@@ -1,5 +1,5 @@
 // ============================================================
-//  Einstellungen & Bilanz – lokal im Browser gespeichert
+//  Einstellungen, Bilanz & Highscores – lokal im Browser gespeichert
 // ============================================================
 
 function readStorage(key, fallback) {
@@ -30,13 +30,22 @@ const GameSettings = {
         this.data[key] = value
         writeStorage("duelist.settings", this.data)
         Sound.setVolumes(this.data)
+        document.body.classList.toggle("crt", !!this.data.crt)
     }
 }
 
-const emptyRecord = () => ({ wins: 0, losses: 0, byDifficulty: {}, byChampion: {}, streak: 0, bestStreak: 0 })
+const emptyRecord = () => ({
+    wins: 0, losses: 0, byDifficulty: {}, byChampion: {}, streak: 0, bestStreak: 0,
+    unlocked: [], arcadeClears: 0,
+    highscores: { arcade: [], survival: [] }
+})
 
 const PlayerRecord = {
     data: readStorage("duelist.record", emptyRecord()),
+
+    save() {
+        writeStorage("duelist.record", this.data)
+    },
 
     addSoloResult(won, difficulty, champId) {
         const d = this.data
@@ -48,11 +57,39 @@ const PlayerRecord = {
         d.byChampion[champId][won ? "w" : "l"]++
         d.streak = won ? d.streak + 1 : 0
         d.bestStreak = Math.max(d.bestStreak, d.streak)
-        writeStorage("duelist.record", d)
+        this.save()
+    },
+
+    unlock(id) {
+        if (!this.data.unlocked.includes(id)) {
+            this.data.unlocked.push(id)
+            this.save()
+            return true
+        }
+        return false
+    },
+
+    // Platz in der Highscore-Liste (0-basiert) oder -1
+    rankFor(mode, score) {
+        const list = this.data.highscores[mode] || []
+        if (score <= 0) return -1
+        const i = list.findIndex(e => score > e.score)
+        if (i >= 0) return i
+        return list.length < 10 ? list.length : -1
+    },
+
+    addHighscore(mode, entry) {
+        const list = this.data.highscores[mode] = this.data.highscores[mode] || []
+        list.push(entry)
+        list.sort((a, b) => b.score - a.score)
+        list.length = Math.min(list.length, 10)
+        this.save()
     },
 
     reset() {
+        const unlocked = this.data.unlocked
         this.data = emptyRecord()
-        writeStorage("duelist.record", this.data)
+        this.data.unlocked = unlocked
+        this.save()
     }
 }

@@ -21,21 +21,30 @@ function loadImage(key, src) {
     })
 }
 
+function championFiles(champ) {
+    const files = new Set()
+    for (const a of Object.values(champ.anims)) files.add(a.file)
+    for (const m of [...champ.light, champ.heavy]) {
+        files.add(m.anim.file)
+        if (m.projectile) files.add(m.projectile.effect)
+        if (m.zone) files.add(m.zone.effect)
+    }
+    return files
+}
+
 function loadAllAssets(onProgress) {
     const jobs = [
-        ["arena", ASSET_ROOT + "ui/Arena2.png"],
         ["sky", ASSET_ROOT + "ui/StartBackground.png"],
         ["logo", ASSET_ROOT + "Überschriften/DUELIST.PNG"]
     ]
+    for (const id of MAP_ORDER) jobs.push(["map:" + id, ASSET_ROOT + MAPS[id].img])
 
     for (const id of CHAMPION_ORDER) {
         const champ = CHAMPIONS[id]
-        const files = new Set()
-        for (const a of Object.values(champ.anims)) files.add(a.file)
-        for (const c of champ.combo) files.add(c.anim.file)
-        for (const f of files) jobs.push([`${id}:${f}`, spritePath(champ, f)])
+        for (const f of championFiles(champ)) jobs.push([`${id}:${f}`, spritePath(champ, f)])
         jobs.push([`icon:${id}`, ASSET_ROOT + champ.ability.icon])
     }
+    jobs.push(["bomb", ASSET_ROOT + "Faehigkeiten/bombe2.png"])
 
     let done = 0
     return Promise.all(jobs.map(([key, src]) =>
@@ -50,10 +59,20 @@ function champImage(champId, file) {
     return IMAGES[`${champId}:${file}`]
 }
 
+// Animation eines Champions per Name: idle, run, light0, light1, heavy, death ...
+function champAnim(champ, name) {
+    if (name.startsWith("light")) {
+        const i = parseInt(name.slice(5)) || 0
+        return champ.light[Math.min(i, champ.light.length - 1)].anim
+    }
+    if (name === "heavy") return champ.heavy.anim
+    return champ.anims[name] || champ.anims.idle
+}
+
 let tintCanvas = null
 let tintCtx = null
 
-// Zeichnet ein Sprite-Frame einfarbig (weißer Treffer-Blitz, Schatten, Nachbilder)
+// Zeichnet ein Sprite-Frame einfarbig (weißer Treffer-Blitz, Nachbilder)
 function drawTintedFrame(ctx, img, frame, dx, dy, dw, dh, color, alpha = 1) {
     if (!tintCanvas) {
         tintCanvas = document.createElement("canvas")
@@ -77,12 +96,12 @@ function drawTintedFrame(ctx, img, frame, dx, dy, dw, dh, color, alpha = 1) {
 
 // Kleine animierte Vorschau eines Champions auf einem <canvas> (Menüs, HUD)
 class SpritePreview {
-    constructor(canvas, champId, animName = "idle", { zoom = 1, flip = false } = {}) {
+    constructor(canvas, champId, animName = "idle", { zoom = 1, flip = false, locked = false } = {}) {
         this.canvas = canvas
         this.ctx = canvas.getContext("2d")
         this.zoom = zoom
         this.flip = flip
-        this.time = Math.random() * 2
+        this.locked = locked
         this.set(champId, animName)
         SpritePreview.all.add(this)
     }
@@ -93,29 +112,21 @@ class SpritePreview {
         this.time = 0
     }
 
-    currentAnim() {
-        const champ = CHAMPIONS[this.champId]
-        if (!champ) return null
-        if (this.animName.startsWith("attack")) {
-            const i = parseInt(this.animName.slice(6)) || 0
-            return champ.combo[Math.min(i, champ.combo.length - 1)].anim
-        }
-        return champ.anims[this.animName] || champ.anims.idle
-    }
-
     draw(dt) {
         if (!this.canvas.isConnected) {
             SpritePreview.all.delete(this)
             return
         }
+        // nicht sichtbare Vorschauen nicht zeichnen
+        if (this.canvas.offsetParent === null || this.canvas.closest(".screen:not(.active)")) return
         this.time += dt
         const ctx = this.ctx
         const w = this.canvas.width
         const h = this.canvas.height
         ctx.clearRect(0, 0, w, h)
-        const anim = this.currentAnim()
-        if (!anim) return
         const champ = CHAMPIONS[this.champId]
+        if (!champ) return
+        const anim = champAnim(champ, this.animName)
         const img = champImage(this.champId, anim.file)
         if (!img || !img.complete) return
 
@@ -129,6 +140,7 @@ class SpritePreview {
         ctx.save()
         ctx.translate(w / 2, h * 0.78)
         if (this.flip) ctx.scale(-1, 1)
+        if (this.locked) ctx.filter = "brightness(0)"
         ctx.drawImage(img, frame * FRAME, 0, FRAME, FRAME,
             -champ.anchor.x * scale, -champ.anchor.y * scale, FRAME * scale, FRAME * scale)
         ctx.restore()

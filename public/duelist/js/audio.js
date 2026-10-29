@@ -179,6 +179,61 @@ const SFX = {
     defeat: s => {
         [64, 63, 62, 59].forEach((m, i) => s.tone(midi(m), 0.45, { type: "triangle", vol: 0.17, delay: i * 0.22 }))
     },
+    heavyCharge: s => {
+        s.tone(180, 0.22, { type: "sawtooth", vol: 0.08, slide: 420 })
+        s.noise(0.2, { vol: 0.12, freq: 400, slide: 1800, q: 4 })
+    },
+    guard: s => {
+        s.tone(620, 0.12, { type: "square", vol: 0.07, slide: 380 })
+        s.noise(0.06, { vol: 0.2, freq: 3500, type: "highpass" })
+    },
+    perfect: s => {
+        s.tone(1568, 0.25, { type: "triangle", vol: 0.16 })
+        s.tone(2093, 0.35, { type: "sine", vol: 0.12, delay: 0.05 })
+        s.noise(0.1, { vol: 0.25, freq: 6000, type: "highpass" })
+    },
+    guardBreak: s => {
+        s.noise(0.5, { vol: 0.6, freq: 3000, slide: 200, type: "lowpass" })
+        s.tone(300, 0.4, { type: "square", vol: 0.12, slide: 60 })
+        s.tone(1200, 0.12, { type: "square", vol: 0.08, delay: 0.02 })
+    },
+    counter: s => {
+        s.tone(880, 0.1, { type: "square", vol: 0.1 })
+        s.tone(1320, 0.18, { type: "square", vol: 0.08, delay: 0.06 })
+    },
+    fireball: s => {
+        s.noise(0.3, { vol: 0.28, freq: 600, slide: 2400, q: 1.5 })
+        s.tone(220, 0.25, { type: "sawtooth", vol: 0.06, slide: 520 })
+    },
+    ice: s => {
+        [2637, 3136, 3520].forEach((f, i) => s.tone(f, 0.25, { type: "sine", vol: 0.06, delay: i * 0.04 }))
+        s.noise(0.4, { vol: 0.25, freq: 7000, slide: 2500, type: "highpass" })
+    },
+    blink: s => {
+        s.tone(400, 0.25, { type: "sine", vol: 0.18, slide: 1800 })
+        s.noise(0.2, { vol: 0.15, freq: 5000, type: "highpass" })
+    },
+    frenzy: s => {
+        s.tone(110, 0.6, { type: "sawtooth", vol: 0.15, slide: 220 })
+        s.noise(0.5, { vol: 0.3, freq: 800, slide: 300, q: 2 })
+        s.tone(55, 0.6, { vol: 0.4 })
+    },
+    quake: s => {
+        s.noise(1.1, { vol: 0.9, freq: 500, slide: 40, type: "lowpass" })
+        s.tone(70, 0.9, { vol: 0.8, slide: 25 })
+    },
+    geyserWarn: s => {
+        s.noise(0.7, { vol: 0.12, freq: 200, slide: 900, type: "lowpass" })
+    },
+    geyser: s => {
+        s.noise(0.7, { vol: 0.55, freq: 1800, slide: 300, type: "bandpass", q: 0.6 })
+        s.tone(120, 0.4, { vol: 0.35, slide: 50 })
+    },
+    coin: s => {
+        s.tone(988, 0.08, { type: "square", vol: 0.08 })
+        s.tone(1319, 0.35, { type: "square", vol: 0.08, delay: 0.08 })
+    },
+    score: s => s.tone(1760, 0.05, { type: "square", vol: 0.03 }),
     uiHover: s => s.tone(1400, 0.04, { type: "sine", vol: 0.04 }),
     uiClick: s => {
         s.tone(660, 0.08, { type: "square", vol: 0.06, slide: 990 })
@@ -194,6 +249,35 @@ const SFX = {
 function midi(m) {
     return 440 * Math.pow(2, (m - 69) / 12)
 }
+
+// ============================================================
+//  Ansager – klassische Arcade-Stimme über die Sprachausgabe
+// ============================================================
+const Announcer = {
+    voice: null,
+
+    pickVoice() {
+        if (!window.speechSynthesis) return null
+        const voices = speechSynthesis.getVoices()
+        this.voice = voices.find(v => /en-(US|GB)/i.test(v.lang) && /male|david|daniel|george|fred/i.test(v.name)) ||
+            voices.find(v => /^en/i.test(v.lang)) || null
+        return this.voice
+    },
+
+    say(text) {
+        if (!window.speechSynthesis || !GameSettings.get().announcer || Sound.muted) return
+        if (!this.voice) this.pickVoice()
+        speechSynthesis.cancel()
+        const u = new SpeechSynthesisUtterance(text)
+        if (this.voice) u.voice = this.voice
+        u.lang = this.voice ? this.voice.lang : "en-US"
+        u.rate = 0.92
+        u.pitch = 0.45
+        u.volume = Math.min(1, Sound.volumes.master * 1.1)
+        speechSynthesis.speak(u)
+    }
+}
+if (window.speechSynthesis) speechSynthesis.onvoiceschanged = () => Announcer.pickVoice()
 
 // ============================================================
 //  Musik – kleiner Sequencer (Menü: ruhig, Kampf: treibend)

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DUELIST Controller</title>
+    <meta name="theme-color" content="#091f5b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quantico:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --p: #2f6bff;
+            --line: #6c8fb6;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: "Quantico", sans-serif;
+            color: #fff;
+            background: url("../assets/ui/StartBackground.png") center / cover #8ec5ff;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            overscroll-behavior: none;
+        }
+
+        button {
+            font: inherit;
+            color: inherit;
+        }
+
+        .glass {
+            border: 2px solid var(--line);
+            background: rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .btn {
+            border: 0;
+            padding: 12px 26px;
+            font-family: "Bebas Neue", sans-serif;
+            font-size: 24px;
+            letter-spacing: 0.06em;
+            background: linear-gradient(#2b4374, #091f5b);
+            cursor: pointer;
+        }
+
+        .btn.red {
+            background: linear-gradient(#e34444, #8f1c1c);
+        }
+
+        /* ---------- Verbinden ---------- */
+        #connect {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #connect img {
+            width: min(320px, 70vw);
+        }
+
+        #connect .glass {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 18px;
+            color: #10213f;
+            max-width: 420px;
+        }
+
+        #code {
+            font-family: "Bebas Neue", sans-serif;
+            font-size: 40px;
+            letter-spacing: 0.3em;
+            text-align: center;
+            text-transform: uppercase;
+            padding: 6px;
+            border: 2px solid var(--line);
+            background: rgba(255, 255, 255, 0.7);
+            color: #091f5b;
+            width: 100%;
+        }
+
+        #status {
+            font-size: 14px;
+            min-height: 20px;
+        }
+
+        /* ---------- Controller ---------- */
+        #pad {
+            position: fixed;
+            inset: 0;
+            display: none;
+        }
+
+        body.connected #pad {
+            display: block;
+        }
+
+        body.connected #connect {
+            display: none;
+        }
+
+        .top {
+            position: absolute;
+            top: calc(8px + env(safe-area-inset-top));
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 14px;
+            color: #fff;
+            background: linear-gradient(var(--p), color-mix(in srgb, var(--p) 55%, #000));
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            font-family: "Bebas Neue", sans-serif;
+            font-size: 22px;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        .top small {
+            font-family: "Quantico", sans-serif;
+            font-size: 12px;
+            opacity: 0.85;
+        }
+
+        .hpbar {
+            width: 90px;
+            height: 10px;
+            border: 1px solid #fff;
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        .hpbar i {
+            display: block;
+            height: 100%;
+            background: #fff;
+            transform-origin: left;
+        }
+
+        #menuBtn {
+            position: absolute;
+            top: calc(10px + env(safe-area-inset-top));
+            right: calc(12px + env(safe-area-inset-right));
+            padding: 8px 14px;
+            font-size: 18px;
+        }
+
+        #fsBtn {
+            position: absolute;
+            top: calc(10px + env(safe-area-inset-top));
+            left: calc(12px + env(safe-area-inset-left));
+            padding: 8px 14px;
+            font-size: 18px;
+        }
+
+        .stick {
+            position: absolute;
+            left: calc(7vw + env(safe-area-inset-left));
+            bottom: 12vh;
+            width: min(44vh, 230px);
+            height: min(44vh, 230px);
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.85);
+            background: radial-gradient(circle, rgba(43, 67, 116, 0.35), rgba(9, 31, 91, 0.6));
+        }
+
+        .knob {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 42%;
+            height: 42%;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle at 35% 30%, #fff, #c9d3f2 60%, #8b98c4);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .btns {
+            position: absolute;
+            right: calc(5vw + env(safe-area-inset-right));
+            bottom: 8vh;
+            width: min(62vh, 330px);
+            height: min(62vh, 330px);
+        }
+
+        .b {
+            position: absolute;
+            width: 36%;
+            height: 36%;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.85);
+            font-family: "Bebas Neue", sans-serif;
+            font-size: min(5vh, 26px);
+            letter-spacing: 0.04em;
+            display: grid;
+            place-items: center;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.3);
+            transition: transform 0.05s, filter 0.05s;
+        }
+
+        .b.on {
+            transform: scale(0.9);
+            filter: brightness(1.35);
+        }
+
+        .b-light { right: 0; top: 32%; background: radial-gradient(circle at 35% 30%, #ff8a72, #e34444 55%, #8f1c1c); }
+        .b-heavy { left: 32%; bottom: 0; background: radial-gradient(circle at 35% 30%, #ffc27a, #e3832c 55%, #8f4a0c); }
+        .b-dash { left: 0; top: 32%; background: radial-gradient(circle at 35% 30%, #8fc4ff, #2b4374 55%, #091f5b); }
+        .b-ability { left: 32%; top: 0; background: radial-gradient(circle at 35% 30%, #6a7090, #2a2f48 70%); filter: grayscale(0.5); }
+        .b-ability.ready { background: radial-gradient(circle at 35% 30%, #ffe9a6, #ffbf2e 60%, #b9700a); filter: none; color: #3a2000; }
+
+        .b-ability svg {
+            position: absolute;
+            inset: -8px;
+            width: calc(100% + 16px);
+            height: calc(100% + 16px);
+            transform: rotate(-90deg);
+        }
+
+        .b-ability circle {
+            fill: none;
+            stroke: #ffd84a;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 289;
+            stroke-dashoffset: 289;
+            transition: stroke-dashoffset 0.2s;
+        }
+
+        .hint {
+            position: absolute;
+            left: 50%;
+            bottom: calc(8px + env(safe-area-inset-bottom));
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #10213f;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 3px 10px;
+            white-space: nowrap;
+        }
+
+        #rotate {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-family: "Bebas Neue", sans-serif;
+            font-size: 28px;
+            background: linear-gradient(#2b4374, #091f5b);
+            z-index: 10;
+        }
+
+        @media (orientation: portrait) {
+            body.connected #rotate {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <section id="connect">
+        <img src="../assets/Überschriften/DUELIST.PNG" alt="DUELIST">
+        <div class="glass">
+            <b>Handy als Controller</b>
+            <span>Code vom PC-Bildschirm eingeben (oder den QR-Code scannen):</span>
+            <input id="code" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD">
+            <button class="btn red" id="joinBtn">Verbinden</button>
+            <div id="status"></div>
+        </div>
+    </section>
+
+    <section id="pad">
+        <button class="btn" id="fsBtn">⛶</button>
+        <div class="top"><span id="slotName">Spieler 1</span><small id="champName">verbunden</small><div class="hpbar"><i id="hp"></i></div></div>
+        <button class="btn" id="menuBtn" data-btn="4">Pause</button>
+
+        <div class="stick" id="stick"><div class="knob" id="knob"></div></div>
+
+        <div class="btns">
+            <button class="b b-ability" data-btn="3"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" /></svg><span>Spezial</span></button>
+            <button class="b b-dash" data-btn="2">Dash</button>
+            <button class="b b-light" data-btn="0">Leicht</button>
+            <button class="b b-heavy" data-btn="1">Schwer</button>
+        </div>
+        <div class="hint">Im Menü: Stick = Auswahl · Leicht = OK · Dash = Zurück</div>
+    </section>
+
+    <div id="rotate">Dreh dein Handy ins Querformat 📱</div>
+
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script>
+        const state = { x: 0, y: 0, b: 0, c: [0, 0, 0, 0, 0] }
+        let conn = null
+        let peer = null
+        let code = (location.hash || "").replace("#", "").toUpperCase()
+        const $ = id => document.getElementById(id)
+        const status = t => $("status").textContent = t
+
+        $("code").value = code
+        $("joinBtn").onclick = () => {
+            code = $("code").value.trim().toUpperCase()
+            if (code.length === 4) join()
+        }
+        if (code.length === 4) join()
+
+        function join() {
+            if (typeof Peer === "undefined") return status("Keine Internetverbindung.")
+            status("Verbinde …")
+            location.hash = code
+            if (!peer || peer.destroyed) peer = new Peer()
+            const go = () => {
+                conn = peer.connect("duelist2-" + code.toLowerCase(), { reliable: true })
+                conn.on("open", () => {
+                    document.body.classList.add("connected")
+                    keepAwake()
+                })
+                conn.on("data", onMessage)
+                conn.on("close", () => {
+                    document.body.classList.remove("connected")
+                    status("Verbindung getrennt – erneut verbinden?")
+                })
+                setTimeout(() => { if (!conn.open) status("PC nicht gefunden. Code richtig? Ist der Controller-Bildschirm am PC offen?") }, 6000)
+            }
+            if (peer.open) go()
+            else peer.once("open", go)
+            peer.on("error", e => status("Fehler: " + e.type))
+        }
+
+        function onMessage(msg) {
+            if (msg.t === "hi") {
+                const color = msg.slot === 0 ? "#2f6bff" : "#e33a3a"
+                document.documentElement.style.setProperty("--p", color)
+                $("slotName").textContent = "Spieler " + (msg.slot + 1)
+                vibrate(60)
+            } else if (msg.t === "full") {
+                status("Es sind schon zwei Handys verbunden.")
+            } else if (msg.t === "vib") {
+                vibrate(msg.ms)
+            } else if (msg.t === "st") {
+                $("champName").textContent = msg.game ? msg.name + " · " + msg.ability : "im Menü"
+                $("hp").style.transform = `scaleX(${msg.game ? msg.hp : 1})`
+                const ab = document.querySelector(".b-ability")
+                ab.classList.toggle("ready", !!msg.ready)
+                ab.querySelector("circle").style.strokeDashoffset = String(289 * (1 - (msg.energy || 0)))
+            }
+        }
+
+        function vibrate(ms) {
+            if (navigator.vibrate) navigator.vibrate(ms)
+        }
+
+        async function keepAwake() {
+            try { if (navigator.wakeLock) await navigator.wakeLock.request("screen") } catch (e) { }
+        }
+        document.addEventListener("visibilitychange", () => { if (!document.hidden && conn && conn.open) keepAwake() })
+
+        // ---------- Senden ----------
+        let lastSent = ""
+        function send(force) {
+            if (!conn || !conn.open) return
+            const msg = { t: "i", x: +state.x.toFixed(2), y: +state.y.toFixed(2), b: state.b, c: state.c }
+            const key = JSON.stringify(msg)
+            if (!force && key === lastSent) return
+            lastSent = key
+            conn.send(msg)
+        }
+        setInterval(() => send(true), 80)
+
+        // ---------- Joystick (fest) ----------
+        const stick = $("stick")
+        const knob = $("knob")
+        let stickId = null
+        stick.addEventListener("pointerdown", e => {
+            stickId = e.pointerId
+            stick.setPointerCapture(e.pointerId)
+            moveStick(e)
+        })
+        stick.addEventListener("pointermove", e => { if (e.pointerId === stickId) moveStick(e) })
+        const releaseStick = e => {
+            if (e.pointerId !== stickId) return
+            stickId = null
+            state.x = state.y = 0
+            knob.style.transform = "translate(-50%, -50%)"
+            send()
+        }
+        stick.addEventListener("pointerup", releaseStick)
+        stick.addEventListener("pointercancel", releaseStick)
+
+        function moveStick(e) {
+            const r = stick.getBoundingClientRect()
+            const R = r.width / 2
+            let dx = e.clientX - (r.left + R)
+            let dy = e.clientY - (r.top + R)
+            const l = Math.hypot(dx, dy)
+            const c = Math.min(l, R * 0.75)
+            const nx = l ? dx / l : 0
+            const ny = l ? dy / l : 0
+            knob.style.transform = `translate(calc(-50% + ${nx * c}px), calc(-50% + ${ny * c}px))`
+            const s = c / (R * 0.75)
+            state.x = s < 0.15 ? 0 : nx * Math.min(1, s * 1.2)
+            state.y = s < 0.15 ? 0 : ny * Math.min(1, s * 1.2)
+            send()
+        }
+
+        // ---------- Knöpfe ----------
+        for (const btn of document.querySelectorAll("[data-btn]")) {
+            const i = +btn.dataset.btn
+            btn.addEventListener("pointerdown", e => {
+                e.preventDefault()
+                state.b |= 1 << i
+                state.c[i]++
+                btn.classList.add("on")
+                vibrate(10)
+                send(true)
+            })
+            const up = () => {
+                state.b &= ~(1 << i)
+                btn.classList.remove("on")
+                send()
+            }
+            btn.addEventListener("pointerup", up)
+            btn.addEventListener("pointercancel", up)
+            btn.addEventListener("pointerleave", up)
+        }
+
+        $("fsBtn").onclick = () => {
+            const el = document.documentElement
+            if (!document.fullscreenElement && el.requestFullscreen) {
+                el.requestFullscreen().then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock("landscape").catch(() => { })).catch(() => { })
+            } else if (document.exitFullscreen) document.exitFullscreen()
+        }
+    </script>
+</body>
+
+</html>

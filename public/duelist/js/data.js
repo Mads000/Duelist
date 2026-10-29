@@ -1,8 +1,9 @@
 // ============================================================
-//  DUELIST – Spieldaten (Champions, Arena, Bot-Stufen, Steuerung)
+//  DUELIST – Spieldaten (Champions, Maps, Modi, Bot-Stufen, Steuerung)
 // ============================================================
 
 const ASSET_ROOT = "../assets/"
+const ONLINE_URL = "https://mads000.github.io/Duelist/duelist/"
 
 // Sprites sind 100x100 Pixel pro Frame, die Figur selbst ist ca. 25px groß
 const FRAME = 100
@@ -11,7 +12,7 @@ const SPRITE_SCALE = 3.2 // Weltpixel pro Sprite-Pixel
 // Welt = Pixel des Arena-Bildes (1536x1024)
 const WORLD = { width: 1536, height: 1024 }
 
-// Begehbare Fläche (abgerundetes Rechteck, Füße der Figuren)
+// Begehbare Fläche (abgerundetes Rechteck, Füße der Figuren) – gleich für alle Maps
 const ARENA = {
     x0: 280, x1: 1256,
     y0: 400, y1: 715,
@@ -19,9 +20,14 @@ const ARENA = {
     spawn: [{ x: 520, y: 575 }, { x: 1016, y: 575 }]
 }
 
-// Animation: frames = Bildanzahl, hits = Frames in denen der Schlag trifft
+// Animation: frames = Bildanzahl
 function anim(file, frames, fps, extra = {}) {
     return { file, frames, fps, ...extra }
+}
+
+// Angriff: hits = Frames in denen der Schlag trifft, reach = Reichweite in Sprite-Pixeln
+function move(a, hits, dmg, kb, reach, extra = {}) {
+    return { anim: a, hits, dmg, kb, reach, lunge: 140, ...extra }
 }
 
 const CHAMPIONS = {
@@ -35,26 +41,27 @@ const CHAMPIONS = {
         color: "#6aa2ff",
         anchor: { x: 49, y: 57 },
         speed: 300,
+        hp: 100,
         stats: { tempo: 3, kraft: 3, reichweite: 3 },
         anims: {
             idle: anim("Idle", 6, 8),
             run: anim("Walk02", 8, 13),
             hurt: anim("Hurt", 4, 16),
             death: anim("Death", 4, 7),
-            block: anim("Block", 4, 16)
+            block: anim("Block", 4, 18)
         },
-        combo: [
-            { anim: anim("Attack01", 7, 20), hits: [[4, 5]], dmg: 6, kb: 260, reach: 30, lunge: 140 },
-            { anim: anim("Attack02", 8, 20), hits: [[5, 6]], dmg: 7, kb: 280, reach: 27, lunge: 160 },
-            { anim: anim("Attack03", 11, 20), hits: [[3, 4], [7, 8]], dmg: 6, kb: 520, reach: 29, lunge: 200, finisher: true }
+        light: [
+            move(anim("Attack01", 7, 22), [[4, 5]], 6, 200, 30, { lunge: 150 }),
+            move(anim("Attack02", 8, 22), [[5, 6]], 7, 240, 27, { lunge: 170 })
         ],
+        heavy: move(anim("Attack03", 11, 19), [[3, 4], [7, 8]], 7, 560, 29, { lunge: 230 }),
         ability: {
             type: "shield",
-            name: "Bollwerk",
+            name: "Shield",
             icon: "Faehigkeiten/schield.png",
             cost: 3,
             duration: 3,
-            text: "Ein Schutzschild aus Licht blockt 3 Sekunden lang jeden Schaden und stößt Angreifer zurück."
+            text: "Nach 3 Treffern verfügbar. 3 Sekunden lang blockt ein Lichtschild jeden Schaden und stößt Angreifer zurück."
         },
         lore: "Der unerschütterliche Anführer der einstigen Gruppe. Vanguard lebte für Ehre, Zusammenhalt und die Hoffnung auf Frieden. Als das Band zerbrach, erhob er sein Schild, um nicht nur sich, sondern auch seine zerbrochenen Kameraden zu schützen. In der Arena kämpft er mit unerschütterlicher Entschlossenheit – um seine Freunde zu retten … oder endgültig zu besiegen."
     },
@@ -69,6 +76,7 @@ const CHAMPIONS = {
         color: "#7fd16a",
         anchor: { x: 50, y: 57 },
         speed: 268,
+        hp: 110,
         stats: { tempo: 2, kraft: 5, reichweite: 4 },
         anims: {
             idle: anim("Idle", 6, 8),
@@ -76,18 +84,18 @@ const CHAMPIONS = {
             hurt: anim("Hurt", 4, 16),
             death: anim("Death", 4, 7)
         },
-        combo: [
-            { anim: anim("Attack01", 7, 17), hits: [[3, 4]], dmg: 8, kb: 280, reach: 31, lunge: 120 },
-            { anim: anim("Attack02", 11, 20), hits: [[1, 2], [5, 6], [9, 9]], dmg: 3, kb: 160, reach: 31, lunge: 90 },
-            { anim: anim("Attack03", 9, 16), hits: [[4, 6]], dmg: 11, kb: 600, reach: 34, lunge: 120, finisher: true }
+        light: [
+            move(anim("Attack01", 7, 19), [[3, 4]], 8, 240, 31, { lunge: 120 }),
+            move(anim("Attack02", 11, 22), [[1, 2], [5, 6], [9, 9]], 3, 150, 31, { lunge: 90 })
         ],
+        heavy: move(anim("Attack03", 9, 15), [[4, 6]], 13, 640, 34, { lunge: 150 }),
         ability: {
             type: "bomb",
-            name: "Kriegsbombe",
+            name: "Damage Stack",
             icon: "Faehigkeiten/bombe2.png",
             cost: 3,
             maxEnergy: 5,
-            text: "Wirft eine Bombe auf den Gegner. Lädt bis zu 5 Treffer auf: 12 / 24 / 36 Schaden. Man kann ausweichen!"
+            text: "Lädt mit jedem Treffer bis zu 3 Stufen: 12 / 24 / 36 Schaden. Die Bombe fliegt zum Gegner – man kann ausweichen!"
         },
         lore: "Der einst mächtigste Krieger – jetzt die Verkörperung ungezähmter Zerstörung. Von Gier und Macht korrumpiert, wandte sich Warbrute gegen alles, was er einst liebte. In der Arena entfesselt er Bomben voller Chaos, während sein wilder Zorn die Luft zerreißt. Für ihn zählt nur Stärke – und die Welt wird seinen Triumph bezeugen."
     },
@@ -102,6 +110,7 @@ const CHAMPIONS = {
         color: "#c9b6ff",
         anchor: { x: 53, y: 57 },
         speed: 318,
+        hp: 95,
         stats: { tempo: 4, kraft: 3, reichweite: 3 },
         anims: {
             idle: anim("Idle", 6, 8),
@@ -109,19 +118,20 @@ const CHAMPIONS = {
             hurt: anim("Hurt", 4, 16),
             death: anim("Death", 4, 7)
         },
-        combo: [
-            { anim: anim("Attack01", 8, 22), hits: [[4, 5]], dmg: 7, kb: 260, reach: 32, lunge: 170 },
-            { anim: anim("Attack02", 9, 20), hits: [[2, 4]], dmg: 9, kb: 520, reach: 23, lunge: 240, finisher: true }
+        light: [
+            move(anim("Attack01", 8, 24), [[4, 5]], 6, 200, 32, { lunge: 170 }),
+            move(anim("Attack01", 8, 28), [[4, 5]], 6, 260, 32, { lunge: 200 })
         ],
+        heavy: move(anim("Attack02", 9, 17), [[2, 4]], 12, 560, 24, { lunge: 330 }),
         ability: {
             type: "stealth",
-            name: "Schattengang",
+            name: "Invisibility",
             icon: "Faehigkeiten/unsichtbar.png",
             cost: 3,
             duration: 3,
-            text: "3 Sekunden unsichtbar und unverwundbar. Der erste Angriff aus dem Schatten verursacht doppelten Schaden."
+            text: "Nach 3 Treffern verfügbar. 3 Sekunden unsichtbar und unverwundbar – der erste Schlag aus dem Schatten macht doppelten Schaden."
         },
-        lore: "Der gefallene Held, der den Tod selbst überwand. Dunkle Kräfte brachten ihn zurück – verändert und geheimnisvoll. Boneguard wandelt durch die Schatten der Arena, unsichtbar und tödlich, doch sein Herz erinnert sich an die Kameradschaft, die ihn einst verband. Pflicht und Erinnerung kämpfen in ihm, während er zwischen Licht und Dunkelheit wandelt."
+        lore: "Der gefallene Held, der den Tod selbst überwand. Dunkle Kräfte brachten ihn zurück – verändert und geheimnisvoll. Boneguard wandelt durch die Schatten der Arena, unsichtbar und tödlich, doch sein Herz erinnert sich an die Kameradschaft, die ihn einst verband."
     },
 
     rageclaw: {
@@ -133,32 +143,147 @@ const CHAMPIONS = {
         folder: "Werebear",
         color: "#ffb35c",
         anchor: { x: 51, y: 57 },
-        speed: 338,
-        stats: { tempo: 5, kraft: 3, reichweite: 2 },
+        speed: 330,
+        hp: 105,
+        stats: { tempo: 4, kraft: 4, reichweite: 2 },
         anims: {
             idle: anim("Idle", 6, 8),
             run: anim("Walk", 8, 14),
             hurt: anim("Hurt", 4, 16),
             death: anim("Death", 4, 7)
         },
-        combo: [
-            { anim: anim("Attack01", 9, 24), hits: [[5, 6]], dmg: 6, kb: 240, reach: 30, lunge: 150 },
-            { anim: anim("Attack02", 13, 24), hits: [[4, 5], [9, 10]], dmg: 4, kb: 220, reach: 28, lunge: 150 },
-            { anim: anim("Attack03", 9, 18), hits: [[5, 7]], dmg: 9, kb: 560, reach: 35, lunge: 200, finisher: true }
+        light: [
+            move(anim("Attack01", 9, 26), [[5, 6]], 6, 200, 30, { lunge: 150 }),
+            move(anim("Attack02", 13, 26), [[4, 5], [9, 10]], 4, 200, 28, { lunge: 150 })
         ],
+        heavy: move(anim("Attack03", 9, 16), [[5, 7]], 13, 600, 35, { lunge: 240 }),
         ability: {
             type: "heal",
-            name: "Wildes Herz",
+            name: "Heal",
             icon: "Faehigkeiten/leben2.png",
             cost: 3,
             amount: 25,
-            text: "Heilt über eine Sekunde 25 Lebenspunkte. Perfekt, um ein verlorenes Duell zu drehen."
+            text: "Nach 3 Treffern verfügbar. Nach Aktivierung bekommt man +25 Leben – perfekt, um ein Duell zu drehen."
         },
-        lore: "Der schnellste, wildeste Kämpfer, gefangen zwischen Mensch und Bestie. Verrat hat seine Seele zerrissen und seine Instinkte entfesselt. Doch tief in ihm glimmt ein Funke der alten Freundschaft, den er mit heilender Kraft schützt. In der Arena stürmt er wie ein wütender Sturm, jeder Schlag ein Kampf zwischen Monster und Erinnerung."
+        lore: "Der schnellste, wildeste Kämpfer, gefangen zwischen Mensch und Bestie. Verrat hat seine Seele zerrissen und seine Instinkte entfesselt. Doch tief in ihm glimmt ein Funke der alten Freundschaft, den er mit heilender Kraft schützt."
+    },
+
+    nightfang: {
+        id: "nightfang",
+        legacy: "Nightfang",
+        name: "Nightfang",
+        title: "Der Mondjäger",
+        role: "Raubtier",
+        folder: "Werewolf",
+        color: "#ff6f91",
+        anchor: { x: 52, y: 57 },
+        speed: 345,
+        hp: 95,
+        stats: { tempo: 5, kraft: 3, reichweite: 2 },
+        anims: {
+            idle: anim("Idle", 6, 8),
+            run: anim("Walk", 8, 15),
+            hurt: anim("Hurt", 4, 16),
+            death: anim("Death", 4, 7)
+        },
+        light: [
+            move(anim("Attack01", 9, 28), [[5, 6]], 5, 180, 26, { lunge: 170 }),
+            move(anim("Attack02", 13, 26), [[4, 5], [8, 9], [11, 11]], 3, 200, 34, { lunge: 160 })
+        ],
+        heavy: move(anim("Attack01", 9, 14), [[5, 6]], 12, 600, 27, { lunge: 520 }),
+        ability: {
+            type: "frenzy",
+            name: "Frenzy",
+            icon: "Faehigkeiten/leben.png",
+            cost: 3,
+            duration: 4,
+            text: "4 Sekunden Blutrausch: schneller laufen, schneller zuschlagen und jeder Treffer heilt die Hälfte des Schadens."
+        },
+        lore: "Ein Wächter des alten Bundes, den der Fluch des Vollmonds verschlungen hat. Nightfang jagt nicht mehr für die Gemeinschaft, sondern für den Rausch der Jagd. Wer ihn in der Arena sieht, sieht ihn nur kurz – dann ist es meist schon vorbei."
+    },
+
+    arcanis: {
+        id: "arcanis",
+        legacy: "Arcanis",
+        name: "Arcanis",
+        title: "Der Sternenseher",
+        role: "Magier",
+        folder: "Wizard",
+        color: "#7fd8ff",
+        anchor: { x: 50, y: 57 },
+        speed: 285,
+        hp: 90,
+        stats: { tempo: 3, kraft: 3, reichweite: 5 },
+        anims: {
+            idle: anim("Idle", 6, 8),
+            run: anim("Walk", 8, 12),
+            hurt: anim("Hurt", 4, 16),
+            death: anim("DEATH", 4, 7)
+        },
+        // Feuerball als Projektil
+        light: [
+            move(anim("Attack02", 6, 16), [], 6, 260, 0, {
+                lunge: 0, projectile: { frame: 4, speed: 820, range: 760, effect: "Attack02_Effect", flyFrames: 4, hitFrames: [4, 6] }
+            })
+        ],
+        // Eis-Explosion am Gegner
+        heavy: move(anim("Attack01", 6, 12), [], 12, 460, 0, {
+            lunge: 0, zone: { frame: 3, effect: "Attack01_Effect", frames: 10, fps: 18, hitFrame: 6, radius: 95, maxDist: 560 }
+        }),
+        ability: {
+            type: "blink",
+            name: "Blink",
+            icon: "Faehigkeiten/unsichtbar.png",
+            cost: 3,
+            text: "Teleportiert sich in einer Lichtwolke hinter den Gegner und ist dabei kurz unverwundbar."
+        },
+        lore: "Er war der Kopf der Gruppe, der die Sterne las und den Verrat kommen sah – und schwieg. Seitdem sucht Arcanis in der Arena nach Vergebung, mit Feuer in der einen und Eis in der anderen Hand."
+    },
+
+    gravelord: {
+        id: "gravelord",
+        legacy: "Gravelord",
+        name: "Gravelord",
+        title: "Der Knochenkönig",
+        role: "Endboss",
+        folder: "Greatsword Skeleton",
+        color: "#e8e0c8",
+        anchor: { x: 52, y: 57 },
+        speed: 255,
+        hp: 140,
+        boss: true,
+        stats: { tempo: 2, kraft: 5, reichweite: 5 },
+        anims: {
+            idle: anim("Idle", 6, 7),
+            run: anim("Walk", 9, 11),
+            hurt: anim("Hurt", 4, 16),
+            death: anim("Death", 4, 6)
+        },
+        light: [
+            move(anim("Attack01", 9, 18), [[4, 6]], 8, 260, 38, { lunge: 120 }),
+            move(anim("Attack03", 8, 18), [[4, 5]], 8, 300, 35, { lunge: 120 })
+        ],
+        heavy: move(anim("Attack02", 12, 15), [[6, 9]], 15, 700, 44, { lunge: 160 }),
+        ability: {
+            type: "quake",
+            name: "Soul Quake",
+            icon: "Faehigkeiten/bombe.png",
+            cost: 3,
+            text: "Rammt das Großschwert in den Boden: Eine Seelenwelle trifft alles um ihn herum und durchbricht jede Deckung."
+        },
+        lore: "Niemand weiß, wer die Arena über den Wolken erbaut hat. Doch wer alle Duelle übersteht, trifft am Ende auf ihren Herrn: den Knochenkönig, der jeden Verrat der vier Gefährten gesät hat."
     }
 }
 
-const CHAMPION_ORDER = ["vanguard", "warbrute", "boneguard", "rageclaw"]
+const CHAMPION_ORDER = ["vanguard", "warbrute", "boneguard", "rageclaw", "nightfang", "arcanis", "gravelord"]
+
+function isUnlocked(id) {
+    return !CHAMPIONS[id].boss || PlayerRecord.data.unlocked.includes(id)
+}
+
+function playableChampions() {
+    return CHAMPION_ORDER.filter(isUnlocked)
+}
 
 // Alte URL-Namen aus der ersten Version (?player1=Soldier ...)
 function resolveChampion(name) {
@@ -170,27 +295,67 @@ function resolveChampion(name) {
     return null
 }
 
+// ---------------- Maps ----------------
+const MAPS = {
+    sky: {
+        id: "sky", name: "Himmelsarena", img: "ui/Arena2.png",
+        text: "Die Original-Arena über den Wolken.",
+        ambient: "clouds", grip: 1
+    },
+    classic: {
+        id: "classic", name: "Wolkenhof", img: "ui/Arena.png",
+        text: "Der alte Trainingshof – weicher Sand, klare Sicht.",
+        ambient: "clouds", grip: 1
+    },
+    volcano: {
+        id: "volcano", name: "Vulkanschmiede", img: "ui/Map-Vulkan.png",
+        text: "Glut steigt auf – und manchmal bricht der Boden auf. Achte auf Feuerfontänen!",
+        ambient: "embers", grip: 1, hazard: "geyser"
+    },
+    frost: {
+        id: "frost", name: "Frostgipfel", img: "ui/Map-Frost.png",
+        text: "Spiegelglattes Eis: Wer getroffen wird, rutscht weit.",
+        ambient: "snow", grip: 0.32
+    }
+}
+const MAP_ORDER = ["sky", "classic", "volcano", "frost"]
+
+// ---------------- Modi ----------------
+const MODES = {
+    arcade:   { id: "arcade",   name: "Arcade",        sub: "7 Gegner · Endboss · Highscore" },
+    solo:     { id: "solo",     name: "Gegen Bot",     sub: "Freies Duell gegen die KI" },
+    local:    { id: "local",    name: "Lokales Duell", sub: "2 Spieler · Tastatur, Gamepad oder Handy" },
+    survival: { id: "survival", name: "Survival",      sub: "Ein Leben · endlose Gegner" },
+    training: { id: "training", name: "Training",      sub: "Kombos üben ohne Druck" }
+}
+
 const DIFFICULTIES = {
-    easy:      { id: "easy",      name: "Rekrut",   reaction: 0.42, dodge: 0.06, aggression: 0.45, combo: 0.35, accuracy: 0.55, smart: 0.3 },
-    normal:    { id: "normal",    name: "Krieger",  reaction: 0.26, dodge: 0.25, aggression: 0.62, combo: 0.65, accuracy: 0.75, smart: 0.6 },
-    hard:      { id: "hard",      name: "Champion", reaction: 0.16, dodge: 0.45, aggression: 0.75, combo: 0.9,  accuracy: 0.9,  smart: 0.85 },
-    nightmare: { id: "nightmare", name: "Legende",  reaction: 0.09, dodge: 0.7,  aggression: 0.85, combo: 1,    accuracy: 1,    smart: 1 }
+    easy:      { id: "easy",      name: "Rekrut",   reaction: 0.42, dodge: 0.06, block: 0.1,  aggression: 0.45, combo: 0.35, heavy: 0.15, accuracy: 0.55, smart: 0.3 },
+    normal:    { id: "normal",    name: "Krieger",  reaction: 0.26, dodge: 0.22, block: 0.3,  aggression: 0.62, combo: 0.65, heavy: 0.3,  accuracy: 0.75, smart: 0.6 },
+    hard:      { id: "hard",      name: "Champion", reaction: 0.17, dodge: 0.4,  block: 0.5,  aggression: 0.74, combo: 0.9,  heavy: 0.45, accuracy: 0.9,  smart: 0.85 },
+    nightmare: { id: "nightmare", name: "Legende",  reaction: 0.1,  dodge: 0.62, block: 0.68, aggression: 0.82, combo: 1,    heavy: 0.55, accuracy: 1,    smart: 1 }
 }
 const DIFFICULTY_ORDER = ["easy", "normal", "hard", "nightmare"]
 
 // Allgemeine Kampfwerte
 const COMBAT = {
-    hp: 100,
     depthReach: 42,      // wie weit ein Schlag nach oben/unten trifft (Welt)
     bodyHalf: 24,        // halbe Körperbreite (Welt)
-    hitstun: 0.24,
-    finisherStun: 0.36,
-    comboWindow: 0.32,   // Eingabepuffer für die nächste Kombo-Stufe
-    recovery: 0.16,
+    hitstun: 0.26,
+    heavyStun: 0.5,
+    blockstun: 0.2,
+    chip: 0.15,          // Schaden, der durch die Deckung geht
+    guardMax: 100,
+    guardRegen: 22,
+    perfectBlock: 0.14,  // Zeitfenster für perfektes Blocken
+    comboWindow: 0.34,   // Eingabepuffer für die nächste Kombo-Stufe
+    recovery: 0.14,
+    heavyRecovery: 0.42,
     dashSpeed: 900,
     dashTime: 0.17,
-    dashCooldown: 0.75,
+    dashCooldown: 0.7,
     dashIframes: 0.16,
+    accel: 22,           // wie schnell man auf Tempo kommt
     friction: 9,
     energyMax: 3
 }
@@ -199,15 +364,16 @@ const COMBAT = {
 const KEYMAPS = {
     solo: {
         up: ["KeyW", "ArrowUp"], down: ["KeyS", "ArrowDown"], left: ["KeyA", "ArrowLeft"], right: ["KeyD", "ArrowRight"],
-        attack: ["KeyJ", "KeyE", "Numpad1"], ability: ["KeyK", "KeyR", "Numpad2"], dash: ["KeyL", "Space", "ShiftLeft", "Numpad3"]
+        light: ["KeyJ", "KeyE", "Numpad1"], heavy: ["KeyK", "KeyF", "Numpad2"],
+        dash: ["KeyL", "Space", "ShiftLeft", "Numpad3"], ability: ["KeyI", "KeyR", "Numpad0"]
     },
     p1: {
         up: ["KeyW"], down: ["KeyS"], left: ["KeyA"], right: ["KeyD"],
-        attack: ["KeyE"], ability: ["KeyR"], dash: ["KeyQ", "ShiftLeft"]
+        light: ["KeyE"], heavy: ["KeyF"], dash: ["KeyQ"], ability: ["KeyR"]
     },
     p2: {
         up: ["KeyI", "ArrowUp"], down: ["KeyK", "ArrowDown"], left: ["KeyJ", "ArrowLeft"], right: ["KeyL", "ArrowRight"],
-        attack: ["KeyO", "Numpad1"], ability: ["KeyP", "Numpad2"], dash: ["KeyU", "Numpad3"]
+        light: ["KeyO", "Numpad1"], heavy: ["KeyP", "Numpad2"], dash: ["KeyU", "Numpad3"], ability: ["KeyH", "Numpad0"]
     }
 }
 
@@ -215,8 +381,10 @@ const DEFAULT_SETTINGS = {
     master: 0.8,
     music: 0.45,
     sfx: 0.9,
+    announcer: true,
     shake: true,
     vibration: true,
+    crt: false,
     rounds: 3,          // Best of 3
     roundTime: 60,
     gameSpeed: 1,

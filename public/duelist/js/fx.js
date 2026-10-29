@@ -102,6 +102,61 @@ class Effects {
         this.particles.push({ type: "ghost", img, frame, x, y, geom, flip, color, life: 0.22, t: 0 })
     }
 
+    // Animiertes Effekt-Spritesheet (z.B. Eis-Explosion), zentriert auf x/y
+    sheet(img, x, y, frames, fps, { flip = false, center = { x: 50, y: 50 }, scale = SPRITE_SCALE } = {}) {
+        this.particles.push({ type: "sheet", img, x, y, frames, fps, flip, center, scale, life: frames / fps, t: 0 })
+    }
+
+    // Halbkreis-Schild vor einer blockenden Figur
+    guardArc(x, y, dir, perfect) {
+        this.particles.push({ type: "guard", x, y, dir, perfect, life: perfect ? 0.35 : 0.2, t: 0 })
+    }
+
+    // Umgebung: Glut (Vulkan), Schnee (Frost), Staubflocken (Himmel)
+    ambient(kind, cam, view) {
+        const left = cam.x - view.w / 2 / cam.zoom
+        const top = cam.y - view.h / 2 / cam.zoom
+        const w = view.w / cam.zoom
+        const h = view.h / cam.zoom
+        if (kind === "embers") {
+            this.particles.push({
+                type: "spark", x: left + Math.random() * w, y: top + h + 10,
+                vx: (Math.random() - 0.5) * 40, vy: -60 - Math.random() * 120, g: -10, drag: 0.3,
+                life: 2 + Math.random() * 2, t: 0, size: 3 + Math.random() * 5,
+                color: Math.random() < 0.5 ? "#ffb347" : "#ff5a1f", glow: true
+            })
+        } else if (kind === "snow") {
+            this.particles.push({
+                type: "snow", x: left + Math.random() * (w + 200) - 100, y: top - 10,
+                vx: 30 + Math.random() * 40, vy: 70 + Math.random() * 80, g: 0, drag: 0,
+                life: h / 90 + 2, t: 0, size: 2 + Math.random() * 4, wobble: Math.random() * 6
+            })
+        } else if (kind === "clouds") {
+            this.particles.push({
+                type: "mote", x: left + Math.random() * w, y: top + Math.random() * h,
+                vx: 10 + Math.random() * 15, vy: -5 - Math.random() * 10, g: 0, drag: 0,
+                life: 3 + Math.random() * 3, t: 0, size: 2 + Math.random() * 2
+            })
+        }
+    }
+
+    // Feuerfontäne (Vulkan-Hazard)
+    geyser(x, y) {
+        this.ring(x, y, { radius: 120, color: "rgba(255,150,60,0.95)", life: 0.5, width: 12 })
+        this.ground.push({ type: "scorch", x, y, radius: 80, life: 3, t: 0 })
+        for (let i = 0; i < 40; i++) {
+            this.particles.push({
+                type: i % 4 === 0 ? "smoke" : "spark",
+                x: x + (Math.random() - 0.5) * 60, y,
+                vx: (Math.random() - 0.5) * 160, vy: -400 - Math.random() * 600,
+                g: i % 4 === 0 ? -40 : 900, drag: 1,
+                life: 0.6 + Math.random() * 0.6, t: 0,
+                size: i % 4 === 0 ? 24 + Math.random() * 20 : 7 + Math.random() * 8,
+                color: ["#fff1b0", "#ffb02e", "#ff6a1f", "#c8301c"][i % 4]
+            })
+        }
+    }
+
     text(x, y, str, { color = "#fff", size = 46, life = 0.9, vy = -160, stroke = "#1a0d06" } = {}) {
         this.texts.push({ x: x + (Math.random() - 0.5) * 24, y, str, color, size, life, t: 0, vy, stroke })
     }
@@ -165,6 +220,7 @@ class Effects {
             switch (p.type) {
                 case "spark":
                     ctx.globalAlpha = 1 - k * k
+                    if (p.glow) ctx.globalCompositeOperation = "lighter"
                     ctx.fillStyle = p.color
                     ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size * (1 - k * 0.5), p.size * (1 - k * 0.5))
                     break
@@ -213,6 +269,35 @@ class Effects {
                     g.addColorStop(1, "rgba(255,120,40,0)")
                     ctx.fillStyle = g
                     ctx.fillRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2)
+                    break
+                }
+                case "snow":
+                    ctx.globalAlpha = Math.min(1, (p.life - p.t) * 2) * 0.9
+                    ctx.fillStyle = "#f4f9ff"
+                    ctx.fillRect(p.x + Math.sin(p.t * 2 + p.wobble) * 12, p.y, p.size, p.size)
+                    break
+                case "mote":
+                    ctx.globalAlpha = Math.sin(k * Math.PI) * 0.5
+                    ctx.fillStyle = "#ffffff"
+                    ctx.fillRect(p.x, p.y, p.size, p.size)
+                    break
+                case "sheet": {
+                    const f = Math.min(p.frames - 1, Math.floor(p.t * p.fps))
+                    const s = p.scale
+                    ctx.translate(p.x, p.y)
+                    if (p.flip) ctx.scale(-1, 1)
+                    ctx.drawImage(p.img, f * FRAME, 0, FRAME, FRAME, -p.center.x * s, -p.center.y * s, FRAME * s, FRAME * s)
+                    break
+                }
+                case "guard": {
+                    ctx.globalAlpha = (1 - k) * 0.95
+                    ctx.translate(p.x, p.y)
+                    ctx.scale(p.dir, 1)
+                    ctx.strokeStyle = p.perfect ? "#fff4a8" : "#9fd0ff"
+                    ctx.lineWidth = p.perfect ? 9 : 6
+                    ctx.beginPath()
+                    ctx.ellipse(0, 0, 34 + k * 22, 52 + k * 22, 0, -1.2, 1.2)
+                    ctx.stroke()
                     break
                 }
                 case "ghost":

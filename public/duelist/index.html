@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>DUELIST</title>
-    <meta name="description" content="DUELIST – Pixel-Duelle in der Arena über den Wolken. Gegen den Bot oder zu zweit.">
-    <meta name="theme-color" content="#0b1022">
+    <meta name="description" content="DUELIST – Pixel-Duelle in der Arena über den Wolken. Arcade, Survival, gegen den Bot oder zu zweit.">
+    <meta name="theme-color" content="#091f5b">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,32 +17,33 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quantico:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/app.css">
 </head>
 
 <body>
     <canvas id="game"></canvas>
-    <div id="shade"></div>
+    <div id="sky"></div>
+    <div id="crt"></div>
 
     <!-- ================= LADEN ================= -->
     <section id="screen-loading" class="screen active">
-        <div class="loading-box">
+        <div class="center-col">
             <img class="logo" src="../assets/Überschriften/DUELIST.PNG" alt="DUELIST">
             <div class="progress"><div class="progress-fill" id="loadFill"></div></div>
-            <p class="muted" id="loadText">Lade Arena …</p>
+            <p class="dark" id="loadText">Lade Arena …</p>
         </div>
     </section>
 
-    <!-- ================= TITEL ================= -->
+    <!-- ================= TITEL (Attract-Modus) ================= -->
     <section id="screen-title" class="screen">
-        <div class="title-box">
+        <div class="center-col">
             <img class="logo logo-big" src="../assets/Überschriften/DUELIST.PNG" alt="DUELIST">
             <p class="tagline">Die Arena über den Wolken</p>
-            <p class="press-start" id="pressStart">Tippen oder Taste drücken</p>
+            <p class="press-start" id="pressStart">PRESS START</p>
         </div>
-        <p class="version">v2.0 · Offline spielbar</p>
+        <p class="version">v3.0 · Arcade Edition · © Mads Lahme</p>
     </section>
 
     <!-- ================= HAUPTMENÜ ================= -->
@@ -50,27 +51,21 @@
         <div class="menu-layout">
             <div class="menu-left">
                 <img class="logo logo-menu" src="../assets/Überschriften/DUELIST.PNG" alt="DUELIST">
-                <nav class="menu-list">
-                    <button class="menu-btn primary" data-go="solo">
-                        <span class="mb-icon">⚔</span>
-                        <span class="mb-text"><span class="mb-title">Gegen Bot</span><span class="mb-sub">Einzelspieler · Offline</span></span>
-                    </button>
-                    <button class="menu-btn" data-go="local">
-                        <span class="mb-icon">👥</span>
-                        <span class="mb-text"><span class="mb-title">Lokales Duell</span><span class="mb-sub">2 Spieler · Tastatur / Gamepad</span></span>
-                    </button>
-                    <button class="menu-btn" data-go="lore">
-                        <span class="mb-icon">📜</span>
-                        <span class="mb-text"><span class="mb-title">Champions</span><span class="mb-sub">Fähigkeiten &amp; Geschichte</span></span>
-                    </button>
-                    <div class="menu-row">
-                        <button class="menu-btn small" data-go="controls"><span class="mb-title">Steuerung</span></button>
-                        <button class="menu-btn small" data-go="settings"><span class="mb-title">Optionen</span></button>
-                    </div>
+                <nav class="menu-grid">
+                    <button class="btn start wide" data-go="arcade"><b>Arcade</b><small>7 Gegner · Endboss · Highscore</small></button>
+                    <button class="btn" data-go="solo"><b>Gegen Bot</b><small>Freies Duell</small></button>
+                    <button class="btn" data-go="local"><b>Lokales Duell</b><small>2 Spieler</small></button>
+                    <button class="btn" data-go="survival"><b>Survival</b><small>Ein Leben, endlos</small></button>
+                    <button class="btn" data-go="training"><b>Training</b><small>Kombos üben</small></button>
+                    <button class="btn small" data-go="lore">Champions</button>
+                    <button class="btn small" data-go="scores">Highscores</button>
+                    <button class="btn small phone" data-go="controller">📱 Handy als Controller</button>
+                    <button class="btn small" data-go="controls">Steuerung</button>
+                    <button class="btn small" data-go="settings">Optionen</button>
                 </nav>
             </div>
             <div class="menu-right">
-                <div class="record-card" id="recordCard"></div>
+                <div class="board p1" id="recordCard"></div>
             </div>
         </div>
     </section>
@@ -79,40 +74,114 @@
     <section id="screen-select" class="screen">
         <header class="screen-head">
             <button class="back-btn" data-back aria-label="Zurück">‹</button>
-            <h2 id="selTitle">Wähle deinen Champion</h2>
+            <img class="head-img" src="../assets/Überschriften/SelctionText.PNG" alt="Selection">
             <span class="step-pill" id="selStep">Spieler 1</span>
         </header>
 
         <div class="sel-stage">
-            <div class="sel-side" data-side="0">
-                <div class="sel-tag p1" id="selTag0">SPIELER 1</div>
+            <div class="sel-side board p1" data-side="0">
+                <div class="sel-tag" id="selTag0">PLAYER 1</div>
                 <div class="sel-sprite-wrap"><canvas class="sel-sprite" width="220" height="220"></canvas></div>
                 <div class="sel-info">
                     <div class="sel-name"></div>
                     <div class="sel-role"></div>
                     <div class="sel-stats"></div>
-                    <div class="sel-ability"></div>
                 </div>
             </div>
 
-            <div class="sel-vs">VS</div>
+            <div class="sel-middle glass">
+                <div class="sel-cards" id="selCards"></div>
+                <div class="ability-box" id="selAbility"></div>
+            </div>
 
-            <div class="sel-side right" data-side="1">
-                <div class="sel-tag p2" id="selTag1">GEGNER</div>
+            <div class="sel-side board p2 right" data-side="1">
+                <div class="sel-tag" id="selTag1">PLAYER 2</div>
                 <div class="sel-sprite-wrap"><canvas class="sel-sprite" width="220" height="220"></canvas></div>
                 <div class="sel-info">
                     <div class="sel-name"></div>
                     <div class="sel-role"></div>
                     <div class="sel-stats"></div>
-                    <div class="sel-ability"></div>
                 </div>
             </div>
         </div>
 
         <div class="sel-bottom">
-            <div class="difficulty" id="difficulty"></div>
-            <div class="sel-cards" id="selCards"></div>
-            <button class="btn-primary big" id="fightBtn" disabled>KÄMPFEN</button>
+            <div class="opt-group glass" id="difficulty"></div>
+            <div class="opt-group glass" id="mapPick"></div>
+            <div class="opt-group glass" id="dummyPick"></div>
+            <label class="toggle glass" id="chaosToggle"><input type="checkbox" id="chaosBox"><span></span>Chaos (Bombenregen)</label>
+            <button class="btn start big" id="fightBtn" disabled>START</button>
+        </div>
+    </section>
+
+    <!-- ================= ARCADE-LEITER / NÄCHSTER GEGNER ================= -->
+    <section id="screen-ladder" class="screen">
+        <div class="center-col">
+            <div class="ladder-title" id="ladderTitle">STAGE 1</div>
+            <div class="ladder" id="ladder"></div>
+            <div class="ladder-info glass" id="ladderInfo"></div>
+            <button class="btn start big" id="ladderGo">FIGHT!</button>
+        </div>
+    </section>
+
+    <!-- ================= CONTINUE ================= -->
+    <section id="screen-continue" class="screen modal">
+        <div class="glass modal-box">
+            <div class="continue-title">CONTINUE?</div>
+            <div class="continue-count" id="continueCount">9</div>
+            <p class="dark">Weiterspielen setzt deine Punkte auf 0 zurück.</p>
+            <button class="btn start" id="continueYes">Weiter kämpfen</button>
+            <button class="btn" id="continueNo">Aufgeben</button>
+        </div>
+    </section>
+
+    <!-- ================= INITIALEN EINGEBEN ================= -->
+    <section id="screen-entry" class="screen modal">
+        <div class="glass modal-box">
+            <div class="continue-title" id="entryTitle">NEW RECORD!</div>
+            <div class="entry-score" id="entryScore">0</div>
+            <p class="dark">Trag deine Initialen ein</p>
+            <div class="entry-letters" id="entryLetters"></div>
+            <button class="btn start" id="entryOk">Eintragen</button>
+        </div>
+    </section>
+
+    <!-- ================= HIGHSCORES ================= -->
+    <section id="screen-scores" class="screen scroll">
+        <header class="screen-head">
+            <button class="back-btn" data-back aria-label="Zurück">‹</button>
+            <h2>Highscores</h2>
+        </header>
+        <div class="scores-grid">
+            <div class="board p1"><h3>Arcade</h3><ol class="score-list" id="scoresArcade"></ol></div>
+            <div class="board p2"><h3>Survival</h3><ol class="score-list" id="scoresSurvival"></ol></div>
+        </div>
+    </section>
+
+    <!-- ================= HANDY-CONTROLLER ================= -->
+    <section id="screen-controller" class="screen scroll">
+        <header class="screen-head">
+            <button class="back-btn" data-back aria-label="Zurück">‹</button>
+            <h2>Handy als Controller</h2>
+        </header>
+        <div class="controller-layout">
+            <div class="glass qr-box">
+                <div class="qr" id="qr"></div>
+                <div class="pair-code">Code: <b id="pairCode">····</b></div>
+                <p class="dark small" id="pairStatus">Starte Verbindung …</p>
+            </div>
+            <div class="glass pair-info">
+                <h3>So geht's</h3>
+                <ol>
+                    <li>QR-Code mit der Handy-Kamera scannen <span class="dark-muted">(oder auf dem Handy <b id="pairUrl"></b> öffnen und den Code eingeben)</span>.</li>
+                    <li>Das Handy wird zum Gamepad: Stick links, vier Knöpfe rechts.</li>
+                    <li>Das <b>erste Handy</b> steuert Spieler 1, ein <b>zweites</b> Spieler 2.</li>
+                    <li>Am PC spielt der andere mit der Tastatur (Pfeile + Numpad bzw. IJKL), oder gegen den Bot.</li>
+                </ol>
+                <div class="pads" id="padList"></div>
+                <button class="btn" id="swapPads">Spieler 1 ⇄ 2 tauschen</button>
+                <p class="dark-muted small">PC und Handy brauchen kurz Internet für den Verbindungsaufbau. Danach läuft alles direkt zwischen den Geräten.</p>
+            </div>
         </div>
     </section>
 
@@ -120,10 +189,10 @@
     <section id="screen-lore" class="screen scroll">
         <header class="screen-head">
             <button class="back-btn" data-back aria-label="Zurück">‹</button>
-            <h2>Champions</h2>
+            <h2>Champion Lore</h2>
         </header>
-        <p class="lore-intro">
-            Bevor die Arena über den Wolken existierte, kämpften diese vier Krieger Seite an Seite.
+        <p class="lore-intro glass">
+            Bevor die Arena über den Wolken existierte, kämpften diese Krieger Seite an Seite.
             Ein Eid verband sie – doch Verrat, Macht und dunkle Magie rissen sie auseinander.
             Jetzt stehen sie sich erneut gegenüber … nicht mehr als Verbündete, sondern als Gegner.
         </p>
@@ -137,44 +206,48 @@
             <h2>Steuerung</h2>
         </header>
         <div class="controls-grid">
-            <div class="panel">
-                <h3>Gegen Bot</h3>
+            <div class="glass panel">
+                <h3>Alleine (Tastatur)</h3>
                 <dl class="keys">
                     <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>Pfeile</kbd></dt><dd>Bewegen</dd>
-                    <dt><kbd>J</kbd> / <kbd>E</kbd></dt><dd>Angriff (mehrfach = Kombo)</dd>
-                    <dt><kbd>K</kbd> / <kbd>R</kbd></dt><dd>Fähigkeit</dd>
-                    <dt><kbd>L</kbd> / <kbd>Leertaste</kbd> / <kbd>Shift</kbd></dt><dd>Ausweichen</dd>
+                    <dt><kbd>J</kbd> / <kbd>E</kbd></dt><dd>Leichter Angriff</dd>
+                    <dt><kbd>K</kbd> / <kbd>F</kbd></dt><dd>Schwerer Angriff</dd>
+                    <dt><kbd>L</kbd> / <kbd>Leertaste</kbd></dt><dd>Ausweichen (Dash)</dd>
+                    <dt><kbd>I</kbd> / <kbd>R</kbd></dt><dd>Spezial-Fähigkeit</dd>
                     <dt><kbd>Esc</kbd></dt><dd>Pause</dd>
                 </dl>
             </div>
-            <div class="panel">
+            <div class="glass panel">
                 <h3>Lokales Duell</h3>
                 <dl class="keys">
                     <dt class="p1t">Spieler 1</dt><dd></dd>
                     <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>Bewegen</dd>
-                    <dt><kbd>E</kbd> · <kbd>R</kbd> · <kbd>Q</kbd></dt><dd>Angriff · Fähigkeit · Ausweichen</dd>
+                    <dt><kbd>E</kbd> <kbd>F</kbd> <kbd>Q</kbd> <kbd>R</kbd></dt><dd>Leicht · Schwer · Dash · Spezial</dd>
                     <dt class="p2t">Spieler 2</dt><dd></dd>
-                    <dt><kbd>I</kbd><kbd>J</kbd><kbd>K</kbd><kbd>L</kbd> / <kbd>Pfeile</kbd></dt><dd>Bewegen</dd>
-                    <dt><kbd>O</kbd> · <kbd>P</kbd> · <kbd>U</kbd></dt><dd>Angriff · Fähigkeit · Ausweichen</dd>
+                    <dt><kbd>Pfeile</kbd> / <kbd>I</kbd><kbd>J</kbd><kbd>K</kbd><kbd>L</kbd></dt><dd>Bewegen</dd>
+                    <dt><kbd>Num1</kbd> <kbd>Num2</kbd> <kbd>Num3</kbd> <kbd>Num0</kbd></dt><dd>Leicht · Schwer · Dash · Spezial</dd>
+                    <dt><kbd>O</kbd> <kbd>P</kbd> <kbd>U</kbd> <kbd>H</kbd></dt><dd>(alternativ)</dd>
                 </dl>
             </div>
-            <div class="panel">
-                <h3>Gamepad &amp; Touch</h3>
+            <div class="glass panel">
+                <h3>Gamepad · Handy · Touch</h3>
                 <dl class="keys">
                     <dt><kbd>Stick</kbd></dt><dd>Bewegen</dd>
-                    <dt><kbd>A</kbd> / <kbd>X</kbd></dt><dd>Angriff</dd>
-                    <dt><kbd>Y</kbd> / <kbd>RB</kbd></dt><dd>Fähigkeit</dd>
-                    <dt><kbd>B</kbd> / <kbd>LB</kbd></dt><dd>Ausweichen</dd>
-                    <dt>Handy</dt><dd>Linke Hälfte = Joystick, rechts die Knöpfe. Angriff gedrückt halten für Kombos.</dd>
+                    <dt><kbd>A</kbd> · <kbd>X</kbd>/<kbd>RT</kbd></dt><dd>Leicht · Schwer</dd>
+                    <dt><kbd>B</kbd>/<kbd>LB</kbd> · <kbd>Y</kbd>/<kbd>RB</kbd></dt><dd>Dash · Spezial</dd>
+                    <dt>Touch</dt><dd>Linke Hälfte = Joystick, rechts vier Knöpfe.</dd>
+                    <dt>Handy</dt><dd>Im Menü „Handy als Controller“ koppeln.</dd>
                 </dl>
             </div>
-            <div class="panel tips">
-                <h3>Kampf-Tipps</h3>
+            <div class="glass panel tips">
+                <h3>Kampfsystem</h3>
                 <ul>
-                    <li><b>Kombos:</b> Drücke im Rhythmus Angriff – der letzte Schlag schleudert den Gegner weg.</li>
-                    <li><b>Ausweichen</b> macht dich kurz unverwundbar. Perfekt gegen Finisher und Bomben.</li>
-                    <li><b>Energie:</b> Jeder Treffer lädt deine Fähigkeit auf. Nach 3 Treffern ist sie bereit.</li>
-                    <li>Bestraf Fehler: Nach einer verfehlten Kombo ist der Gegner kurz offen.</li>
+                    <li><b>Kombo:</b> Leicht, Leicht, <b>Schwer</b> – der schwere Schlag beendet die Kombo mit Wucht.</li>
+                    <li><b>Blocken:</b> Vom Gegner <b>weg</b> drücken. Kurz vor dem Treffer = <b>PERFEKT</b>: kein Schaden, der Gegner taumelt.</li>
+                    <li><b>Schwere Angriffe</b> brechen jede Deckung (GUARD BREAK).</li>
+                    <li><b>Konter:</b> Triff den Gegner, während er zu einem schweren Angriff oder einer Fähigkeit ausholt – 40 % mehr Schaden.</li>
+                    <li><b>Dash</b> macht kurz unverwundbar – perfekt gegen Bomben und Feuerbälle.</li>
+                    <li><b>Spezial:</b> Treffer laden die Fähigkeit auf (3 Treffer).</li>
                 </ul>
             </div>
         </div>
@@ -187,28 +260,30 @@
             <h2>Optionen</h2>
         </header>
         <div class="settings-grid" id="settingsForm">
-            <div class="panel">
+            <div class="glass panel">
                 <h3>Audio</h3>
                 <label class="slider">Gesamt <input type="range" min="0" max="1" step="0.05" data-setting="master"></label>
                 <label class="slider">Musik <input type="range" min="0" max="1" step="0.05" data-setting="music"></label>
                 <label class="slider">Effekte <input type="range" min="0" max="1" step="0.05" data-setting="sfx"></label>
+                <label class="toggle"><input type="checkbox" data-setting="announcer"><span></span>Arcade-Ansager („Round 1 – Fight!“)</label>
             </div>
-            <div class="panel">
+            <div class="glass panel">
                 <h3>Match</h3>
-                <div class="seg-label">Runden</div>
+                <div class="seg-label">Runden (Gegen Bot / Lokal)</div>
                 <div class="seg" data-setting="rounds" data-options="1:Eine,3:Best of 3,5:Best of 5"></div>
                 <div class="seg-label">Rundenzeit</div>
                 <div class="seg" data-setting="roundTime" data-options="45:45s,60:60s,90:90s"></div>
                 <div class="seg-label">Spieltempo</div>
                 <div class="seg" data-setting="gameSpeed" data-options="0.85:Ruhig,1:Normal,1.2:Turbo"></div>
             </div>
-            <div class="panel">
-                <h3>Gefühl</h3>
+            <div class="glass panel">
+                <h3>Darstellung &amp; Gefühl</h3>
+                <label class="toggle"><input type="checkbox" data-setting="crt"><span></span>Retro-Filter (Scanlines)</label>
                 <label class="toggle"><input type="checkbox" data-setting="shake"><span></span>Bildschirm-Wackeln</label>
                 <label class="toggle"><input type="checkbox" data-setting="vibration"><span></span>Vibration (Handy)</label>
                 <label class="toggle"><input type="checkbox" data-setting="fullscreen"><span></span>Vollbild beim Kampf (Handy)</label>
                 <label class="toggle"><input type="checkbox" data-setting="showFps"><span></span>FPS anzeigen</label>
-                <button class="btn-ghost danger" id="resetRecord">Bilanz zurücksetzen</button>
+                <button class="btn small" id="resetRecord">Bilanz zurücksetzen</button>
             </div>
         </div>
     </section>
@@ -218,15 +293,9 @@
         <div class="hud-player" data-side="0">
             <canvas class="hud-portrait" width="72" height="72"></canvas>
             <div class="hud-info">
-                <div class="hud-row">
-                    <span class="hud-name"></span>
-                    <span class="hud-wins"></span>
-                </div>
-                <div class="hp">
-                    <div class="hp-lag"></div>
-                    <div class="hp-fill"></div>
-                    <span class="hp-num"></span>
-                </div>
+                <div class="hud-row"><span class="hud-name"></span><span class="hud-wins"></span></div>
+                <div class="hp"><div class="hp-lag"></div><div class="hp-fill"></div><span class="hp-text"></span></div>
+                <div class="guard"><i></i></div>
                 <div class="energy"></div>
             </div>
             <div class="combo"></div>
@@ -234,21 +303,15 @@
 
         <div class="hud-center">
             <div class="hud-timer" id="hudTimer">60</div>
-            <div class="hud-round" id="hudRound">Runde 1</div>
+            <div class="hud-score" id="hudScore" hidden>0</div>
         </div>
 
         <div class="hud-player right" data-side="1">
             <canvas class="hud-portrait" width="72" height="72"></canvas>
             <div class="hud-info">
-                <div class="hud-row">
-                    <span class="hud-name"></span>
-                    <span class="hud-wins"></span>
-                </div>
-                <div class="hp">
-                    <div class="hp-lag"></div>
-                    <div class="hp-fill"></div>
-                    <span class="hp-num"></span>
-                </div>
+                <div class="hud-row"><span class="hud-name"></span><span class="hud-wins"></span></div>
+                <div class="hp"><div class="hp-lag"></div><div class="hp-fill"></div><span class="hp-text"></span></div>
+                <div class="guard"><i></i></div>
                 <div class="energy"></div>
             </div>
             <div class="combo"></div>
@@ -259,6 +322,13 @@
 
     <div id="banner"><div class="banner-text"></div><div class="banner-sub"></div></div>
 
+    <!-- VS-Bildschirm vor dem Kampf -->
+    <div id="vs">
+        <div class="vs-side p1"><canvas width="240" height="240"></canvas><div class="vs-name"></div><div class="vs-sub"></div></div>
+        <div class="vs-mid"><div class="vs-text">VS</div><div class="vs-map"></div></div>
+        <div class="vs-side p2"><canvas width="240" height="240"></canvas><div class="vs-name"></div><div class="vs-sub"></div></div>
+    </div>
+
     <!-- ================= TOUCH ================= -->
     <div id="touch" hidden>
         <div class="stick-zone">
@@ -266,48 +336,44 @@
             <div class="stick-base"><div class="stick-knob"></div></div>
         </div>
         <div class="touch-btns">
-            <button class="t-btn t-ability" data-act="ability" aria-label="Fähigkeit">
+            <button class="t-btn t-ability" data-act="ability" aria-label="Spezial">
                 <svg class="t-ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" /></svg>
                 <img alt="">
             </button>
-            <button class="t-btn t-dash" data-act="dash" aria-label="Ausweichen">⤳</button>
-            <button class="t-btn t-attack" data-act="attack" aria-label="Angriff">⚔</button>
+            <button class="t-btn t-dash" data-act="dash" aria-label="Ausweichen">DASH</button>
+            <button class="t-btn t-heavy" data-act="heavy" aria-label="Schwerer Angriff">SCHWER</button>
+            <button class="t-btn t-light" data-act="light" aria-label="Leichter Angriff">LEICHT</button>
         </div>
     </div>
 
     <!-- ================= PAUSE ================= -->
     <section id="screen-pause" class="screen modal">
-        <div class="modal-box">
+        <div class="glass modal-box">
             <h2>Pause</h2>
-            <button class="btn-primary" id="resumeBtn">Weiter</button>
-            <button class="btn-ghost" id="restartBtn">Neu starten</button>
-            <button class="btn-ghost" id="pauseSettingsBtn">Optionen</button>
-            <button class="btn-ghost" id="quitBtn">Hauptmenü</button>
+            <button class="btn start" id="resumeBtn">Weiter</button>
+            <button class="btn" id="restartBtn">Neu starten</button>
+            <button class="btn" id="pauseSettingsBtn">Optionen</button>
+            <button class="btn" id="quitBtn">Hauptmenü</button>
         </div>
     </section>
 
     <!-- ================= ERGEBNIS ================= -->
     <section id="screen-results" class="screen">
         <div class="results-box">
+            <img class="head-img res-img" src="../assets/Überschriften/end.PNG" alt="End">
             <div class="res-title" id="resTitle">SIEG!</div>
             <div class="res-sub" id="resSub"></div>
             <div class="res-main">
-                <div class="res-fighter" data-side="0">
-                    <canvas width="200" height="200"></canvas>
-                    <div class="res-name"></div>
-                </div>
+                <div class="res-fighter board p1" data-side="0"><canvas width="200" height="200"></canvas><div class="res-name"></div></div>
                 <div class="res-score" id="resScore">2 : 1</div>
-                <div class="res-fighter" data-side="1">
-                    <canvas width="200" height="200"></canvas>
-                    <div class="res-name"></div>
-                </div>
+                <div class="res-fighter board p2" data-side="1"><canvas width="200" height="200"></canvas><div class="res-name"></div></div>
             </div>
-            <div class="res-stats" id="resStats"></div>
+            <div class="res-stats glass" id="resStats"></div>
             <div class="res-note" id="resNote"></div>
             <div class="res-actions">
-                <button class="btn-primary" id="rematchBtn">Revanche</button>
-                <button class="btn-ghost" id="changeBtn">Champion wechseln</button>
-                <button class="btn-ghost" id="menuBtn">Hauptmenü</button>
+                <button class="btn start" id="rematchBtn">Revanche</button>
+                <button class="btn" id="changeBtn">Champion wechseln</button>
+                <button class="btn" id="menuBtn">Hauptmenü</button>
             </div>
         </div>
     </section>
@@ -320,15 +386,17 @@
     <div id="toast"></div>
 
     <script src="js/data.js"></script>
+    <script src="js/audio.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/assets.js"></script>
-    <script src="js/audio.js"></script>
     <script src="js/input.js"></script>
+    <script src="js/link.js"></script>
     <script src="js/fx.js"></script>
     <script src="js/fighter.js"></script>
     <script src="js/ai.js"></script>
     <script src="js/match.js"></script>
     <script src="js/ui.js"></script>
+    <script src="js/modes.js"></script>
     <script src="js/main.js"></script>
 </body>
 

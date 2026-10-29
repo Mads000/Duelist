@@ -4,8 +4,10 @@
 // ============================================================
 
 class BotController {
-    constructor(difficultyId = "normal") {
+    // dummy: null | "stand" | "block" (Trainingspuppe)
+    constructor(difficultyId = "normal", { dummy = null } = {}) {
         this.diff = DIFFICULTIES[difficultyId] || DIFFICULTIES.normal
+        this.dummy = dummy
         this.me = null
         this.op = null
         this.match = null
@@ -15,6 +17,7 @@ class BotController {
         this.inRangeSince = null
         this.lastSeen = { x: 0, y: 0 }
         this.seenSwing = null
+        this.blockUntil = 0
         this.dashAt = null
         this.dashDir = null
         this.comboDecided = -1
@@ -35,10 +38,16 @@ class BotController {
     }
 
     read() {
-        const out = { mx: 0, my: 0, attack: false, ability: false, dash: false, attackHeld: false, pause: false }
+        const out = emptyInput()
         const { me, op, match, diff } = this
         if (!me || match.phase !== "fight" || me.state === "dead") return out
         const t = match.time
+
+        // Trainingspuppe: steht still oder blockt alles
+        if (this.dummy) {
+            if (this.dummy === "block") out.mx = -Math.sign(op.x - me.x) || 1
+            return out
+        }
 
         // ---- Wahrnehmung: Unsichtbare Gegner nur grob orten ----
         if (op.stealthT > 0) {
@@ -53,8 +62,10 @@ class BotController {
         const dy = ty - me.y
         const adx = Math.abs(dx)
         const ady = Math.abs(dy)
-        const reach = me.champ.combo[0].reach * SPRITE_SCALE + COMBAT.bodyHalf
-        const opReach = op.champ.combo[0].reach * SPRITE_SCALE + COMBAT.bodyHalf
+        const toOp = Math.sign(dx) || 1
+        const ranged = !!me.champ.light[0].projectile
+        const reach = ranged ? 620 : me.champ.light[0].reach * SPRITE_SCALE + COMBAT.bodyHalf
+        const opReach = op.champ.light[0].projectile ? 200 : op.champ.light[0].reach * SPRITE_SCALE + COMBAT.bodyHalf
         const dist = Math.hypot(dx, dy)
 
         // ---- Geplantes Ausweichen ausführen ----
@@ -66,16 +77,27 @@ class BotController {
             return out
         }
 
-        // ---- Bomben ausweichen ----
-        const danger = match.bombs.find(b => b.owner !== me &&
-            Math.hypot((me.x - b.tx) / b.radius, (me.y - b.ty) / (b.radius * 0.5)) < 1.25)
+        // ---- Blocken (rückwärts halten), solange eine Bedrohung besteht ----
+        if (t < this.blockUntil && !me.busy) {
+            out.mx = -toOp
+            out.my = 0
+            return out
+        }
+
+        // ---- Bomben / Fontänen / Zauber ausweichen ----
+        const dangers = [
+            ...match.bombs.filter(b => b.owner !== me).map(b => ({ x: b.tx, y: b.ty, r: b.radius, late: b.phase === "fuse" })),
+            ...match.geysers.map(g => ({ x: g.x, y: g.y, r: g.radius * 1.2, late: g.t > g.warn * 0.5 })),
+            ...match.zones.filter(z => z.owner !== me && !z.done).map(z => ({ x: z.x, y: z.y, r: z.radius, late: true }))
+        ]
+        const danger = dangers.find(d => Math.hypot((me.x - d.x) / d.r, (me.y - d.y) / (d.r * 0.5)) < 1.25)
         if (danger) {
-            const ex = me.x - danger.tx || this.rand(-1, 1)
-            const ey = (me.y - danger.ty) * 2 || this.rand(-1, 1)
+            const ex = me.x - danger.x || this.rand(-1, 1)
+            const ey = (me.y - danger.y) * 2 || this.rand(-1, 1)
             const l = Math.hypot(ex, ey)
             out.mx = ex / l
             out.my = ey / l
-            if (danger.phase === "fuse" && danger.t > 0.15 && me.dashCd <= 0 && Math.random() < diff.dodge * 0.25) out.dash = true
+            if (danger.late && me.dashCd <= 0 && Math.random() < diff.dodge * 0.25) out.dash = true
             if (Math.random() > diff.smart * 0.9 + 0.1) {
                 out.mx *= 0.3
                 out.my *= 0.3
@@ -83,22 +105,39 @@ class BotController {
             return out
         }
 
-        // ---- Gegnerischen Angriff erkennen und evtl. ausweichen ----
+        // ---- Feuerbälle: blocken oder ausweichen ----
+        const incoming = match.projectiles.find(p => p.owner !== me && p.state === "fly" &&
+            Math.sign(me.x - p.x) === Math.sign(p.vx) && Math.abs(me.x - p.x) < 260 && Math.abs(me.y - p.y) < COMBAT.depthReach)
+        if (incoming && !me.busy && this.seenSwing !== incoming) {
+            this.seenSwing = incoming
+            const r = Math.random()
+            if (r < diff.block) this.blockUntil = t + 0.4
+            else if (r < diff.block + diff.dodge * 0.6 && me.dashCd <= 0) {
+                this.dashDir = { x: 0, y: me.y > (ARENA.y0 + ARENA.y1) / 2 ? -1 : 1 }
+                this.dashAt = t + diff.reaction * 0.4
+            }
+        }
+
+        // ---- Gegnerischen Angriff erkennen: blocken, ausweichen oder Schild ----
         if (op.state === "attack" && op.stateT < 0.15) {
-            const key = op.comboStep + ":" + Math.floor((t - op.stateT) * 100)
+            const key = op.moveKind + op.comboStep + ":" + Math.floor((t - op.stateT) * 100)
             if (this.seenSwing !== key) {
                 this.seenSwing = key
-                const threatened = Math.abs(op.x - me.x) < opReach + 50 && Math.abs(op.y - me.y) < COMBAT.depthReach + 25 &&
-                    Math.sign(me.x - op.x) === op.facing
-                if (threatened && me.dashCd <= 0 && Math.random() < diff.dodge && !me.busy) {
-                    const away = Math.sign(me.x - op.x) || 1
-                    const vert = Math.random() < 0.5 ? 1 : -1
-                    this.dashDir = Math.random() < 0.5 ? { x: away, y: 0 } : { x: away * 0.4, y: vert }
-                    this.dashAt = t + diff.reaction * this.rand(0.3, 0.8)
-                }
-                // Schild als Konter
-                if (threatened && me.champ.ability.type === "shield" && me.abilityReady && Math.random() < diff.smart * 0.6) {
-                    out.ability = true
+                const heavy = op.moveKind === "heavy"
+                const threatened = Math.abs(op.x - me.x) < opReach + 60 && Math.abs(op.y - me.y) < COMBAT.depthReach + 25
+                if (threatened && !me.busy) {
+                    const r = Math.random()
+                    if (me.champ.ability.type === "shield" && me.abilityReady && r < diff.smart * 0.5) {
+                        out.ability = true
+                    } else if (!heavy && r < diff.block) {
+                        // schnelle Bots blocken auch mal perfekt
+                        this.blockUntil = t + diff.reaction * this.rand(0.3, 0.7) + 0.35
+                    } else if (r < diff.block + diff.dodge && me.dashCd <= 0) {
+                        const away = Math.sign(me.x - op.x) || 1
+                        const vert = Math.random() < 0.5 ? 1 : -1
+                        this.dashDir = Math.random() < 0.5 ? { x: away, y: 0 } : { x: away * 0.4, y: vert }
+                        this.dashAt = t + diff.reaction * this.rand(0.3, 0.8)
+                    }
                 }
             }
         }
@@ -115,13 +154,13 @@ class BotController {
         // ---- Bewegung ----
         let gx = 0, gy = 0
         const side = Math.sign(me.x - tx) || (me.side === 0 ? -1 : 1)
-        const ideal = reach * 0.72
+        const ideal = ranged ? 420 : reach * 0.72
 
         if (this.mode === "engage" || me.stealthT > 0) {
             gx = tx + side * ideal
             gy = ty
         } else if (this.mode === "space") {
-            gx = tx + side * (opReach + 110)
+            gx = tx + side * (ranged ? 480 : opReach + 110)
             gy = ty + Math.sin(t * 1.7) * 90 * this.strafe
         } else if (this.mode === "retreat") {
             gx = tx + side * 420
@@ -151,7 +190,7 @@ class BotController {
         }
 
         // ---- Angreifen ----
-        const inRange = adx < reach * 0.98 && ady < COMBAT.depthReach * 0.7 && op.stealthT <= 0
+        const inRange = adx < reach * 0.98 && ady < COMBAT.depthReach * 0.7 && op.stealthT <= 0 && adx > (ranged ? 140 : 0)
         if (inRange) {
             if (this.inRangeSince === null) this.inRangeSince = t + diff.reaction * this.rand(0.5, 1.3)
         } else {
@@ -159,22 +198,28 @@ class BotController {
         }
 
         if (!me.busy && inRange && t >= this.inRangeSince) {
-            const punish = op.state === "recover" || op.state === "hurt" || op.state === "throw"
+            const punish = op.state === "recover" || op.state === "hurt" || op.state === "throw" || op.state === "dizzy"
+            const opBlocks = op.guarding || op.state === "block"
             if (punish || Math.random() < diff.aggression * 0.35) {
-                out.attack = true
-                // Beim Angriff zum Gegner drehen
-                out.mx = Math.sign(dx) * 0.3
+                // Gegen Blocker: schwerer Angriff bricht die Deckung
+                if ((opBlocks && Math.random() < diff.smart) || Math.random() < diff.heavy * 0.4) out.heavy = true
+                else out.light = true
+                out.mx = toOp * 0.3
                 out.my = 0
             }
         }
 
-        // Kombo fortsetzen?
+        // Kombo fortsetzen – leicht, leicht, schwer
         if (me.state === "attack") {
-            if (this.comboDecided !== me.comboStep) {
-                this.comboDecided = me.comboStep
+            const key = me.moveKind + me.comboStep
+            if (this.comboDecided !== key) {
+                this.comboDecided = key
                 this.comboGo = Math.random() < diff.combo
             }
-            if (this.comboGo && (me.landedThisSwing || Math.random() < 0.3)) out.attackHeld = true
+            if (this.comboGo && me.moveKind === "light" && (me.landedThisSwing || Math.random() < 0.3)) {
+                if (me.comboStep >= me.champ.light.length - 1 || Math.random() < diff.heavy * 0.5) out.heavy = true
+                else out.lightHeld = true
+            }
             out.mx = 0
             out.my = 0
         } else {
@@ -182,7 +227,7 @@ class BotController {
         }
 
         // Unsichtbar & nah dran: zuschlagen
-        if (me.stealthT > 0 && inRange && !me.busy) out.attack = true
+        if (me.stealthT > 0 && inRange && !me.busy) out.light = true
 
         return out
     }
@@ -190,11 +235,11 @@ class BotController {
     chooseMode(dist) {
         const { me, op, diff } = this
         const t = this.match.time
-        const hpDiff = me.hp - op.hp
+        const hpDiff = me.hp / me.maxHp - op.hp / op.maxHp
         const r = Math.random()
         this.strafe = Math.random() < 0.5 ? 1 : -1
 
-        if (me.hp < 30 && hpDiff < -15 && r < diff.smart * 0.6) {
+        if (me.hp < me.maxHp * 0.3 && hpDiff < -0.15 && r < diff.smart * 0.6) {
             this.mode = "retreat"
             this.modeUntil = t + this.rand(0.8, 1.6)
         } else if (r < diff.aggression) {
@@ -209,21 +254,29 @@ class BotController {
     wantsAbility(dist, reach) {
         const { me, op, diff } = this
         const smart = Math.random() < diff.smart
+        const hpK = me.hp / me.maxHp
         switch (me.champ.ability.type) {
             case "heal":
-                if (me.hp >= 90) return false
-                if (me.hp <= 40) return true
-                return smart ? me.hp <= 72 && (dist > 220 || op.state === "hurt") : Math.random() < 0.3
+                if (hpK >= 0.9) return false
+                if (hpK <= 0.4) return true
+                return smart ? hpK <= 0.72 && (dist > 220 || op.state === "hurt") : Math.random() < 0.3
             case "shield":
                 if (!smart) return Math.random() < 0.25
-                return dist < reach * 1.6 && (op.state === "attack" || me.hp < 40)
+                return dist < reach * 1.6 && (op.state === "attack" || hpK < 0.4)
             case "stealth":
                 if (!smart) return Math.random() < 0.25
-                return (me.hp < 45 && dist < 240) || (dist > 260 && dist < 520 && Math.random() < 0.5)
+                return (hpK < 0.45 && dist < 240) || (dist > 260 && dist < 520 && Math.random() < 0.5)
+            case "frenzy":
+                return smart ? dist < 320 : Math.random() < 0.3
+            case "blink":
+                if (op.stealthT > 0) return false
+                return smart ? (dist < 160 && hpK < 0.6) || (op.state === "attack" && dist < 220) : Math.random() < 0.2
+            case "quake":
+                return dist < 220 || (!smart && Math.random() < 0.2)
             case "bomb": {
                 const max = me.energy >= me.maxEnergy
                 const lethal = (me.energy >= 5 && op.hp <= 36) || (me.energy >= 4 && op.hp <= 24) || op.hp <= 12
-                const committed = op.state === "attack" || op.state === "recover" || op.state === "hurt"
+                const committed = op.state === "attack" || op.state === "recover" || op.state === "hurt" || op.state === "dizzy"
                 if (op.stealthT > 0) return false
                 if (!smart) return true
                 if (diff.smart >= 0.85) return (max || lethal) && (committed || Math.random() < 0.4)

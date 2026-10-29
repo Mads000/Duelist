@@ -1,26 +1,36 @@
 // Service Worker – macht DUELIST nach dem ersten Laden komplett offline spielbar
-const CACHE = "duelist-v2.0.0"
+// (automatisch erzeugt von tools/make_sw.js)
+const CACHE = "duelist-v3.0.2"
 const PRECACHE = [
     "./",
     "index.html",
+    "pad.html",
     "css/app.css",
     "manifest.webmanifest",
     "icons/icon-192.png",
     "icons/icon-512.png",
-    "js/data.js",
-    "js/settings.js",
+    "js/ai.js",
     "js/assets.js",
     "js/audio.js",
-    "js/input.js",
-    "js/fx.js",
+    "js/data.js",
     "js/fighter.js",
-    "js/ai.js",
-    "js/match.js",
-    "js/ui.js",
+    "js/fx.js",
+    "js/input.js",
+    "js/link.js",
     "js/main.js",
-    "../assets/ui/Arena2.png",
+    "js/match.js",
+    "js/modes.js",
+    "js/settings.js",
+    "js/ui.js",
     "../assets/ui/StartBackground.png",
     "../assets/Überschriften/DUELIST.PNG",
+    "../assets/Überschriften/SelctionText.PNG",
+    "../assets/Überschriften/end.PNG",
+    "../assets/Faehigkeiten/bombe2.png",
+    "../assets/ui/Arena2.png",
+    "../assets/ui/Arena.png",
+    "../assets/ui/Map-Vulkan.png",
+    "../assets/ui/Map-Frost.png",
     "../assets/characters/Knight Templar/Knight Templar-Idle.png",
     "../assets/characters/Knight Templar/Knight Templar-Walk02.png",
     "../assets/characters/Knight Templar/Knight Templar-Hurt.png",
@@ -37,7 +47,6 @@ const PRECACHE = [
     "../assets/characters/Elite Orc/Elite Orc-Attack01.png",
     "../assets/characters/Elite Orc/Elite Orc-Attack02.png",
     "../assets/characters/Elite Orc/Elite Orc-Attack03.png",
-    "../assets/Faehigkeiten/bombe2.png",
     "../assets/characters/Armored Skeleton/Armored Skeleton-Idle.png",
     "../assets/characters/Armored Skeleton/Armored Skeleton-Walk.png",
     "../assets/characters/Armored Skeleton/Armored Skeleton-Hurt.png",
@@ -52,7 +61,30 @@ const PRECACHE = [
     "../assets/characters/Werebear/Werebear-Attack01.png",
     "../assets/characters/Werebear/Werebear-Attack02.png",
     "../assets/characters/Werebear/Werebear-Attack03.png",
-    "../assets/Faehigkeiten/leben2.png"
+    "../assets/Faehigkeiten/leben2.png",
+    "../assets/characters/Werewolf/Werewolf-Idle.png",
+    "../assets/characters/Werewolf/Werewolf-Walk.png",
+    "../assets/characters/Werewolf/Werewolf-Hurt.png",
+    "../assets/characters/Werewolf/Werewolf-Death.png",
+    "../assets/characters/Werewolf/Werewolf-Attack01.png",
+    "../assets/characters/Werewolf/Werewolf-Attack02.png",
+    "../assets/Faehigkeiten/leben.png",
+    "../assets/characters/Wizard/Wizard-Idle.png",
+    "../assets/characters/Wizard/Wizard-Walk.png",
+    "../assets/characters/Wizard/Wizard-Hurt.png",
+    "../assets/characters/Wizard/Wizard-DEATH.png",
+    "../assets/characters/Wizard/Wizard-Attack02.png",
+    "../assets/characters/Wizard/Wizard-Attack02_Effect.png",
+    "../assets/characters/Wizard/Wizard-Attack01.png",
+    "../assets/characters/Wizard/Wizard-Attack01_Effect.png",
+    "../assets/characters/Greatsword Skeleton/Greatsword Skeleton-Idle.png",
+    "../assets/characters/Greatsword Skeleton/Greatsword Skeleton-Walk.png",
+    "../assets/characters/Greatsword Skeleton/Greatsword Skeleton-Hurt.png",
+    "../assets/characters/Greatsword Skeleton/Greatsword Skeleton-Death.png",
+    "../assets/characters/Greatsword Skeleton/Greatsword Skeleton-Attack01.png",
+    "../assets/characters/Greatsword Skeleton/Greatsword Skeleton-Attack03.png",
+    "../assets/characters/Greatsword Skeleton/Greatsword Skeleton-Attack02.png",
+    "../assets/Faehigkeiten/bombe.png"
 ]
 
 self.addEventListener("install", e => {
@@ -67,9 +99,12 @@ self.addEventListener("activate", e => {
     )
 })
 
-// Erst Cache, im Hintergrund aktualisieren (auch Google Fonts werden so offline verfügbar)
+// Erst Netz (damit Updates sofort ankommen), sonst Cache – Schriften & Bibliotheken: erst Cache
 self.addEventListener("fetch", e => {
     if (e.request.method !== "GET") return
+    const url = new URL(e.request.url)
+    const sameOrigin = url.origin === location.origin
+    if (url.hostname.includes("peerjs")) return
     e.respondWith(
         caches.open(CACHE).then(async cache => {
             const cached = await cache.match(e.request, { ignoreSearch: true })
@@ -79,7 +114,8 @@ self.addEventListener("fetch", e => {
                     return res
                 })
                 .catch(() => cached)
-            return cached || network
+            if (!sameOrigin) return cached || network
+            return network.then(res => res || cached)
         })
     )
 })
