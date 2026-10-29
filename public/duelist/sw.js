@@ -1,6 +1,6 @@
 // Service Worker – macht DUELIST nach dem ersten Laden komplett offline spielbar
 // (automatisch erzeugt von tools/make_sw.js)
-const CACHE = "duelist-v3.0.2"
+const CACHE = "duelist-v3.0.4"
 const PRECACHE = [
     "./",
     "index.html",
@@ -20,8 +20,16 @@ const PRECACHE = [
     "js/main.js",
     "js/match.js",
     "js/modes.js",
+    "js/pad.js",
     "js/settings.js",
     "js/ui.js",
+    "../assets/ui/Knight Templar.png",
+    "../assets/ui/Elite Orc.png",
+    "../assets/ui/Armored Skeleton.png",
+    "../assets/ui/Werebear.png",
+    "../assets/Faehigkeiten/schield.png",
+    "../assets/Faehigkeiten/leben2.png",
+    "../assets/Faehigkeiten/unsichtbar.png",
     "../assets/ui/StartBackground.png",
     "../assets/Überschriften/DUELIST.PNG",
     "../assets/Überschriften/SelctionText.PNG",
@@ -39,7 +47,6 @@ const PRECACHE = [
     "../assets/characters/Knight Templar/Knight Templar-Attack01.png",
     "../assets/characters/Knight Templar/Knight Templar-Attack02.png",
     "../assets/characters/Knight Templar/Knight Templar-Attack03.png",
-    "../assets/Faehigkeiten/schield.png",
     "../assets/characters/Elite Orc/Elite Orc-Idle.png",
     "../assets/characters/Elite Orc/Elite Orc-Walk.png",
     "../assets/characters/Elite Orc/Elite Orc-Hurt.png",
@@ -53,7 +60,6 @@ const PRECACHE = [
     "../assets/characters/Armored Skeleton/Armored Skeleton-Death.png",
     "../assets/characters/Armored Skeleton/Armored Skeleton-Attack01.png",
     "../assets/characters/Armored Skeleton/Armored Skeleton-Attack02.png",
-    "../assets/Faehigkeiten/unsichtbar.png",
     "../assets/characters/Werebear/Werebear-Idle.png",
     "../assets/characters/Werebear/Werebear-Walk.png",
     "../assets/characters/Werebear/Werebear-Hurt.png",
@@ -61,7 +67,6 @@ const PRECACHE = [
     "../assets/characters/Werebear/Werebear-Attack01.png",
     "../assets/characters/Werebear/Werebear-Attack02.png",
     "../assets/characters/Werebear/Werebear-Attack03.png",
-    "../assets/Faehigkeiten/leben2.png",
     "../assets/characters/Werewolf/Werewolf-Idle.png",
     "../assets/characters/Werewolf/Werewolf-Walk.png",
     "../assets/characters/Werewolf/Werewolf-Hurt.png",

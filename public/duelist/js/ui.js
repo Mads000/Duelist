@@ -52,6 +52,13 @@ const UI = {
         $("#pauseBtn").addEventListener("click", () => App.pause())
         $("#swapPads").addEventListener("click", () => Link.swapSlots())
         $("#ladderGo").addEventListener("click", () => Modes.ladderGo())
+        $("#hostBtn").addEventListener("click", () => {
+            Link.start()
+            this.renderController()
+        })
+        $("#joinBtn").addEventListener("click", () => PadMode.open($("#joinCode").value))
+        $("#joinCode").addEventListener("input", e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "") })
+        $("#joinCode").addEventListener("keydown", e => { if (e.key === "Enter") PadMode.open(e.target.value) })
     },
 
     show(id) {
@@ -163,7 +170,6 @@ const UI = {
                 input.addEventListener("change", () => {
                     GameSettings.set(key, input.checked)
                     if (key === "showFps") $("#fps").hidden = !input.checked
-                    if (key === "announcer" && input.checked) Announcer.say("Fight!")
                 })
             } else if (input.type === "range") {
                 input.value = s[key]
@@ -315,8 +321,10 @@ const UI = {
             : st.step === 1 ? (vsBot ? "Wähle den Gegner" : "Spieler 2 wählt") : "Bereit?"
         pill.className = "step-pill " + (st.step === 0 ? "p1" : st.step === 1 ? "p2" : "ready")
 
-        $("#selTag0").textContent = m === "local" ? "PLAYER 1" : "DU"
-        $("#selTag1").textContent = m === "local" ? "PLAYER 2" : m === "training" ? "TRAININGSPUPPE" : "BOT · " + DIFFICULTIES[App.config.difficulty].name.toUpperCase()
+        // Wer steuert womit? (Handy wird automatisch erkannt)
+        const input = slot => Link.padFor(slot) ? "📱 Handy" : slot === 0 ? (isTouchDevice() ? "Touch / WASD" : "WASD + E F Q R") : "Pfeile + Numpad"
+        $("#selTag0").innerHTML = (m === "local" ? "PLAYER 1" : "DU") + (m === "local" ? `<small>${input(0)}</small>` : "")
+        $("#selTag1").innerHTML = m === "local" ? `PLAYER 2<small>${input(1)}</small>` : m === "training" ? "TRAININGSPUPPE" : "BOT · " + DIFFICULTIES[App.config.difficulty].name.toUpperCase()
         $(".sel-side[data-side='1']").hidden = st.single
         $(".sel-stage").style.gridTemplateColumns = st.single ? "minmax(0,1fr) minmax(0,2.1fr)" : ""
 
@@ -533,9 +541,6 @@ const UI = {
         void vs.offsetWidth
         vs.className = "show"
         Sound.play("select")
-        const a = match.fighters[0].champ.name
-        const b = match.fighters[1].champ.name
-        setTimeout(() => match.say(`${a} versus ${b}`), 200)
         clearTimeout(this.vsTimer)
         this.vsTimer = setTimeout(() => { vs.className = "" }, 2300)
     },
@@ -564,7 +569,6 @@ const UI = {
         const count = $("#continueCount")
         count.textContent = n
         this.show("continue")
-        Announcer.say("Continue?")
         clearInterval(this.continueTimer)
         const done = fn => {
             clearInterval(this.continueTimer)
@@ -637,10 +641,14 @@ const UI = {
     },
 
     renderScores(highlight = null) {
+        // Immer 10 Plätze wie am Automaten – leere Plätze als "---"
         const fill = (el, list) => {
-            el.innerHTML = list.length ? list.map(e => `
-                <li class="${highlight && highlight === e ? "new" : ""}"><span class="sl-name">${e.name}</span><span>${CHAMPIONS[e.champ] ? CHAMPIONS[e.champ].name : ""}${e.detail ? " · " + e.detail : ""}</span><span class="sl-score">${e.score.toLocaleString("de-DE")}</span></li>`).join("")
-                : `<li class="empty">Noch keine Einträge – sei der Erste!</li>`
+            const rows = list.map(e => `
+                <li class="${highlight && highlight === e ? "new" : ""}"><span class="sl-name">${e.name}</span><span>${CHAMPIONS[e.champ] ? CHAMPIONS[e.champ].name : ""}${e.detail ? " · " + e.detail : ""}</span><span class="sl-score">${e.score.toLocaleString("de-DE")}</span></li>`)
+            for (let i = list.length; i < 10; i++) {
+                rows.push(`<li class="placeholder"><span class="sl-name">---</span><span></span><span class="sl-score">0</span></li>`)
+            }
+            el.innerHTML = rows.join("")
         }
         fill($("#scoresArcade"), PlayerRecord.data.highscores.arcade || [])
         fill($("#scoresSurvival"), PlayerRecord.data.highscores.survival || [])
@@ -649,15 +657,20 @@ const UI = {
     // ---------------- Handy-Controller ----------------
     renderController() {
         const s = Link.status
+        const hosting = s !== "off"
+        $("#hostBtn").hidden = hosting
+        $("#pairCode").parentElement.hidden = !hosting
         $("#pairCode").textContent = Link.code || "····"
-        $("#pairUrl").textContent = (Link.code ? Link.padUrl().replace(/#.*/, "") : "")
-        $("#qr").innerHTML = s === "ready" ? Link.qrSvg() : `<span class="dark">${s === "error" ? "⚠" : "…"}</span>`
-        $("#pairStatus").textContent = s === "ready" ? "Bereit – scanne den Code mit deinem Handy." : s === "error" ? Link.error : "Starte Verbindung …"
+        $("#qr").innerHTML = s === "ready" ? Link.qrSvg() : `<span class="dark">${s === "error" ? "⚠" : s === "off" ? "📺" : "…"}</span>`
+        $("#pairStatus").textContent = s === "ready" ? "Bereit – scanne den Code oder tippe ihn am Handy ein."
+            : s === "error" ? Link.error : s === "off" ? "Tippe auf „QR-Code anzeigen“, wenn dieses Gerät das Spiel zeigen soll." : "Starte Verbindung …"
         $("#padList").innerHTML = [0, 1].map(slot => {
             const p = Link.padFor(slot)
-            return `<span class="pad-chip ${p ? "p" + (slot + 1) : "none"}">Spieler ${slot + 1}: ${p ? "📱 Handy" : "Tastatur / Gamepad"}</span>`
+            return `<span class="pad-chip ${p ? "p" + (slot + 1) : "none"}">Spieler ${slot + 1}: ${p ? "📱 verbunden" : "wartet auf Handy …"}</span>`
         }).join("")
         $("#swapPads").hidden = !Link.pads.length
+        // Auf dem Handy steht "Controller" zuerst
+        $(".controller-layout").classList.toggle("phone-first", isTouchDevice())
     },
 
     // ---------------- Ergebnis ----------------

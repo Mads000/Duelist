@@ -251,35 +251,6 @@ function midi(m) {
 }
 
 // ============================================================
-//  Ansager – klassische Arcade-Stimme über die Sprachausgabe
-// ============================================================
-const Announcer = {
-    voice: null,
-
-    pickVoice() {
-        if (!window.speechSynthesis) return null
-        const voices = speechSynthesis.getVoices()
-        this.voice = voices.find(v => /en-(US|GB)/i.test(v.lang) && /male|david|daniel|george|fred/i.test(v.name)) ||
-            voices.find(v => /^en/i.test(v.lang)) || null
-        return this.voice
-    },
-
-    say(text) {
-        if (!window.speechSynthesis || !GameSettings.get().announcer || Sound.muted) return
-        if (!this.voice) this.pickVoice()
-        speechSynthesis.cancel()
-        const u = new SpeechSynthesisUtterance(text)
-        if (this.voice) u.voice = this.voice
-        u.lang = this.voice ? this.voice.lang : "en-US"
-        u.rate = 0.92
-        u.pitch = 0.45
-        u.volume = Math.min(1, Sound.volumes.master * 1.1)
-        speechSynthesis.speak(u)
-    }
-}
-if (window.speechSynthesis) speechSynthesis.onvoiceschanged = () => Announcer.pickVoice()
-
-// ============================================================
 //  Musik – kleiner Sequencer (Menü: ruhig, Kampf: treibend)
 // ============================================================
 const Music = {

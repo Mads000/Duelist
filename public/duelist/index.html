@@ -52,14 +52,14 @@
             <div class="menu-left">
                 <img class="logo logo-menu" src="../assets/Überschriften/DUELIST.PNG" alt="DUELIST">
                 <nav class="menu-grid">
-                    <button class="btn start wide" data-go="arcade"><b>Arcade</b><small>7 Gegner · Endboss · Highscore</small></button>
-                    <button class="btn" data-go="solo"><b>Gegen Bot</b><small>Freies Duell</small></button>
-                    <button class="btn" data-go="local"><b>Lokales Duell</b><small>2 Spieler</small></button>
-                    <button class="btn" data-go="survival"><b>Survival</b><small>Ein Leben, endlos</small></button>
-                    <button class="btn" data-go="training"><b>Training</b><small>Kombos üben</small></button>
+                    <button class="btn start wide" data-go="arcade"><img class="mi" src="../assets/ui/Knight Templar.png" alt=""><span><b>Arcade</b><small>5 Gegner · Endboss · Highscore</small></span><img class="mi flip" src="../assets/ui/Elite Orc.png" alt=""></button>
+                    <button class="btn" data-go="solo"><img class="mi" src="../assets/ui/Armored Skeleton.png" alt=""><span><b>Gegen Bot</b><small>Freies Duell</small></span></button>
+                    <button class="btn" data-go="local"><img class="mi" src="../assets/ui/Werebear.png" alt=""><span><b>Lokales Duell</b><small>2 Spieler</small></span></button>
+                    <button class="btn" data-go="survival"><img class="mi" src="../assets/Faehigkeiten/leben2.png" alt=""><span><b>Survival</b><small>Ein Leben, endlos</small></span></button>
+                    <button class="btn" data-go="training"><img class="mi" src="../assets/Faehigkeiten/schield.png" alt=""><span><b>Training</b><small>Kombos üben</small></span></button>
+                    <button class="btn phone wide" data-go="controller"><img class="mi" src="../assets/Faehigkeiten/unsichtbar.png" alt=""><span><b>📱 Handy als Controller</b><small>Bildschirm koppeln oder dieses Handy zum Gamepad machen</small></span></button>
                     <button class="btn small" data-go="lore">Champions</button>
                     <button class="btn small" data-go="scores">Highscores</button>
-                    <button class="btn small phone" data-go="controller">📱 Handy als Controller</button>
                     <button class="btn small" data-go="controls">Steuerung</button>
                     <button class="btn small" data-go="settings">Optionen</button>
                 </nav>
@@ -165,24 +165,64 @@
             <h2>Handy als Controller</h2>
         </header>
         <div class="controller-layout">
-            <div class="glass qr-box">
-                <div class="qr" id="qr"></div>
-                <div class="pair-code">Code: <b id="pairCode">····</b></div>
-                <p class="dark small" id="pairStatus">Starte Verbindung …</p>
+            <div class="glass panel role-card" id="roleScreen">
+                <div class="panel-head">📺 Dieses Gerät ist der Bildschirm</div>
+                <div class="role-body">
+                    <div class="qr-box">
+                        <div class="qr" id="qr"></div>
+                        <div class="pair-code">Code: <b id="pairCode">····</b></div>
+                        <button class="btn" id="hostBtn" hidden>QR-Code anzeigen</button>
+                        <p class="dark small" id="pairStatus"></p>
+                    </div>
+                    <div class="pair-info">
+                        <ol>
+                            <li>Auf dem Handy DUELIST öffnen → <b>Handy als Controller</b> → Code eingeben. Oder einfach den QR-Code scannen.</li>
+                            <li>Das <b>erste Handy</b> steuert Spieler 1, das <b>zweite</b> Spieler 2 – so können beide Spieler ein Handy benutzen.</li>
+                            <li>Oder: einer spielt am Handy, der andere an der Tastatur (Pfeile + Numpad).</li>
+                        </ol>
+                        <div class="pads" id="padList"></div>
+                        <button class="btn small" id="swapPads">Spieler 1 ⇄ 2 tauschen</button>
+                    </div>
+                </div>
             </div>
-            <div class="glass pair-info">
-                <h3>So geht's</h3>
-                <ol>
-                    <li>QR-Code mit der Handy-Kamera scannen <span class="dark-muted">(oder auf dem Handy <b id="pairUrl"></b> öffnen und den Code eingeben)</span>.</li>
-                    <li>Das Handy wird zum Gamepad: Stick links, vier Knöpfe rechts.</li>
-                    <li>Das <b>erste Handy</b> steuert Spieler 1, ein <b>zweites</b> Spieler 2.</li>
-                    <li>Am PC spielt der andere mit der Tastatur (Pfeile + Numpad bzw. IJKL), oder gegen den Bot.</li>
-                </ol>
-                <div class="pads" id="padList"></div>
-                <button class="btn" id="swapPads">Spieler 1 ⇄ 2 tauschen</button>
-                <p class="dark-muted small">PC und Handy brauchen kurz Internet für den Verbindungsaufbau. Danach läuft alles direkt zwischen den Geräten.</p>
+            <div class="glass panel role-card" id="roleController">
+                <div class="panel-head red">📱 Dieses Gerät ist der Controller</div>
+                <div class="role-body column">
+                    <p class="dark">Gib den 4-stelligen Code ein, der auf dem Spiel-Bildschirm (PC, Laptop, Tablet, Fernseher) angezeigt wird:</p>
+                    <input id="joinCode" class="code-input" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD" inputmode="text">
+                    <button class="btn start" id="joinBtn">Als Controller verbinden</button>
+                </div>
             </div>
         </div>
+        <p class="dark-muted small center-note">Für den Verbindungsaufbau brauchen beide Geräte kurz Internet. Danach laufen die Eingaben direkt zwischen den Geräten.</p>
+    </section>
+
+    <!-- ================= CONTROLLER-ANSICHT (dieses Gerät = Gamepad) ================= -->
+    <section id="screen-pad" class="screen">
+        <div class="pad-connect center-col">
+            <img class="logo logo-menu" src="../assets/Überschriften/DUELIST.PNG" alt="DUELIST">
+            <div class="glass panel pad-form">
+                <div class="panel-head red">📱 Als Controller verbinden</div>
+                <input id="padCode" class="code-input" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD">
+                <button class="btn start" id="padJoin">Verbinden</button>
+                <p class="dark small" id="padStatus">Code vom Spiel-Bildschirm eingeben.</p>
+            </div>
+        </div>
+
+        <div class="pad-view" id="padView" data-slot="0">
+            <button class="btn small pad-fs" id="padFs">⛶</button>
+            <div class="pad-top"><span id="padSlot">Spieler 1</span><small id="padChamp">verbunden</small><div class="pad-hp"><i id="padHp"></i></div></div>
+            <button class="btn small pad-menu" data-btn="4">Pause</button>
+            <div class="pad-stick" id="padStick"><div class="pad-knob" id="padKnob"></div></div>
+            <div class="pad-btns">
+                <button class="pb pb-ability" data-btn="3"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" /></svg><span>Spezial</span></button>
+                <button class="pb pb-dash" data-btn="2">Dash</button>
+                <button class="pb pb-light" data-btn="0">Leicht</button>
+                <button class="pb pb-heavy" data-btn="1">Schwer</button>
+            </div>
+            <div class="pad-hint">Menü: Stick = Auswahl · Leicht = OK · Dash = Zurück</div>
+        </div>
+        <button class="btn small pad-leave" id="padLeave">✕ Trennen</button>
     </section>
 
     <!-- ================= CHAMPIONS / LORE ================= -->
@@ -265,7 +305,6 @@
                 <label class="slider">Gesamt <input type="range" min="0" max="1" step="0.05" data-setting="master"></label>
                 <label class="slider">Musik <input type="range" min="0" max="1" step="0.05" data-setting="music"></label>
                 <label class="slider">Effekte <input type="range" min="0" max="1" step="0.05" data-setting="sfx"></label>
-                <label class="toggle"><input type="checkbox" data-setting="announcer"><span></span>Arcade-Ansager („Round 1 – Fight!“)</label>
             </div>
             <div class="glass panel">
                 <h3>Match</h3>
@@ -391,6 +430,7 @@
     <script src="js/assets.js"></script>
     <script src="js/input.js"></script>
     <script src="js/link.js"></script>
+    <script src="js/pad.js"></script>
     <script src="js/fx.js"></script>
     <script src="js/fighter.js"></script>
     <script src="js/ai.js"></script>

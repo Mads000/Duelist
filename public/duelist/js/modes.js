@@ -102,7 +102,6 @@ const Modes = {
                 ? `<b>${CHAMPIONS.gravelord.name} – ${CHAMPIONS.gravelord.title}</b><br>Er hat jeden Verrat gesät. Besiege ihn, um die Arena zu befreien.`
                 : `<b>${CHAMPIONS[s.champ].name}</b> · ${DIFFICULTIES[s.diff].name} · ${MAPS[s.map].name}<br>Punkte: ${r.score.toLocaleString("de-DE")}${r.continues ? ` · Continues: ${r.continues}` : ""}`
         })
-        Announcer.say(boss ? "Final stage" : "Stage " + (r.stage + 1))
         App.setState("ladder")
     },
 
@@ -178,7 +177,6 @@ const Modes = {
                     const fresh = PlayerRecord.unlock("gravelord")
                     PlayerRecord.data.arcadeClears++
                     PlayerRecord.save()
-                    Announcer.say("Congratulations!")
                     this.finishRun(match, winner, {
                         title: "ARCADE GESCHAFFT!",
                         sub: `${CHAMPIONS[r.champ].name} hat die Arena befreit!`,
@@ -194,7 +192,6 @@ const Modes = {
                     this.showArcadeLadder()
                 }, () => {
                     r.over = true
-                    Announcer.say("Game over")
                     this.finishRun(match, winner, { title: "GAME OVER", sub: `Stage ${r.stage + 1} · ${CHAMPIONS[r.ladder[r.stage].champ].name}` })
                 })
                 App.setState("continue")
@@ -211,7 +208,6 @@ const Modes = {
             this.nextSurvivalOpponent()
         } else {
             r.over = true
-            Announcer.say("Game over")
             this.finishRun(match, winner, { title: "GAME OVER", sub: `${r.wins} Gegner besiegt` })
         }
         return true

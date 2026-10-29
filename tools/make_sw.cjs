@@ -12,7 +12,7 @@ const { CHAMPIONS, CHAMPION_ORDER, MAPS, MAP_ORDER } = ctx
 
 const files = new Set(["./", "index.html", "pad.html", "css/app.css", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png"])
 for (const f of fs.readdirSync(path.join(dir, "js"))) files.add("js/" + f)
-for (const f of ["ui/StartBackground.png", "Überschriften/DUELIST.PNG", "Überschriften/SelctionText.PNG", "Überschriften/end.PNG", "Faehigkeiten/bombe2.png"]) files.add("../assets/" + f)
+for (const f of ["ui/Knight Templar.png", "ui/Elite Orc.png", "ui/Armored Skeleton.png", "ui/Werebear.png", "Faehigkeiten/schield.png", "Faehigkeiten/leben2.png", "Faehigkeiten/unsichtbar.png", "ui/StartBackground.png", "Überschriften/DUELIST.PNG", "Überschriften/SelctionText.PNG", "Überschriften/end.PNG", "Faehigkeiten/bombe2.png"]) files.add("../assets/" + f)
 for (const id of MAP_ORDER) files.add("../assets/" + MAPS[id].img)
 for (const id of CHAMPION_ORDER) {
     const c = CHAMPIONS[id]

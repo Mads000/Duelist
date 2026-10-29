@@ -68,10 +68,6 @@ class Match {
         if (!this.demo) Sound.play(name, opt)
     }
 
-    say(text) {
-        if (!this.demo) Announcer.say(text)
-    }
-
     vibrate(ms, fighter = null) {
         if (this.demo) return
         this.emit("vibrate", { ms, side: fighter ? fighter.side : null })
@@ -183,11 +179,9 @@ class Match {
             const final = this.wins[0] === this.roundsToWin - 1 && this.wins[1] === this.roundsToWin - 1 && this.roundsToWin > 1
             const text = final ? "FINALE RUNDE" : `RUNDE ${this.round}`
             this.emit("banner", { text, sub: this.rules.stage || "", kind: "round", time: 1.1 })
-            this.say(final ? "Final round" : "Round " + this.round)
             this.sound("count")
         } else if (step === "fight") {
             this.emit("banner", { text: "FIGHT!", kind: "fight", time: 0.8 })
-            this.say("Fight!")
             this.sound("fight")
             this.addShake(10)
             this.setPhase("fight")
@@ -627,7 +621,6 @@ class Match {
         this.flash = 0.8
         this.addShake(30)
         this.sound("ko")
-        this.say("K.O.")
         this.vibrate(160)
         this.emit("banner", { text: "K.O.", kind: "ko", time: 1.4 })
     }
@@ -641,7 +634,6 @@ class Match {
         const rb = b.hp / b.maxHp
         this.roundWinner = Math.abs(ra - rb) < 0.001 ? -1 : ra > rb ? 0 : 1
         this.emit("banner", { text: "TIME!", kind: "ko", time: 1.2 })
-        this.say("Time!")
         this.sound("ko")
     }
 
@@ -650,7 +642,6 @@ class Match {
         const w = this.roundWinner
         if (w === -1) {
             this.emit("banner", { text: "UNENTSCHIEDEN", kind: "info", time: 1.8 })
-            this.say("Draw game")
             return
         }
         this.wins[w]++
@@ -662,7 +653,6 @@ class Match {
             sub: perfect ? this.winnerName(w) + " gewinnt die Runde" : `Runde ${this.round}`,
             kind: "win", side: w, time: 1.9
         })
-        if (perfect) this.say("Perfect!")
         if (!f.isHuman && this.humanCount === 1) this.sound("defeat")
         else this.sound("victory")
     }

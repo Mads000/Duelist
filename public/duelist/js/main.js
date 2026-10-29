@@ -44,6 +44,12 @@ const App = {
         Link.onChange = () => { if (UI.current === "controller") UI.renderController() }
         this.bindGlobalKeys()
 
+        // Direkt als Controller starten (QR-Code: ...?pad=ABCD) – dafür braucht es keine Grafiken
+        if (params.has("pad")) {
+            PadMode.open(params.get("pad") || "")
+            return
+        }
+
         await loadAllAssets(p => {
             document.getElementById("loadFill").style.transform = `scaleX(${p})`
         })
@@ -126,7 +132,8 @@ const App = {
         }
         if (target === "settings") UI.backTarget.settings = this.state === "paused" ? "pause" : "menu"
         if (target === "controller") {
-            Link.start()
+            // Am PC sofort den QR-Code zeigen, am Handy erst auf Wunsch
+            if (!isTouchDevice()) Link.start()
             UI.renderController()
         }
         UI.show(target)
@@ -145,7 +152,7 @@ const App = {
             UI.show("pause")
             return
         }
-        if (["ladder", "continue", "entry"].includes(cur)) return
+        if (["ladder", "continue", "entry", "pad"].includes(cur)) return
         this.setState("menu")
         UI.show("menu")
     },
@@ -220,7 +227,6 @@ const App = {
         this.setState("paused")
         UI.show("pause")
         this.touch.reset()
-        if (window.speechSynthesis) speechSynthesis.cancel()
     },
 
     resume() {
@@ -279,7 +285,6 @@ const App = {
         }
         this.setState("results")
         UI.showResults(match, winner, { note })
-        Announcer.say(match.humanCount === 1 ? (winner === 0 ? "You win!" : "You lose") : `Player ${winner + 1} wins`)
         Sound.play(match.humanCount === 1 && winner !== 0 ? "defeat" : "victory")
     },
 

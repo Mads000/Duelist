@@ -381,7 +381,6 @@ const DEFAULT_SETTINGS = {
     master: 0.8,
     music: 0.45,
     sfx: 0.9,
-    announcer: true,
     shake: true,
     vibration: true,
     crt: false,

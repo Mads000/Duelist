@@ -8,15 +8,23 @@ const QR_LIB = "https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"
 const PEER_PREFIX = "duelist2-"
 const PAD_BUTTONS = ["light", "heavy", "dash", "ability", "pause"]
 
+// Lädt ein Skript nur einmal – auch wenn es mehrfach gleichzeitig angefragt wird
+const scriptPromises = {}
 function loadScript(src) {
-    return new Promise((resolve, reject) => {
-        if (document.querySelector(`script[src="${src}"]`)) return resolve()
-        const s = document.createElement("script")
-        s.src = src
-        s.onload = resolve
-        s.onerror = () => reject(new Error("Konnte " + src + " nicht laden"))
-        document.head.appendChild(s)
-    })
+    if (!scriptPromises[src]) {
+        scriptPromises[src] = new Promise((resolve, reject) => {
+            const s = document.createElement("script")
+            s.src = src
+            s.onload = resolve
+            s.onerror = () => {
+                delete scriptPromises[src]
+                s.remove()
+                reject(new Error("Konnte " + src + " nicht laden"))
+            }
+            document.head.appendChild(s)
+        })
+    }
+    return scriptPromises[src]
 }
 
 function makeCode() {
@@ -74,6 +82,16 @@ const Link = {
         })
     },
 
+    // Dieses Gerät ist doch kein Bildschirm (z.B. weil es selbst Controller wird)
+    stop() {
+        if (this.peer) this.peer.destroy()
+        this.peer = null
+        this.pads = []
+        this.code = null
+        this.status = "off"
+        this.onChange()
+    },
+
     accept(conn) {
         conn.on("open", () => {
             const taken = this.pads.map(p => p.slot)
@@ -126,8 +144,8 @@ const Link = {
     // Adresse, die das Handy öffnet (lokal gehostete PCs verweisen auf GitHub Pages)
     padUrl() {
         const local = !location.protocol.startsWith("http") || ["localhost", "127.0.0.1"].includes(location.hostname)
-        const base = local ? ONLINE_URL + "pad.html" : new URL("pad.html", location.href).href
-        return base + "#" + this.code
+        const base = local ? ONLINE_URL : new URL("./", location.href).href
+        return base + "?pad=" + this.code
     },
 
     qrSvg() {
