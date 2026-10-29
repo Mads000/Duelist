@@ -1,0 +1,171 @@
+html, body {
+    margin: 0;           
+    padding: 0;          
+    overflow: hidden;    
+    width: 100%;
+    height: 100%;
+
+    font-family: "Quantico", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+
+
+}
+
+
+.background{
+    background-color: #F0F8FF;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+
+    background-image: url("/assets/ui/StartBackground.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+
+    font-family: "Quantico", sans-serif;
+}
+
+
+
+
+.login{
+    font-family: "Quantico", sans-serif;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    /* border: solid 1px #5581ad; */
+
+     border: 0.15vw solid #6c8fb6;
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(4px);
+
+    padding: 15px;
+    gap: 1.3em;
+
+}
+
+div{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+
+    width: 25vw;
+}
+
+.text{
+    font-family: "Quantico", sans-serif;
+
+    height: 3.7vh;
+    width: 25vw;
+    font-size: 1.2vw;
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+
+    color: #dadada;
+
+    /* background-color: #bfbfbf; */
+   
+    /* border: 2px solid #253141; */
+
+    background: rgba(255, 255, 255, 0.4);
+    border: 0.15vw solid #6c8fb6;
+
+    transition: all 0.1s;
+}
+
+.text:hover {
+    border: 2px solid white;
+    transform: translateY(2px);
+}
+
+
+
+a{
+    height: auto;
+    width: auto;
+    font-size: 0.8vw;
+
+    font-family: "Bebas Neue", sans-serif;
+
+    color: #0036c9;
+
+    text-decoration: none;
+
+    text-align: center;
+}
+a:hover{
+    color: rgba(255, 255, 255, 0.829);
+}
+
+ .submit {
+
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+
+    height: 5vh;
+    width: 10vw;
+
+    font-size: 1.2vw;
+    font-family: "Bebas Neue", sans-serif;
+
+    text-decoration: none;
+    color: white;
+
+    background: linear-gradient(#2b4374, #091f5b);
+/* 
+    border-radius: 8px; */
+
+    cursor: pointer;
+
+    transition: all 0.1s;
+}
+
+.submit:hover {
+    transform: translateY(2px);
+} 
+
+/* input {
+    font-family: "Quantico", sans-serif;
+
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    height: 5vh;
+    width: 10vw;
+    font-size: 1.2vw;
+
+    color: #d4d4d4;
+
+    background-color: #091f5b;
+
+    border: 1px solid #293b5f;
+
+    cursor: pointer;
+} */
+
+.ImgBox{
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+}
+
+.LogInImg{
+    width: 25em;
+    height: auto;
+    padding-bottom: 3em;
+}
+
+.LogInImg2{
+    width: 40em;
+    height: auto;
+    padding-bottom: 3em;
+}

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Champion Selection</title>
+
+    <link rel="stylesheet" href="/css/selection.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quantico:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=info_i" />
+</head>
+
+<body class="background">
+
+    <img src="assets/Überschriften/SelctionText.png" alt="selection text">
+
+    <div class="leftMiddleRight">
+
+        <div class="ScoreBoard1">
+            <div class="ScoreBoardNameDiv1">
+                <p>
+                    Player 1
+                </p>
+            </div>
+            <p>Kills: <%= user.kills %>
+            </p>
+            <p>Damage Dealt: <%= user.damageDealt %>
+            </p>
+            <p>Damage Taken: <%= user.damageTaken %>
+            </p>
+        </div>
+
+
+
+        <div class="middle">
+            <div class="ChampionRow">
+                <div class="Champion" id="SoldierCard">
+                    <img id="SoldierImg" src="assets/ui/Knight Templar.png" alt="">
+                    <div class="ChampionName" id="SoldierName">Vanguard</div>
+                </div>
+
+                <div class="Champion" id="OrcCard">
+                    <img id="OrcImg" src="assets/ui/Elite Orc.png" alt="">
+                    <div class="ChampionName" id="OrcName">Warbrute</div>
+                </div>
+
+                <div class="Champion" id="WerewolfCard">
+                    <img src="assets/ui/Armored Skeleton.png" alt="">
+                    <div class="ChampionName" id="WerewolfName">Boneguard</div>
+                </div>
+
+                <div class="Champion" id="SkeletonCard">
+                    <img id="WerebearImg" src="assets/ui/Werebear.png" alt="">
+                    <div class="ChampionName" id="SkeletonName">Rageclaw</div>
+                </div>
+            </div>
+
+            <div class="AbilityContainer">
+
+                <img class="ability-icon" id="AbilityIcon" src="assets/Faehigkeiten/schield.png" alt="schild Icon">
+
+                <div class="ability-text">
+                    <p class="ability-title" id="AbilityTitle"> Ability: Shield</p>
+                    <p id="AbilityText">
+                        Nach 3 Angriffen erhält man die Fähigkeit Shield.
+                        Nach Aktivierung ist sie 3sek Aktiv.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="ScoreBoard2">
+            <div class="ScoreBoardNameDiv2">
+                <p>Player 2</p>
+            </div>
+            <p>Kills: <%= user.p2kills %>
+            </p>
+            <p>Damage Dealt: <%= user.p2damageDealt %>
+            </p>
+            <p>Damage Taken: <%= user.p2damageTaken %>
+            </p>
+        </div>
+    </div>
+    </div>
+
+
+    <p>Eingeloggt als: <%= user.Username %>
+    </p>
+
+    <input type="number" placeholder="Gamespeed" id="GameSpeed" class="text">
+    <div id="Start" class="start">START</div>
+    <div id="Info">Info</div>
+    <div id="LogOutContainer">LogOut</div>
+    <div id="resetButton">Auswahl Reset</div>
+
+    <div id="popup">
+        <p>Geschwindigkeit: Anpassbar, meist 0, 1 oder 2 <br>
+            Schnelleres Spiel: Geschwindigkeit auf +2 setzen <br>
+            Linksklick: Player1 <br>
+            Rechtsklick: Player2 <br>
+            Lore: drücke "L"
+        </p>
+    </div>
+
+    <script src="/js/selection.js"></script>
+    <script src="/js/Match.js"></script>
+    <script src="/js/player.js"></script>
+
+</body>
+
+</html>

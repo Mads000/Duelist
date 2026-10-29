@@ -1,0 +1,4 @@
+
+Datenbankname: duelist_db
+
+Dann in die Datenbank benutzer.sql einfügen und alles ist fertig.

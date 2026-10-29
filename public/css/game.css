@@ -1,0 +1,71 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#myCanvas {
+    /* aspect-ratio: 16 / 9; */
+    display: block;
+    background-size: contain;
+    position: absolute;
+    z-index: 150;
+    width: 100%;
+    height: auto;
+}
+
+#Border {
+    border: red 6px solid;
+    position: absolute;
+    width: 70vw;
+    height: 60vh;
+    z-index: 1000;
+}
+
+.shield{
+    z-index: 100;
+    position: relative;
+    width: 70vw;
+    height: 60vh;
+    margin-top: 2em;
+}
+
+#startCounter{
+    /* border: red 6px solid; */
+    position: absolute;
+    width: 5vw;
+    height: 5vw;
+    z-index: 100;
+    font-family: "Quantico", sans-serif;
+    /* font-family: "Bebas Neue", sans-serif; */
+    font-size: 5vw;
+    text-align: center;
+    display: block;
+    background: transparent;
+    z-index: 500;
+    margin-top: -10vh;
+}
+
+#gameCountdown{
+     position: absolute;
+    width: 6vw;
+    height: 4vw;
+    z-index: 100;
+    font-family: "Quantico", sans-serif;
+    font-size: 3vw;
+    text-align: center;
+    display: block;
+    z-index: 500;
+
+    margin-top: -85vh;
+
+    background: rgba(180, 180, 180, 0.6);
+    border: 0.2vw solid #3a3a3a;
+}

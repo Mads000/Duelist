@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="/css/login.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+
+</head>
+
+<body class="background">
+
+  <div class="ImgBox">
+    <img src="assets/Überschriften/DUELIST.png" alt="Login text">
+
+    <img class="LogInImg" src="assets/Überschriften/LogIn.png" alt="Login text">
+  </div>
+
+
+  <form action="/login" method="POST" class="login">
+    <input type="text" name="username" placeholder="Benutzername" class="text">
+    <input type="password" name="password" placeholder="Password" class="text">
+
+    <div>
+    <input type="submit" name="send" value="LogIn" class="submit" class="button">
+
+     <a href="/register" >Kein Acc?:  Registrieren</a>
+    </div>
+
+    <h1 color="red" >Falsche Benutzerdaten!</h1>
+  </form>
+
+  
+
+</body>
+
+</html>

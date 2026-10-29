@@ -1,0 +1,16 @@
+{
+  "name": "duelist",
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node offline.js",
+    "start:server": "node server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "ejs": "^4.0.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "mysql2": "^3.18.0"
+  }
+}

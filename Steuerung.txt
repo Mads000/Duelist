@@ -1,0 +1,22 @@
+Für Player 1:
+
+Bewegen: W - A - S - D
+Schlagen: E 
+Fähigkeit: R
+
+
+
+
+
+Für Player 2:
+
+Bewegen: I - J - K - L
+Schlagen: O
+Fähigkeit: P 
+
+
+Match abbrechen: 0, es gibt trotzdem ein Gewinner und Verlierer 
+
+Die Geschwindigkeit muss meisten angepasst werden über Gamespeed, gute Geschwindigkeit sind 2 oder 3 jenach leistung des PCs, bei einem guten PC einfach garnichts verändern.
+
+Mit "L" öffnen Sie noch ein Eastereg.

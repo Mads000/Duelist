@@ -1,0 +1,12 @@
+# Abhängigkeiten
+node_modules/
+
+# Große / private Dateien (nicht ins öffentliche Repo)
+*.mp4
+*.odp
+*.pptx
+~$*
+desktop.ini
+benutzer.sql
+public/assets/*.zip
+_original_backup/
