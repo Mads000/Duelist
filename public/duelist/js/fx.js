@@ -181,6 +181,17 @@ class Effects {
         }
     }
 
+    // Windstreifen über den ganzen Bildausschnitt
+    wind(dir, cam, view) {
+        const w = view.w / cam.zoom
+        const h = view.h / cam.zoom
+        this.particles.push({
+            type: "streak", x: cam.x - dir * (w / 2 + 40) + (Math.random() - 0.5) * 200, y: cam.y - h / 2 + Math.random() * h,
+            vx: dir * (900 + Math.random() * 500), vy: 0, g: 0, drag: 0,
+            life: 0.9 + Math.random() * 0.5, t: 0, size: 4 + Math.random() * 6
+        })
+    }
+
     // Feuerfontäne (Vulkan-Hazard)
     geyser(x, y) {
         this.ring(x, y, { radius: 120, color: "rgba(255,150,60,0.95)", life: 0.5, width: 12 })
@@ -259,6 +270,11 @@ class Effects {
             const k = p.t / p.life
             ctx.save()
             switch (p.type) {
+                case "streak":
+                    ctx.globalAlpha = Math.sin(k * Math.PI) * 0.7
+                    ctx.fillStyle = "#ffffff"
+                    ctx.fillRect(p.x, p.y, Math.sign(p.vx) * p.size * 10, 3)
+                    break
                 case "spark":
                     ctx.globalAlpha = 1 - k * k
                     if (p.glow) ctx.globalCompositeOperation = "lighter"

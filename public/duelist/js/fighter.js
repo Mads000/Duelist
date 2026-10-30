@@ -59,6 +59,8 @@ class Fighter {
         this.bufLight = 0
         this.bufHeavy = 0
         this.dashCd = 0
+        this.specialCd = 0
+        this.special = false
         this.iframes = 0
         this.dashDir = { x: 1, y: 0 }
         this.ghostT = 0
@@ -134,6 +136,7 @@ class Fighter {
         this.animT += dt * animRate
         this.stateT += dt
         this.dashCd -= dt
+        this.specialCd -= dt
         this.iframes -= dt
         this.flashT -= dt
         this.bufLight -= dt
@@ -201,6 +204,7 @@ class Fighter {
 
     updateFree(dt, opp, inp) {
         if (inp.dash && this.dashCd <= 0) return this.startDash(inp, opp)
+        if (this.bufHeavy > 0 && this.wantsSpecial(opp, inp)) return this.startSpecial(opp)
         if (this.bufHeavy > 0) return this.startAttack("heavy", 0, opp)
         if (this.bufLight > 0) return this.startAttack("light", 0, opp)
         if (inp.ability && this.tryAbility(opp)) return
@@ -281,8 +285,32 @@ class Fighter {
         else this.vx += this.facing * amount
     }
 
-    startAttack(kind, step, opp) {
-        const def = kind === "heavy" ? this.champ.heavy : this.champ.light[step]
+    // Spezialangriff: Richtung zum Gegner gedrückt halten + Schwer (wenn abgeklungen)
+    wantsSpecial(opp, inp) {
+        if (!this.champ.special || this.specialCd > 0) return false
+        const toOpp = Math.sign(opp.x - this.x) || this.facing
+        return inp.mx * toOpp > 0.5 && Math.abs(inp.mx) > Math.abs(inp.my)
+    }
+
+    get specialReady() {
+        return !!this.champ.special && this.specialCd <= 0
+    }
+
+    startSpecial(opp) {
+        const sp = this.champ.special
+        this.startAttack("heavy", 0, opp, sp.move)
+        this.special = true
+        this.aimY = 0
+        this.specialCd = COMBAT.specialCooldown
+        this.flashT = 0.12
+        this.match.callout(this, sp.name.toUpperCase() + "!", this.champ.color)
+        this.match.fx.ring(this.x, this.y, { radius: 110, color: this.champ.color, life: 0.35, width: 8 })
+        this.match.emit("special", { fighter: this })
+    }
+
+    startAttack(kind, step, opp, custom = null) {
+        const def = custom || (kind === "heavy" ? this.champ.heavy : this.champ.light[step])
+        this.special = false
         this.state = "attack"
         this.stateT = 0
         this.moveKind = kind
@@ -296,7 +324,7 @@ class Fighter {
         this.swingSound = false
         this.bufLight = 0
         this.bufHeavy = 0
-        this.setAnim(kind === "heavy" ? "heavy" : "light" + step, def.anim)
+        this.setAnim(custom ? "special" : kind === "heavy" ? "heavy" : "light" + step, def.anim)
         this.faceOpponent(opp, this.input)
         this.aimY = this.pickAim(opp, this.input)
         this.lungeBy(def.lunge * (kind === "heavy" ? 0.55 : 1))
@@ -334,6 +362,13 @@ class Fighter {
             this.match.sound(def.projectile ? "fireball" : def.zone ? "ice" : "swing", { pitch: isHeavy ? 0.7 : 0.9 + this.comboStep * 0.2 })
         }
 
+        // Ansturm (Spezialangriff): in festen Frames nach vorn schießen
+        if (def.rush && frame >= def.rush[0] && frame <= def.rush[1]) {
+            this.x += this.facing * def.rush[2] * dt
+            this.iframes = Math.max(this.iframes, 0.05)
+            if (Math.random() < dt * 30) this.match.fx.dust(this.x - this.facing * 20, this.y, { count: 1, size: 14, vx: -this.facing * 120, color: this.match.map.dust })
+        }
+
         // Projektil / Zauber auslösen
         if (!this.spawned && def.projectile && frame >= def.projectile.frame) {
             this.spawned = true
@@ -358,6 +393,7 @@ class Fighter {
         if (frame > lastActive) {
             if (!isHeavy) {
                 const nextLight = this.comboStep + 1 < this.champ.light.length
+                if (this.bufHeavy > 0 && this.wantsSpecial(opp, inp)) return this.startSpecial(opp)
                 if (this.bufHeavy > 0) return this.startAttack("heavy", 0, opp)
                 if (this.bufLight > 0 && nextLight) return this.startAttack("light", this.comboStep + 1, opp)
             }

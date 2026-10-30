@@ -81,6 +81,12 @@ const CHAMPIONS = {
             move(anim("Attack02", 8, 22), [[5, 6]], 7, 240, 27, { lunge: 170 })
         ],
         heavy: move(anim("Attack03", 11, 19), [[3, 4], [7, 8]], 7, 560, 29, { lunge: 230 }),
+        // Spezialangriff: zum Gegner drücken + Schwer
+        special: {
+            name: "Schildsturm",
+            text: "Stürmt mit dem Schild nach vorn und bricht jede Deckung.",
+            move: move(anim("Attack03", 11, 22), [[4, 6]], 12, 820, 30, { lunge: 0, rush: [2, 6, 620], guardBreak: true, recovery: 0.5 })
+        },
         ability: {
             type: "shield",
             name: "Shield",
@@ -115,6 +121,12 @@ const CHAMPIONS = {
             move(anim("Attack02", 11, 22), [[1, 2], [5, 6], [9, 9]], 3, 150, 31, { lunge: 90 })
         ],
         heavy: move(anim("Attack03", 9, 15), [[4, 6]], 13, 640, 34, { lunge: 150 }),
+        // Spezialangriff: zum Gegner drücken + Schwer
+        special: {
+            name: "Erdspalter",
+            text: "Spaltet den Boden – eine Schockwelle trifft alles vor ihm.",
+            move: move(anim("Attack03", 9, 13), [], 14, 720, 0, { lunge: 60, zone: { frame: 5, ahead: 190, radius: 125, hitFrame: 0, fps: 13 }, guardBreak: true, recovery: 0.55 })
+        },
         ability: {
             type: "bomb",
             name: "Damage Stack",
@@ -149,6 +161,12 @@ const CHAMPIONS = {
             move(anim("Attack01", 8, 28), [[4, 5]], 6, 260, 32, { lunge: 200 })
         ],
         heavy: move(anim("Attack02", 9, 17), [[2, 4]], 12, 560, 24, { lunge: 330 }),
+        // Spezialangriff: zum Gegner drücken + Schwer
+        special: {
+            name: "Speerstoß",
+            text: "Ein blitzschneller Stoß mit doppelter Reichweite.",
+            move: move(anim("Attack02", 9, 18), [[3, 5]], 11, 600, 50, { lunge: 200, guardBreak: true, recovery: 0.45 })
+        },
         ability: {
             type: "stealth",
             name: "Invisibility",
@@ -183,6 +201,12 @@ const CHAMPIONS = {
             move(anim("Attack02", 13, 26), [[4, 5], [9, 10]], 4, 200, 28, { lunge: 150 })
         ],
         heavy: move(anim("Attack03", 9, 16), [[5, 7]], 13, 600, 35, { lunge: 240 }),
+        // Spezialangriff: zum Gegner drücken + Schwer
+        special: {
+            name: "Wirbelklauen",
+            text: "Dreht sich mit ausgefahrenen Klauen – trifft dreimal rundherum.",
+            move: move(anim("Attack02", 13, 24), [[3, 4], [6, 7], [9, 10]], 5, 300, 32, { lunge: 60, around: true, guardBreak: true, recovery: 0.5 })
+        },
         ability: {
             type: "heal",
             name: "Heal",
@@ -217,6 +241,12 @@ const CHAMPIONS = {
             move(anim("Attack02", 13, 26), [[4, 5], [8, 9], [11, 11]], 3, 200, 34, { lunge: 160 })
         ],
         heavy: move(anim("Attack01", 9, 14), [[5, 6]], 12, 600, 27, { lunge: 520 }),
+        // Spezialangriff: zum Gegner drücken + Schwer
+        special: {
+            name: "Mondsprung",
+            text: "Springt mit einem Satz auf den Gegner zu.",
+            move: move(anim("Attack02", 13, 26), [[6, 8]], 12, 640, 30, { lunge: 0, rush: [1, 6, 760], guardBreak: true, recovery: 0.45 })
+        },
         ability: {
             type: "frenzy",
             name: "Frenzy",
@@ -256,6 +286,12 @@ const CHAMPIONS = {
         heavy: move(anim("Attack01", 6, 11), [], 9, 420, 0, {
             lunge: 0, recovery: 0.55, zone: { frame: 3, effect: "Attack01_Effect", frames: 10, fps: 18, hitFrame: 8, radius: 80, maxDist: 400 }
         }),
+        // Spezialangriff: zum Gegner drücken + Schwer
+        special: {
+            name: "Feuersalve",
+            text: "Drei Feuerbälle im Fächer – schwer auszuweichen.",
+            move: move(anim("Attack02", 6, 12), [], 4, 220, 0, { lunge: 0, recovery: 0.6, projectile: { frame: 4, speed: 600, range: 560, effect: "Attack02_Effect", flyFrames: 4, hitFrames: [4, 6], count: 3, spread: 230 } })
+        },
         ability: {
             type: "blink",
             name: "Blink",
@@ -290,6 +326,12 @@ const CHAMPIONS = {
             move(anim("Attack03", 8, 18), [[4, 5]], 8, 300, 35, { lunge: 120 })
         ],
         heavy: move(anim("Attack02", 12, 15), [[6, 9]], 15, 700, 44, { lunge: 160 }),
+        // Spezialangriff: zum Gegner drücken + Schwer
+        special: {
+            name: "Seelenklinge",
+            text: "Ein weiter Hieb mit der Seelenklinge, der jede Deckung bricht.",
+            move: move(anim("Attack03", 8, 15), [[4, 6]], 14, 760, 58, { lunge: 180, guardBreak: true, recovery: 0.55 })
+        },
         ability: {
             type: "quake",
             name: "Soul Quake",
@@ -325,13 +367,13 @@ function resolveChampion(name) {
 const MAPS = {
     sky: {
         id: "sky", name: "Himmelsarena", img: "ui/Arena2.png",
-        text: "Die Original-Arena über den Wolken.",
-        ambient: "clouds", grip: 1, bg: ["#3f7bd9", "#9ccaf5"]
+        text: "Die Original-Arena über den Wolken – Windstöße schieben euch über den Platz.",
+        ambient: "clouds", grip: 1, hazard: "wind", bg: ["#3f7bd9", "#9ccaf5"]
     },
     classic: {
         id: "classic", name: "Wolkenhof", img: "ui/Map-Wolkenhof.png",
-        text: "Ein Marmorhof im Abendrot – Blüten wehen über den Platz.",
-        ambient: "petals", grip: 1, dust: "rgba(236,230,242,0.6)", bg: ["#7080d6", "#ffb496"], tint: ["#ff9a8a", 0.35]
+        text: "Ein Marmorhof im Abendrot – wer zuerst auf eine Heilblüte tritt, bekommt Leben zurück.",
+        ambient: "petals", grip: 1, hazard: "bloom", dust: "rgba(236,230,242,0.6)", bg: ["#7080d6", "#ffb496"], tint: ["#ff9a8a", 0.35]
     },
     volcano: {
         id: "volcano", name: "Vulkanschmiede", img: "ui/Map-Vulkan.png",
@@ -383,7 +425,8 @@ const COMBAT = {
     dashIframes: 0.16,
     accel: 22,           // wie schnell man auf Tempo kommt
     friction: 9,
-    energyMax: 3
+    energyMax: 3,
+    specialCooldown: 4   // Spezialangriff (zum Gegner + Schwer)
 }
 
 // Tastatur (e.code => layoutunabhängig, funktioniert auch mit QWERTZ)
@@ -414,5 +457,6 @@ const DEFAULT_SETTINGS = {
     roundTime: 60,
     gameSpeed: 1,
     showFps: false,
-    fullscreen: true
+    fullscreen: true,
+    replay: true
 }

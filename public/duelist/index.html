@@ -222,7 +222,7 @@
             <button class="btn small pad-menu" data-btn="4">Pause</button>
             <div class="pad-stick" id="padStick"><div class="pad-knob" id="padKnob"></div></div>
             <div class="pad-btns">
-                <button class="pb pb-ability" data-btn="3"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" /></svg><span>Spezial</span></button>
+                <button class="pb pb-ability" data-btn="3"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" /></svg><span>Fähigk.</span></button>
                 <button class="pb pb-dash" data-btn="2">Dash</button>
                 <button class="pb pb-light" data-btn="0">Leicht</button>
                 <button class="pb pb-heavy" data-btn="1">Schwer</button>
@@ -260,7 +260,7 @@
                     <dt><kbd>J</kbd> / <kbd>E</kbd></dt><dd>Leichter Angriff</dd>
                     <dt><kbd>K</kbd> / <kbd>F</kbd></dt><dd>Schwerer Angriff</dd>
                     <dt><kbd>L</kbd> / <kbd>Leertaste</kbd></dt><dd>Ausweichen (Dash)</dd>
-                    <dt><kbd>I</kbd> / <kbd>R</kbd></dt><dd>Spezial-Fähigkeit</dd>
+                    <dt><kbd>I</kbd> / <kbd>R</kbd></dt><dd>Fähigkeit</dd>
                     <dt><kbd>Esc</kbd></dt><dd>Pause</dd>
                 </dl>
             </div>
@@ -269,10 +269,10 @@
                 <dl class="keys">
                     <dt class="p1t">Spieler 1</dt><dd></dd>
                     <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>Bewegen</dd>
-                    <dt><kbd>E</kbd> <kbd>F</kbd> <kbd>Q</kbd> <kbd>R</kbd></dt><dd>Leicht · Schwer · Dash · Spezial</dd>
+                    <dt><kbd>E</kbd> <kbd>F</kbd> <kbd>Q</kbd> <kbd>R</kbd></dt><dd>Leicht · Schwer · Dash · Fähigkeit</dd>
                     <dt class="p2t">Spieler 2</dt><dd></dd>
                     <dt><kbd>Pfeile</kbd> / <kbd>I</kbd><kbd>J</kbd><kbd>K</kbd><kbd>L</kbd></dt><dd>Bewegen</dd>
-                    <dt><kbd>Num1</kbd> <kbd>Num2</kbd> <kbd>Num3</kbd> <kbd>Num0</kbd></dt><dd>Leicht · Schwer · Dash · Spezial</dd>
+                    <dt><kbd>Num1</kbd> <kbd>Num2</kbd> <kbd>Num3</kbd> <kbd>Num0</kbd></dt><dd>Leicht · Schwer · Dash · Fähigkeit</dd>
                     <dt><kbd>O</kbd> <kbd>P</kbd> <kbd>U</kbd> <kbd>H</kbd></dt><dd>(alternativ)</dd>
                 </dl>
             </div>
@@ -281,7 +281,7 @@
                 <dl class="keys">
                     <dt><kbd>Stick</kbd></dt><dd>Bewegen</dd>
                     <dt><kbd>A</kbd> · <kbd>X</kbd>/<kbd>RT</kbd></dt><dd>Leicht · Schwer</dd>
-                    <dt><kbd>B</kbd>/<kbd>LB</kbd> · <kbd>Y</kbd>/<kbd>RB</kbd></dt><dd>Dash · Spezial</dd>
+                    <dt><kbd>B</kbd>/<kbd>LB</kbd> · <kbd>Y</kbd>/<kbd>RB</kbd></dt><dd>Dash · Fähigkeit</dd>
                     <dt>Touch</dt><dd>Linke Hälfte = Joystick, rechts vier Knöpfe.</dd>
                     <dt>Handy</dt><dd>Im Menü „Handy als Controller“ koppeln.</dd>
                 </dl>
@@ -290,12 +290,13 @@
                 <h3>Kampfsystem</h3>
                 <ul>
                     <li><b>Kombo:</b> Leicht, Leicht, <b>Schwer</b> – der schwere Schlag beendet die Kombo mit Wucht.</li>
+                    <li><b>Spezialangriff:</b> Zum Gegner drücken + <b>Schwer</b> – jeder Champion hat einen eigenen (z. B. Schildsturm, Feuersalve). Bricht die Deckung, danach 4 Sekunden Abklingzeit (SP im HUD).</li>
                     <li><b>Oben &amp; unten:</b> Halte hoch oder runter beim Angriff – oder steh einfach über/unter dem Gegner. Dann schlägst du in diese Richtung.</li>
                     <li><b>Blocken:</b> Vom Gegner <b>weg</b> drücken. Kurz vor dem Treffer = <b>PERFEKT</b>: kein Schaden, der Gegner taumelt.</li>
                     <li><b>Schwere Angriffe</b> brechen jede Deckung (GUARD BREAK).</li>
                     <li><b>Konter:</b> Triff den Gegner, während er zu einem schweren Angriff oder einer Fähigkeit ausholt – 40 % mehr Schaden.</li>
                     <li><b>Dash</b> macht kurz unverwundbar – perfekt gegen Bomben und Feuerbälle.</li>
-                    <li><b>Spezial:</b> Treffer laden die Fähigkeit auf (3 Treffer, Warbrute bis zu 5).</li>
+                    <li><b>Fähigkeit:</b> Treffer laden sie auf (3 Treffer, Warbrute bis zu 5).</li>
                 </ul>
             </div>
         </div>
@@ -327,6 +328,7 @@
                 <h3>Darstellung &amp; Gefühl</h3>
                 <label class="toggle"><input type="checkbox" data-setting="crt"><span></span>Retro-Filter (Scanlines)</label>
                 <label class="toggle"><input type="checkbox" data-setting="shake"><span></span>Bildschirm-Wackeln</label>
+                <label class="toggle"><input type="checkbox" data-setting="replay"><span></span>Finisher-Wiederholung</label>
                 <label class="toggle"><input type="checkbox" data-setting="vibration"><span></span>Vibration (Handy)</label>
                 <label class="toggle"><input type="checkbox" data-setting="fullscreen"><span></span>Vollbild beim Kampf (Handy)</label>
                 <label class="toggle"><input type="checkbox" data-setting="showFps"><span></span>FPS anzeigen</label>
@@ -387,7 +389,7 @@
             <div class="stick-base"><div class="stick-knob"></div></div>
         </div>
         <div class="touch-btns">
-            <button class="t-btn t-ability" data-act="ability" aria-label="Spezial">
+            <button class="t-btn t-ability" data-act="ability" aria-label="Fähigkeit">
                 <svg class="t-ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" /></svg>
                 <img alt="">
             </button>

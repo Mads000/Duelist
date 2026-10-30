@@ -109,6 +109,7 @@ const App = {
         document.getElementById("touch").hidden = !showTouch
         if (!showTouch && this.touch) this.touch.reset()
         if (!inGame) {
+            document.body.classList.remove("replaying")
             Link.menuState()
             document.getElementById("vs").className = ""
         }
@@ -263,6 +264,9 @@ const App = {
                 break
             case "vibrate":
                 Link.vibrate(data.side, data.ms)
+                break
+            case "replay":
+                document.body.classList.toggle("replaying", data.on)
                 break
             case "pauseRequest":
                 this.pause()

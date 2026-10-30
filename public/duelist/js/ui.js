@@ -151,7 +151,7 @@ const UI = {
         const a = c.ability
         return `<div class="ability-box">
             <img src="${ASSET_ROOT}${a.icon}" alt="">
-            <div><b>${who}${who ? c.name + " · " : ""}Ability: ${a.name}</b><p>${a.text}</p></div>
+            <div><b>${who}${who ? c.name + " · " : ""}Ability: ${a.name}</b><p>${a.text}</p>${c.special ? `<p class="sp-line"><b>Spezial (zum Gegner + Schwer): ${c.special.name}</b> – ${c.special.text}</p>` : ""}</div>
         </div>`
     },
 
@@ -404,7 +404,7 @@ const UI = {
 
     // ---------------- HUD ----------------
     buildHud(match) {
-        this.hudCache = { hp: [-1, -1], lag: [-1, -1], energy: [-1, -1], guard: [-1, -1], wins: [-1, -1], timer: -1, ready: [null, null] }
+        this.hudCache = { hp: [-1, -1], lag: [-1, -1], energy: [-1, -1], guard: [-1, -1], wins: [-1, -1], sp: [null, null], timer: -1, ready: [null, null] }
         this.hudPreviews = this.hudPreviews || []
         for (const f of match.fighters) {
             const el = $(`.hud-player[data-side="${f.side}"]`)
@@ -414,7 +414,7 @@ const UI = {
             $(".hp-text", el).textContent = match.humanCount === 2 ? `Player ${f.side + 1}` : f.side === 0 ? "Player 1" : (match.training ? "Dummy" : "CPU")
             $(".energy", el).innerHTML = Array.from({ length: f.maxEnergy }, (_, i) =>
                 `<i class="${i === f.champ.ability.cost - 1 ? "cost" : ""}"></i>`).join("") +
-                `<img src="${ASSET_ROOT}${f.champ.ability.icon}" alt="">`
+                `<img src="${ASSET_ROOT}${f.champ.ability.icon}" alt=""><span class="sp" title="Spezialangriff bereit">SP</span>`
             $(".hud-wins", el).innerHTML = match.training ? "" : Array.from({ length: match.roundsToWin }, () => "<i></i>").join("")
             if (!this.hudPreviews[f.side]) {
                 this.hudPreviews[f.side] = new SpritePreview($(".hud-portrait", el), f.champId, "idle", { zoom: 1.9, flip: f.side === 1 })
@@ -434,16 +434,16 @@ const UI = {
         const k = (key, label) => `<span><kbd>${key}</kbd>${label}</span>`
         const layouts = match.humanCount === 2
             ? [
-                [k("WASD", "Laufen"), k("E", "Leicht"), k("F", "Schwer"), k("Q", "Dash"), k("R", "Spezial")],
-                [k("Pfeile", "Laufen"), k("Num1", "Leicht"), k("Num2", "Schwer"), k("Num3", "Dash"), k("Num0", "Spezial")]
+                [k("WASD", "Laufen"), k("E", "Leicht"), k("F", "Schwer"), k("Q", "Dash"), k("R", "Fähigkeit")],
+                [k("Pfeile", "Laufen"), k("Num1", "Leicht"), k("Num2", "Schwer"), k("Num3", "Dash"), k("Num0", "Fähigkeit")]
             ]
-            : [[k("WASD", "Laufen"), k("J", "Leicht"), k("K", "Schwer"), k("L", "Dash"), k("I", "Spezial"), k("Esc", "Pause")], null]
+            : [[k("WASD", "Laufen"), k("J", "Leicht"), k("K", "Schwer"), k("L", "Dash"), k("I", "Fähigkeit"), k("Esc", "Pause")], null]
         for (const side of [0, 1]) {
             const el = $(`.hud-keys[data-side="${side}"]`)
             const keys = layouts[side]
             const show = keys && !isTouchDevice() && !Link.padFor(side) && match.fighters[side].isHuman
             el.hidden = !show
-            if (show) el.innerHTML = `<b>${match.humanCount === 2 ? "P" + (side + 1) : "Steuerung"}</b>${keys.join("")}<small>Hoch/Runter + Angriff = nach oben/unten schlagen</small>`
+            if (show) el.innerHTML = `<b>${match.humanCount === 2 ? "P" + (side + 1) : "Steuerung"}</b>${keys.join("")}<small>Zum Gegner + Schwer = Spezialangriff · Hoch/Runter + Angriff = nach oben/unten</small>`
         }
     },
 
@@ -480,6 +480,11 @@ const UI = {
                 $$(".energy i", el).forEach((pip, i) => pip.classList.toggle("on", i < f.energy))
                 el.classList.toggle("ready", f.abilityReady)
                 if (f.side === 0) this.updateTouchAbility(f)
+            }
+            const sp = f.specialReady
+            if (c.sp[f.side] !== sp) {
+                c.sp[f.side] = sp
+                $(".energy .sp", el).classList.toggle("on", sp)
             }
             if (c.wins[f.side] !== match.wins[f.side]) {
                 c.wins[f.side] = match.wins[f.side]

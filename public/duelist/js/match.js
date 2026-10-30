@@ -36,6 +36,10 @@ class Match {
         this.projectiles = []
         this.zones = []
         this.geysers = []
+        this.blooms = []
+        this.wind = { t: 9 + Math.random() * 5, active: 0, warn: 0, dir: 1 }
+        this.bloomT = 7 + Math.random() * 4
+        this.rec = []          // Aufnahme der letzten Sekunden (für die Finisher-Wiederholung)
         this.hazardT = 4 + Math.random() * 3
         this.chaosT = 3
         this.time = 0
@@ -86,6 +90,7 @@ class Match {
     // ---------------- Ablauf ----------------
     update(realDt) {
         if (this.paused || this.over) return
+        if (this.phase === "replay") return this.updateReplay(realDt)
         const dt = realDt * (this.settings.gameSpeed || 1)
 
         this.flash = Math.max(0, this.flash - realDt * 3)
@@ -124,6 +129,7 @@ class Match {
         if (fighting) this.updateHazards(sdt)
         this.updateTraining(sdt)
         this.fx.update(sdt)
+        this.record()
 
         if (fighting && isFinite(this.timer)) {
             this.timer -= sdt
@@ -204,7 +210,10 @@ class Match {
 
         if (melee) {
             const reach = move.reach * SPRITE_SCALE + COMBAT.bodyHalf
-            if (att.aimY) {
+            if (move.around) {
+                // Rundumschlag: trifft in alle Richtungen
+                if (Math.abs(def.x - att.x) > reach || Math.abs(def.y - att.y) > COMBAT.depthReach * 1.4) return false
+            } else if (att.aimY) {
                 // Schlag nach oben/unten: Reichweite in der Tiefe, schmal zur Seite
                 const dy = (def.y - att.y) * att.aimY
                 if (dy < -COMBAT.bodyHalf || dy > reach || Math.abs(def.x - att.x) > COMBAT.depthReach * 1.6) return false
@@ -394,6 +403,17 @@ class Match {
     spawnProjectile(owner, move) {
         const p = move.projectile
         const aimY = owner.aimY
+        // Fächer (Feuersalve): weitere Geschosse mit Tiefenversatz
+        for (let i = 1; i < (p.count || 1); i++) {
+            const k = i % 2 ? 1 : -1
+            this.projectiles.push({
+                owner, move, cfg: p, aimY: 0,
+                img: champImage(owner.champId, p.effect),
+                x: owner.x + owner.facing * 70, y: owner.y, h: 62,
+                vx: owner.facing * p.speed, vy: k * Math.ceil(i / 2) * p.spread * 0.5, dist: 0,
+                t: 0, state: "fly", dodged: false
+            })
+        }
         this.projectiles.push({
             owner, move, cfg: p, aimY,
             img: champImage(owner.champId, p.effect),
@@ -441,6 +461,18 @@ class Match {
     spawnZone(owner, opp, move) {
         const z = move.zone
         let x, y
+        if (z.ahead) {
+            // Schockwelle direkt vor dem Angreifer (Spezialangriff)
+            const [sx, sy] = ARENA.clamp(owner.x + owner.facing * z.ahead, owner.y)
+            this.fx.ring(sx, sy, { radius: z.radius * 1.3, color: "rgba(255,220,150,0.95)", life: 0.5, width: 14 })
+            this.fx.ring(sx, sy, { radius: z.radius * 0.8, color: owner.champ.color, life: 0.4, width: 18 })
+            this.fx.dust(sx, sy, { count: 16, size: 26, color: this.map.dust })
+            this.fx.sparks(sx, sy - 20, owner.facing, { count: 18, speed: 600, spread: 2.4, color: "#ffe2a8", color2: "#c8742c" })
+            this.sound("quake")
+            this.addShake(18)
+            this.zones.push({ owner, move, x: sx, y: sy, t: 0, hitAt: 0.02, radius: z.radius, done: false, color: "rgba(255,220,150,0.5)" })
+            return
+        }
         const aimY = owner.aimY
         const inFront = aimY ? Math.sign(opp.y - owner.y) === aimY : (opp.x - owner.x) * owner.facing > 0
         const dist = Math.hypot(opp.x - owner.x, (opp.y - owner.y) * 1.3)
@@ -572,6 +604,10 @@ class Match {
 
     // ---------------- Map-Gefahren & Chaos ----------------
     updateHazards(dt) {
+        if (!this.training) {
+            if (this.map.hazard === "wind") this.updateWind(dt)
+            if (this.map.hazard === "bloom") this.updateBlooms(dt)
+        }
         if (this.map.hazard === "geyser" && !this.training) {
             this.hazardT -= dt
             if (this.hazardT <= 0) {
@@ -617,6 +653,116 @@ class Match {
         }
     }
 
+    // Himmelsarena: Windstoß mit Vorwarnung, schiebt beide zur Seite
+    updateWind(dt) {
+        const w = this.wind
+        if (w.active > 0) {
+            w.active -= dt
+            for (const f of this.fighters) {
+                if (f.state === "dead" || f.state === "dash") continue
+                f.vx += w.dir * 1800 * dt // gegen die Reibung ~200 px/s – man kann noch dagegen anlaufen
+            }
+            if (Math.random() < dt * 40) this.fx.wind(w.dir, this.camera, this.view)
+            return
+        }
+        if (w.warn > 0) {
+            w.warn -= dt
+            if (Math.random() < dt * 8) this.fx.wind(w.dir, this.camera, this.view)
+            if (w.warn <= 0) {
+                w.active = 2.2
+                this.sound("dash", { pitch: 0.5 })
+                this.addShake(6)
+            }
+            return
+        }
+        w.t -= dt
+        if (w.t <= 0) {
+            w.t = 11 + Math.random() * 7
+            w.warn = 1.2
+            w.dir = Math.random() < 0.5 ? -1 : 1
+            const me = this.fighters.find(f => f.isHuman) || this.fighters[0]
+            this.fx.text(me.x, me.y - 170, w.dir > 0 ? "WINDSTOSS  >>>" : "<<<  WINDSTOSS", { color: "#e8f4ff", size: 36, life: 1.4, vy: -40 })
+        }
+    }
+
+    // Wolkenhof: Heilblüten – wer zuerst drauftritt, bekommt Leben zurück
+    updateBlooms(dt) {
+        this.bloomT -= dt
+        if (this.bloomT <= 0 && this.blooms.length < 1) {
+            this.bloomT = 9 + Math.random() * 5
+            const [x, y] = ARENA.clamp(ARENA.x0 + Math.random() * (ARENA.x1 - ARENA.x0), ARENA.y0 + Math.random() * (ARENA.y1 - ARENA.y0), 70)
+            this.blooms.push({ x, y, t: 0, life: 9 })
+            this.fx.ring(x, y, { radius: 70, color: "rgba(255,170,210,0.9)", life: 0.5, width: 6 })
+        }
+        for (let i = this.blooms.length - 1; i >= 0; i--) {
+            const b = this.blooms[i]
+            b.t += dt
+            const taker = this.fighters.find(f => f.state !== "dead" && Math.hypot(f.x - b.x, (f.y - b.y) * 1.5) < 46)
+            if (taker || b.t >= b.life) {
+                this.blooms.splice(i, 1)
+                if (!taker) continue
+                const heal = Math.min(10, taker.maxHp - taker.hp)
+                taker.hp += heal
+                this.fx.heal(taker.x, taker.y)
+                this.fx.ring(b.x, b.y, { radius: 90, color: "rgba(255,170,210,0.95)", life: 0.45, width: 8 })
+                this.callout(taker, "+" + Math.round(heal) + " HEILBLÜTE", "#ff9fd0")
+                this.sound("heal")
+            }
+        }
+    }
+
+    // ---------------- Finisher-Wiederholung ----------------
+    // Merkt sich die letzten ~1,6 s (Figuren + Geschosse), solange gekämpft wird
+    record() {
+        if (this.demo || this.training || !this.settings.replay) return
+        if (this.phase !== "fight" && !(this.phase === "ko" && this.phaseT < 0.7)) return
+        const snap = f => ({ x: f.x, y: f.y, facing: f.facing, anim: f.anim, frame: f.frame, champId: f.champId, alpha: f.stealthAlpha(), dead: f.state === "dead" })
+        this.rec.push({
+            t: this.time,
+            f: this.fighters.map(snap),
+            p: this.projectiles.map(p => ({ img: p.img, x: p.x, y: p.y, h: p.h, vx: p.vx, aimY: p.aimY, state: p.state, t: p.t, cfg: p.cfg }))
+        })
+        while (this.rec.length && this.rec[0].t < this.time - 1.6) this.rec.shift()
+    }
+
+    startReplay() {
+        const ko = this.rec.findIndex(r => r.t >= this.koTime) // Moment des K.O.-Treffers
+        this.replay = { i: 0, t: this.rec[0].t, koIdx: ko < 0 ? this.rec.length - 1 : ko, boom: false, skipReady: 0.4 }
+        this.setPhase("replay")
+        this.emit("replay", { on: true })
+        this.emit("banner", { text: "WIEDERHOLUNG", kind: "info", time: 1.2 })
+    }
+
+    updateReplay(realDt) {
+        const r = this.replay
+        r.t += realDt * 0.4
+        r.skipReady -= realDt
+        while (r.i < this.rec.length - 1 && this.rec[r.i + 1].t <= r.t) r.i++
+        if (!r.boom && r.i >= r.koIdx) {
+            r.boom = true
+            const loser = this.rec[r.i].f[1 - this.roundWinner]
+            this.fx.sparks(loser.x, loser.y - 60, 1, { count: 40, speed: 900, spread: 3, size: 9 })
+            this.fx.ring(loser.x, loser.y, { radius: 260, color: "rgba(255,255,255,0.95)", life: 0.7, width: 16 })
+            this.sound("hit", { heavy: true })
+            this.addShake(24)
+            this.flash = 0.6
+        }
+        this.fx.update(realDt * 0.4)
+        this.flash = Math.max(0, this.flash - realDt * 2)
+        this.shake = Math.max(0, this.shake - realDt * 60)
+        this.updateCamera(realDt)
+        const skip = r.skipReady <= 0 && this.fighters.some(f => {
+            if (!f.isHuman) return false
+            const inp = f.controller && f.controller.read ? f.controller.read() : NO_INPUT
+            return inp.light || inp.heavy || inp.ability || inp.dash || inp.pause
+        })
+        if (r.i >= this.rec.length - 1 || skip) {
+            this.emit("replay", { on: false })
+            this.over = true
+            this.emit("matchEnd", { winner: this.roundWinner })
+        }
+    }
+
     // Training: Leben füllt sich wieder auf, Energie ist unendlich
     updateTraining(dt) {
         if (!this.training) return
@@ -635,6 +781,7 @@ class Match {
         this.roundResolved = false
         this.roundWinner = winner.side
         this.koTarget = loser
+        this.koTime = this.time
         const fin = this.finisherName(this.lastHit || {})
         this.lastHit = null
         this.finisher = fin
@@ -719,8 +866,13 @@ class Match {
         const decided = this.wins[0] >= this.roundsToWin || this.wins[1] >= this.roundsToWin
         const tooLong = this.round >= (this.rules.rounds || 3) + 2
         if (decided || (tooLong && this.wins[0] !== this.wins[1])) {
-            this.over = true
             const winner = this.wins[0] > this.wins[1] ? 0 : 1
+            // Entscheidender K.O.: Zeitlupen-Wiederholung des Finishers
+            if (this.koTime !== undefined && this.rec.length > 30 && this.roundWinner === winner && this.koTarget) {
+                this.roundWinner = winner
+                return this.startReplay()
+            }
+            this.over = true
             this.emit("matchEnd", { winner })
             return
         }
@@ -731,6 +883,9 @@ class Match {
         this.projectiles.length = 0
         this.zones.length = 0
         this.geysers.length = 0
+        this.blooms.length = 0
+        this.rec.length = 0
+        this.koTime = undefined
         this.fx.clear()
         this.fighters.forEach((f, i) => f.reset(ARENA.spawn[i]))
         this.koTarget = null
@@ -768,7 +923,12 @@ class Match {
         let zoom = Math.min(w / needW, h / needH)
         zoom = Math.max(cover * (me ? 0.8 : 1), Math.min(cover * 1.45, zoom))
 
-        if (this.koTarget && this.phase === "ko") {
+        if (this.phase === "replay") {
+            const snap = this.rec[this.replay.i].f[1 - this.roundWinner]
+            cx = snap.x
+            cy = snap.y - 60
+            zoom = cover * 1.6
+        } else if (this.koTarget && this.phase === "ko") {
             cx = this.koTarget.x
             cy = this.koTarget.y - 60
             zoom = Math.min(cover * 1.7, zoom * 1.3)
@@ -834,7 +994,7 @@ class Match {
         const ground = this.pixel.begin(w, h, cam, sx, sy, px)
         this.fx.drawGround(ground)
         this.drawTelegraphs(ground)
-        for (const f of this.fighters) f.drawShadow(ground)
+        if (this.phase !== "replay") for (const f of this.fighters) f.drawShadow(ground)
         this.pixel.end(ctx)
 
         // Figuren & Geschosse (Sprites)
@@ -842,14 +1002,17 @@ class Match {
         toWorld()
         // Tiefensortierung: wer weiter unten steht, wird später gezeichnet
         const drawables = [...this.fighters].sort((p, q) => p.y - q.y)
-        for (const f of drawables) f.draw(ctx)
-        this.drawProjectiles(ctx)
+        if (this.phase === "replay") this.drawReplay(ctx)
+        else {
+            for (const f of drawables) f.draw(ctx)
+            this.drawProjectiles(ctx)
+        }
         this.drawBombs(ctx)
         ctx.restore()
 
         // Effekte darüber in Pixel-Auflösung: Funken, Ringe, Rauch, Fähigkeiten, Zahlen
         const top = this.pixel.begin(w, h, cam, sx, sy, px)
-        for (const f of drawables) f.drawFx(top)
+        if (this.phase !== "replay") for (const f of drawables) f.drawFx(top)
         this.fx.draw(top)
         this.fx.drawTexts(top)
         this.pixel.end(ctx)
@@ -863,6 +1026,28 @@ class Match {
         if (this.phase === "ko" && this.phaseT < 1.6) {
             ctx.fillStyle = `rgba(10,5,20,${Math.min(0.35, this.phaseT * 0.5)})`
             ctx.fillRect(0, 0, w, h)
+        }
+        // Wiederholung: Kino-Balken, Sepia-Schleier und REPLAY-Anzeige
+        if (this.phase === "replay") {
+            ctx.fillStyle = "rgba(60,40,20,0.12)"
+            ctx.fillRect(0, 0, w, h)
+            ctx.fillStyle = "#05070f"
+            ctx.fillRect(0, 0, w, h * 0.1)
+            ctx.fillRect(0, h * 0.9, w, h * 0.1)
+            ctx.font = `${Math.round(h * 0.045)}px "Bebas Neue", Impact, sans-serif`
+            ctx.fillStyle = "#fff"
+            ctx.textBaseline = "middle"
+            ctx.fillText("REPLAY", w * 0.04 + h * 0.045, h * 0.05)
+            if (Math.sin(this.phaseT * 6) > 0) {
+                ctx.fillStyle = "#e33a3a"
+                ctx.beginPath()
+                ctx.arc(w * 0.04, h * 0.05, h * 0.013, 0, Math.PI * 2)
+                ctx.fill()
+            }
+            ctx.textAlign = "right"
+            ctx.font = `${Math.round(h * 0.03)}px "Quantico", sans-serif`
+            ctx.fillText("Taste drücken zum Überspringen", w * 0.96, h * 0.95)
+            ctx.textAlign = "left"
         }
         // Kino-Balken beim Finisher
         if (this.phase === "ko") {
@@ -981,6 +1166,27 @@ class Match {
             }
             ctx.restore()
         }
+        for (const b of this.blooms) {
+            const pulse = 0.6 + Math.sin(b.t * 6) * 0.25
+            const fade = Math.min(1, (b.life - b.t) * 2)
+            ctx.save()
+            ctx.globalAlpha = fade
+            ctx.fillStyle = `rgba(255,170,210,${0.25 * pulse})`
+            ctx.beginPath()
+            ctx.ellipse(b.x, b.y, 54, 22, 0, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.strokeStyle = "rgba(255,200,230,0.9)"
+            ctx.lineWidth = 4
+            ctx.stroke()
+            // Blüte: vier Blätter und eine goldene Mitte
+            const s = 9
+            const y = b.y - 16 - Math.sin(b.t * 3) * 3
+            ctx.fillStyle = "#ff8fc2"
+            for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) ctx.fillRect(b.x + dx * s - s / 2, y + dy * s - s / 2, s, s)
+            ctx.fillStyle = "#ffe27a"
+            ctx.fillRect(b.x - s / 2, y - s / 2, s, s)
+            ctx.restore()
+        }
         for (const g of this.geysers) {
             const k = g.t / g.warn
             ctx.save()
@@ -1006,6 +1212,28 @@ class Match {
             ctx.stroke()
             ctx.restore()
         }
+    }
+
+    // Figuren und Geschosse aus der Aufnahme zeichnen
+    drawReplay(ctx) {
+        const r = this.rec[this.replay.i]
+        const order = [...r.f].sort((a, b) => a.y - b.y)
+        for (const s of order) {
+            const f = this.fighters.find(ff => ff.champId === s.champId && r.f.indexOf(s) === ff.side)
+            const img = champImage(s.champId, s.anim.file)
+            if (!f || !img) continue
+            const g = f.geom
+            ctx.save()
+            ctx.translate(Math.round(s.x), Math.round(s.y))
+            if (s.facing < 0) ctx.scale(-1, 1)
+            ctx.globalAlpha = s.alpha
+            ctx.drawImage(img, s.frame * FRAME, 0, FRAME, FRAME, -g.ax, -g.ay, g.w, g.h)
+            ctx.restore()
+        }
+        const live = this.projectiles
+        this.projectiles = r.p
+        this.drawProjectiles(ctx)
+        this.projectiles = live
     }
 
     drawProjectiles(ctx) {

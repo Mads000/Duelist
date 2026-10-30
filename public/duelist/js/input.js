@@ -66,7 +66,7 @@ class KeyboardSource {
     }
 }
 
-// Standard-Belegung: A = leicht, X/RT = schwer, B/LB/LT = Ausweichen, Y/RB = Spezial
+// Standard-Belegung: A = leicht, X/RT = schwer, B/LB/LT = Ausweichen, Y/RB = Fähigkeit
 function readPadButtons(pad) {
     const b = i => !!(pad.buttons[i] && pad.buttons[i].pressed)
     let x = pad.axes[0] || 0
