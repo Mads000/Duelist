@@ -171,8 +171,7 @@ class BotController {
         }
 
         // Nicht in die Wand laufen: Ziel in die Arena ziehen
-        gx = Math.max(ARENA.x0 + 40, Math.min(ARENA.x1 - 40, gx))
-        gy = Math.max(ARENA.y0 + 20, Math.min(ARENA.y1 - 20, gy))
+        ;[gx, gy] = ARENA.clamp(gx, gy, 30)
         let mx = gx - me.x
         let my = gy - me.y
         if (Math.abs(mx) < 10) mx = 0

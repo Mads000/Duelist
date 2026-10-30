@@ -99,6 +99,50 @@ button {
     background: radial-gradient(ellipse at 50% 40%, transparent 55%, rgba(9, 31, 91, 0.35));
 }
 
+/* Sonne oben rechts + langsam drehende Lichtstrahlen */
+.sky-rays {
+    position: absolute;
+    right: -20vmax;
+    top: -20vmax;
+    width: 70vmax;
+    height: 70vmax;
+    background:
+        radial-gradient(circle, rgba(255, 250, 220, 0.75) 0%, rgba(255, 240, 200, 0.25) 18%, transparent 45%),
+        repeating-conic-gradient(rgba(255, 255, 255, 0.13) 0deg 6deg, transparent 6deg 18deg);
+    mask-image: radial-gradient(circle, #000 20%, transparent 68%);
+    -webkit-mask-image: radial-gradient(circle, #000 20%, transparent 68%);
+    animation: raysTurn 90s linear infinite;
+}
+
+@keyframes raysTurn {
+    to { transform: rotate(360deg); }
+}
+
+/* Die Arena als schwebende Insel unter dem Menü */
+.sky-island {
+    position: absolute;
+    left: 50%;
+    bottom: 5vh;
+    width: min(820px, 64vw);
+    aspect-ratio: 1024 / 602;
+    background: url("../../assets/ui/Arena-Insel.png") center / contain no-repeat;
+    image-rendering: pixelated;
+    opacity: 0.9;
+    filter: drop-shadow(0 30px 40px rgba(9, 31, 91, 0.35)) saturate(1.05);
+    transform: translateX(-50%);
+    animation: islandFloat 9s ease-in-out infinite;
+}
+
+@keyframes islandFloat {
+    50% { transform: translateX(-50%) translateY(-14px); }
+}
+
+/* Auf Unterseiten tritt die Insel zurück, damit Text lesbar bleibt */
+body:not([data-screen="menu"]) .sky-island {
+    opacity: 0.35;
+    filter: blur(2px);
+}
+
 @keyframes skyDrift {
     from { transform: translateX(-2%) scale(1.04); }
     to { transform: translateX(2%) scale(1.04); }
@@ -370,7 +414,7 @@ body.crt #crt {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    filter: drop-shadow(0 2px 0 #4d5668) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+    filter: drop-shadow(1px 0 0 #1d2f63) drop-shadow(-1px 0 0 #1d2f63) drop-shadow(0 -1px 0 #1d2f63) drop-shadow(0 3px 0 #1d2f63) drop-shadow(0 6px 10px rgba(9, 31, 91, 0.4));
 }
 
 .back-btn {
@@ -527,6 +571,25 @@ body.crt #crt {
 .btn.mode {
     text-align: left;
     padding: 10px 16px;
+}
+
+.menu-info {
+    min-height: 3.1em;
+    margin: 0;
+    padding: 6px 12px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--btn-bottom);
+    background: rgba(255, 255, 255, 0.35);
+    border-left: 4px solid var(--start-top);
+}
+
+.menu-info b {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    margin-right: 4px;
 }
 
 .menu-links {
@@ -3060,18 +3123,126 @@ kbd,
         width: 120px;
         height: 120px;
     }
+
+    .panel {
+        padding: 10px 14px;
+    }
+
+    .glass h3,
+    .panel h3 {
+        font-size: 22px;
+        margin-bottom: 6px;
+    }
+
+    .board h3 {
+        font-size: 24px;
+        margin-bottom: 4px;
+    }
+
+    .score-list li {
+        padding: 2px 0;
+        font-size: 13px;
+    }
+
+    .score-list li::before {
+        font-size: 17px;
+    }
+
+    .lore-intro {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+
+    .menu-info {
+        min-height: 0;
+        padding: 4px 10px;
+        font-size: 11px;
+        line-height: 1.35;
+    }
+
+    .menu-info b {
+        font-size: 14px;
+    }
+
+    .controls-grid,
+    .settings-grid {
+        gap: 8px;
+    }
+
+    .sky-island {
+        width: 58vw;
+        bottom: -34vh;
+    }
 }
 
 /* Hochformat (Menüs auf dem Handy) */
 @media (orientation: portrait) and (max-width: 700px) {
+    .sky-island {
+        width: 120vw;
+        bottom: -4vh;
+    }
+
+    #screen-select {
+        overflow-y: auto;
+    }
+
+    #screen-select .screen-head {
+        flex-wrap: wrap;
+    }
+
+    .screen-head h2 {
+        font-size: 30px;
+    }
+
+    .step-pill {
+        margin-left: auto;
+        font-size: 15px;
+        padding: 4px 10px;
+        white-space: nowrap;
+    }
+
     .sel-stage {
+        flex: none;
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto auto;
+        gap: 10px;
+    }
+
+    .sel-side {
+        padding: 10px 6px;
+    }
+
+    .sel-sprite-wrap {
+        width: 110px;
+        height: 110px;
     }
 
     .sel-middle {
         grid-column: span 2;
         order: 3;
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .champ-card {
+        width: 74px;
+    }
+
+    .sel-bottom {
+        flex-direction: column;
+        align-items: stretch;
+        padding-top: 10px;
+    }
+
+    .opt-group {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .controls-grid,
+    .settings-grid,
+    .scores-grid {
+        grid-template-columns: 1fr;
     }
 
     .rs-row {
@@ -3095,4 +3266,10 @@ kbd,
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
     }
+}
+
+/* Auf Touch-Geräten zuerst Touch/Handy-Steuerung und Kampfsystem zeigen */
+body.is-touch .controls-grid > :nth-child(3),
+body.is-touch .controls-grid > :nth-child(4) {
+    order: -1;
 }

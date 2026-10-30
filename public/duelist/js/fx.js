@@ -131,6 +131,13 @@ class Effects {
                 vx: 30 + Math.random() * 40, vy: 70 + Math.random() * 80, g: 0, drag: 0,
                 life: h / 90 + 2, t: 0, size: 2 + Math.random() * 4, wobble: Math.random() * 6
             })
+        } else if (kind === "petals") {
+            this.particles.push({
+                type: "snow", x: left - 60 + Math.random() * (w + 120), y: top - 10,
+                vx: 40 + Math.random() * 50, vy: 45 + Math.random() * 45, g: 0, drag: 0,
+                life: h / 60 + 2, t: 0, size: 4 + Math.random() * 4, wobble: Math.random() * 6,
+                color: Math.random() < 0.6 ? "#ffb7d0" : "#fff0f5"
+            })
         } else if (kind === "clouds") {
             this.particles.push({
                 type: "mote", x: left + Math.random() * w, y: top + Math.random() * h,
@@ -273,7 +280,7 @@ class Effects {
                 }
                 case "snow":
                     ctx.globalAlpha = Math.min(1, (p.life - p.t) * 2) * 0.9
-                    ctx.fillStyle = "#f4f9ff"
+                    ctx.fillStyle = p.color || "#f4f9ff"
                     ctx.fillRect(p.x + Math.sin(p.t * 2 + p.wobble) * 12, p.y, p.size, p.size)
                     break
                 case "mote":

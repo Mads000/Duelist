@@ -19,12 +19,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/app.css?v=3.0.8">
+    <link rel="stylesheet" href="css/app.css?v=3.0.12">
 </head>
 
 <body>
     <canvas id="game"></canvas>
-    <div id="sky"></div>
+    <div id="sky">
+        <div class="sky-rays"></div>
+        <div class="sky-island"></div>
+    </div>
     <div id="crt"></div>
 
     <!-- ================= LADEN ================= -->
@@ -51,19 +54,20 @@
         <div class="menu-wrap">
             <h1 class="logo logo-menu chrome">DUELIST</h1>
             <nav class="menu-panel glass">
-                <button class="btn start menu-arcade" data-go="arcade"><b>Arcade</b><small>5 Gegner · Endboss · Highscore</small></button>
+                <button class="btn start menu-arcade" data-go="arcade" data-info="Arcade: Kämpf dich durch 5 Gegner mit steigender Schwierigkeit bis zum Endboss. Punkte für Treffer, Konter und Finisher – ab in die Highscores! Wer gewinnt, schaltet einen geheimen Champion frei."><b>Arcade</b><small>5 Gegner · Endboss · Highscore</small></button>
                 <div class="mode-grid">
-                    <button class="btn mode" data-go="solo"><b>Gegen Bot</b><small>Freies Duell</small></button>
-                    <button class="btn mode" data-go="local"><b>Lokales Duell</b><small>2 Spieler</small></button>
-                    <button class="btn mode" data-go="survival"><b>Survival</b><small>Ein Leben, endlos</small></button>
-                    <button class="btn mode" data-go="training"><b>Training</b><small>Kombos üben</small></button>
+                    <button class="btn mode" data-go="solo" data-info="Gegen Bot: Ein freies Duell gegen die KI. Du wählst Gegner, Schwierigkeit (Rekrut bis Legende), Arena und ob Bomben vom Himmel fallen."><b>Gegen Bot</b><small>Freies Duell</small></button>
+                    <button class="btn mode" data-go="local" data-info="Lokales Duell: Zwei Spieler an einem Gerät – geteilte Tastatur, zwei Gamepads oder Handys als Controller."><b>Lokales Duell</b><small>2 Spieler</small></button>
+                    <button class="btn mode" data-go="survival" data-info="Survival: Ein Leben, endlose Gegner. Nach jedem Sieg heilst du nur 30 % – jeder 5. Gegner ist der Endboss. Wie weit kommst du?"><b>Survival</b><small>Ein Leben, endlos</small></button>
+                    <button class="btn mode" data-go="training" data-info="Training: Übe Kombos, Blocken und Fähigkeiten gegen einen Dummy. Unendlich Energie, niemand verliert."><b>Training</b><small>Kombos üben</small></button>
                 </div>
+                <p class="menu-info" id="menuInfo" aria-live="polite"></p>
                 <div class="menu-links">
-                    <button class="btn link" data-go="controller">Controller</button>
-                    <button class="btn link" data-go="lore">Champions</button>
-                    <button class="btn link" data-go="scores">Highscores</button>
-                    <button class="btn link" data-go="controls">Steuerung</button>
-                    <button class="btn link" data-go="settings">Optionen</button>
+                    <button class="btn link" data-go="controller" data-info="Controller: Mach dein Handy zum Gamepad – QR-Code scannen oder 4-stelligen Code eingeben.">Controller</button>
+                    <button class="btn link" data-go="lore" data-info="Champions: Geschichte, Werte und Fähigkeit jedes Kämpfers.">Champions</button>
+                    <button class="btn link" data-go="scores" data-info="Highscores: Die besten 10 Läufe in Arcade und Survival.">Highscores</button>
+                    <button class="btn link" data-go="controls" data-info="Steuerung: Alle Tasten für Tastatur, Gamepad, Touch und Handy – plus Tipps zum Kampfsystem.">Steuerung</button>
+                    <button class="btn link" data-go="settings" data-info="Optionen: Lautstärke, Rundenanzahl, Spieltempo, Bildschirm-Wackeln und mehr.">Optionen</button>
                 </div>
             </nav>
             <div class="menu-stats" id="recordCard"></div>
@@ -428,20 +432,21 @@
     <div id="fps" hidden></div>
     <div id="toast"></div>
 
-    <script src="js/data.js?v=3.0.8"></script>
-    <script src="js/audio.js?v=3.0.8"></script>
-    <script src="js/settings.js?v=3.0.8"></script>
-    <script src="js/assets.js?v=3.0.8"></script>
-    <script src="js/input.js?v=3.0.8"></script>
-    <script src="js/link.js?v=3.0.8"></script>
-    <script src="js/pad.js?v=3.0.8"></script>
-    <script src="js/fx.js?v=3.0.8"></script>
-    <script src="js/fighter.js?v=3.0.8"></script>
-    <script src="js/ai.js?v=3.0.8"></script>
-    <script src="js/match.js?v=3.0.8"></script>
-    <script src="js/ui.js?v=3.0.8"></script>
-    <script src="js/modes.js?v=3.0.8"></script>
-    <script src="js/main.js?v=3.0.8"></script>
+    <script src="js/arena_shape.js?v=3.0.12"></script>
+    <script src="js/data.js?v=3.0.12"></script>
+    <script src="js/audio.js?v=3.0.12"></script>
+    <script src="js/settings.js?v=3.0.12"></script>
+    <script src="js/assets.js?v=3.0.12"></script>
+    <script src="js/input.js?v=3.0.12"></script>
+    <script src="js/link.js?v=3.0.12"></script>
+    <script src="js/pad.js?v=3.0.12"></script>
+    <script src="js/fx.js?v=3.0.12"></script>
+    <script src="js/fighter.js?v=3.0.12"></script>
+    <script src="js/ai.js?v=3.0.12"></script>
+    <script src="js/match.js?v=3.0.12"></script>
+    <script src="js/ui.js?v=3.0.12"></script>
+    <script src="js/modes.js?v=3.0.12"></script>
+    <script src="js/main.js?v=3.0.12"></script>
 </body>
 
 </html>

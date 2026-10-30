@@ -426,7 +426,7 @@ class Match {
                         boom = this.tryHit(p.owner, def, p.move, 0, { x: p.x - Math.sign(p.vx) * 30, y: p.y - p.aimY * 20, aimY: p.aimY })
                     }
                 }
-                if (p.dist > p.cfg.range || p.x < ARENA.x0 - 60 || p.x > ARENA.x1 + 60 || p.y < ARENA.y0 - 40 || p.y > ARENA.y1 + 40) boom = true
+                if (p.dist > p.cfg.range || !ARENA.contains(p.x, p.y, 50)) boom = true
                 if (boom) {
                     p.state = "boom"
                     p.t = 0
@@ -451,8 +451,7 @@ class Match {
             x = owner.x + (aimY ? 0 : owner.facing * z.maxDist * 0.55)
             y = owner.y + aimY * z.maxDist * 0.35
         }
-        x = Math.max(ARENA.x0, Math.min(ARENA.x1, x))
-        y = Math.max(ARENA.y0, Math.min(ARENA.y1, y))
+        ;[x, y] = ARENA.clamp(x, y)
         const img = champImage(owner.champId, z.effect)
         this.fx.sheet(img, x, y - 50, z.frames, z.fps, { center: { x: 52, y: 50 } })
         this.zones.push({ owner, move, x, y, t: 0, hitAt: z.hitFrame / z.fps, radius: z.radius, done: false, color: "rgba(140,210,255,0.5)" })
@@ -578,8 +577,7 @@ class Match {
             if (this.hazardT <= 0) {
                 this.hazardT = 5 + Math.random() * 4
                 const near = this.fighters[Math.floor(Math.random() * 2)]
-                const x = Math.max(ARENA.x0 + 60, Math.min(ARENA.x1 - 60, near.x + (Math.random() - 0.5) * 220))
-                const y = Math.max(ARENA.y0 + 40, Math.min(ARENA.y1 - 40, near.y + (Math.random() - 0.5) * 120))
+                const [x, y] = ARENA.clamp(near.x + (Math.random() - 0.5) * 220, near.y + (Math.random() - 0.5) * 120, 40)
                 this.geysers.push({ x, y, t: 0, warn: 1.1, radius: 90 })
                 this.sound("geyserWarn")
             }
@@ -613,8 +611,7 @@ class Match {
             if (this.chaosT <= 0) {
                 this.chaosT = 1.8 + Math.random() * 2
                 const t = this.fighters[Math.floor(Math.random() * 2)]
-                const x = Math.max(ARENA.x0 + 40, Math.min(ARENA.x1 - 40, t.x + (Math.random() - 0.5) * 400))
-                const y = Math.max(ARENA.y0 + 30, Math.min(ARENA.y1 - 30, t.y + (Math.random() - 0.5) * 200))
+                const [x, y] = ARENA.clamp(t.x + (Math.random() - 0.5) * 400, t.y + (Math.random() - 0.5) * 200, 30)
                 this.dropBomb(x, y)
             }
         }
@@ -752,12 +749,24 @@ class Match {
         const { w, h } = this.view
         const cover = Math.max(w / WORLD.width, h / WORLD.height)
         const [a, b] = this.fighters
-        let cx = (a.x + b.x) / 2
-        let cy = (a.y + b.y) / 2 - 70
-        const needW = Math.abs(a.x - b.x) + 560
-        const needH = Math.abs(a.y - b.y) + 440
+        // Allein: die eigene Figur steht immer in der Bildmitte, der Gegner bleibt im Bild.
+        // Zu zweit (oder Demo): Mitte zwischen beiden.
+        const me = this.humanCount === 1 ? this.fighters.find(f => f.isHuman) : null
+        let cx, cy, needW, needH
+        if (me) {
+            const op = this.fighters[1 - me.side]
+            cx = me.x
+            cy = me.y - 70
+            needW = Math.abs(op.x - me.x) * 2 + 460
+            needH = Math.abs(op.y - me.y) * 2 + 400
+        } else {
+            cx = (a.x + b.x) / 2
+            cy = (a.y + b.y) / 2 - 70
+            needW = Math.abs(a.x - b.x) + 560
+            needH = Math.abs(a.y - b.y) + 440
+        }
         let zoom = Math.min(w / needW, h / needH)
-        zoom = Math.max(cover, Math.min(cover * 1.45, zoom))
+        zoom = Math.max(cover * (me ? 0.8 : 1), Math.min(cover * 1.45, zoom))
 
         if (this.koTarget && this.phase === "ko") {
             cx = this.koTarget.x
@@ -768,16 +777,19 @@ class Match {
 
         const cam = this.camera
         const k = cam.ready ? 1 - Math.exp(-(this.koTarget ? 5 : 3.2) * dt) : 1
+        const kPos = cam.ready ? 1 - Math.exp(-(me && !this.koTarget ? 9 : this.koTarget ? 5 : 3.2) * dt) : 1
         cam.zoom += (zoom - cam.zoom) * k
-        cam.x += (cx - cam.x) * k
-        cam.y += (cy - cam.y) * k
+        cam.x += (cx - cam.x) * kPos
+        cam.y += (cy - cam.y) * kPos
         cam.ready = true
 
-        // Kamera nicht über den Bildrand hinaus
-        const halfW = w / 2 / cam.zoom
-        const halfH = h / 2 / cam.zoom
-        cam.x = Math.max(halfW, Math.min(WORLD.width - halfW, cam.x))
-        cam.y = Math.max(halfH, Math.min(WORLD.height - halfH, cam.y))
+        // Zu zweit: Kamera nicht über den Bildrand hinaus (allein darf sie, damit man mittig bleibt)
+        if (!me) {
+            const halfW = w / 2 / cam.zoom
+            const halfH = h / 2 / cam.zoom
+            cam.x = Math.max(halfW, Math.min(WORLD.width - halfW, cam.x))
+            cam.y = Math.max(halfH, Math.min(WORLD.height - halfH, cam.y))
+        }
     }
 
     // ---------------- Zeichnen ----------------
@@ -785,11 +797,16 @@ class Match {
         const cam = this.camera
         ctx.save()
         ctx.imageSmoothingEnabled = false
-        ctx.fillStyle = "#4f86d6"
+        // Hintergrund außerhalb des Map-Bildes: Farbverlauf passend zur Map
+        const [bgTop, bgBottom] = this.map.bg || ["#3d78d8", "#8ec5ff"]
+        const bg = ctx.createLinearGradient(0, 0, 0, h)
+        bg.addColorStop(0, bgTop)
+        bg.addColorStop(1, bgBottom)
+        ctx.fillStyle = bg
         ctx.fillRect(0, 0, w, h)
 
         // Umgebungspartikel (nicht zu viele)
-        if (this.fx.particles.length < 260 && Math.random() < (this.map.ambient === "snow" ? 0.9 : this.map.ambient === "embers" ? 0.6 : 0.15)) {
+        if (this.fx.particles.length < 260 && Math.random() < (this.map.ambient === "snow" ? 0.9 : this.map.ambient === "embers" ? 0.6 : this.map.ambient === "petals" ? 0.25 : 0.15)) {
             this.fx.ambient(this.map.ambient, cam, this.view)
         }
 

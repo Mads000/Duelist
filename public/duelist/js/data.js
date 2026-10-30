@@ -12,12 +12,38 @@ const SPRITE_SCALE = 3.2 // Weltpixel pro Sprite-Pixel
 // Welt = Pixel des Arena-Bildes (1536x1024)
 const WORLD = { width: 1536, height: 1024 }
 
-// Begehbare Fläche (abgerundetes Rechteck, Füße der Figuren) – gleich für alle Maps
+// Begehbare Fläche (Füße der Figuren) – aus dem Map-Bild vermessen (js/arena_shape.js),
+// damit die Grenze immer genau an den Mauern liegt. Alle Maps teilen dieselbe Form.
 const ARENA = {
-    x0: 280, x1: 1256,
-    y0: 400, y1: 715,
-    radius: 85,
-    spawn: [{ x: 520, y: 575 }, { x: 1016, y: 575 }]
+    shape: ARENA_SHAPE,
+    y0: ARENA_SHAPE.y0,
+    y1: ARENA_SHAPE.y1,
+    x0: Math.min(...ARENA_SHAPE.rows.map(r => r[0])),
+    x1: Math.max(...ARENA_SHAPE.rows.map(r => r[1])),
+    spawn: [{ x: 500, y: 560 }, { x: 1036, y: 560 }],
+
+    // linke/rechte Grenze auf Höhe y (zwischen den Tabellenzeilen interpoliert)
+    span(y) {
+        const s = this.shape
+        const f = Math.max(0, Math.min(s.rows.length - 1, (y - s.first) / s.step))
+        const i = Math.floor(f)
+        const a = s.rows[i]
+        const b = s.rows[Math.min(s.rows.length - 1, i + 1)]
+        const t = f - i
+        return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]
+    },
+
+    // Punkt in die Fläche ziehen (margin = Abstand zur Mauer)
+    clamp(x, y, margin = 0) {
+        y = Math.max(this.y0 + margin, Math.min(this.y1 - margin, y))
+        const [l, r] = this.span(y)
+        return [Math.max(l + margin, Math.min(r - margin, x)), y]
+    },
+
+    contains(x, y, slack = 0) {
+        const [cx, cy] = this.clamp(x, y)
+        return Math.hypot(x - cx, y - cy) <= slack
+    }
 }
 
 // Animation: frames = Bildanzahl
@@ -300,22 +326,22 @@ const MAPS = {
     sky: {
         id: "sky", name: "Himmelsarena", img: "ui/Arena2.png",
         text: "Die Original-Arena über den Wolken.",
-        ambient: "clouds", grip: 1
+        ambient: "clouds", grip: 1, bg: ["#3f7bd9", "#9ccaf5"]
     },
     classic: {
-        id: "classic", name: "Wolkenhof", img: "ui/Arena.png",
-        text: "Der alte Trainingshof – weicher Sand, klare Sicht.",
-        ambient: "clouds", grip: 1
+        id: "classic", name: "Wolkenhof", img: "ui/Map-Wolkenhof.png",
+        text: "Ein Marmorhof im Abendrot – Blüten wehen über den Platz.",
+        ambient: "petals", grip: 1, dust: "rgba(236,230,242,0.6)", bg: ["#7080d6", "#ffb496"]
     },
     volcano: {
         id: "volcano", name: "Vulkanschmiede", img: "ui/Map-Vulkan.png",
         text: "Glut steigt auf – und manchmal bricht der Boden auf. Achte auf Feuerfontänen!",
-        ambient: "embers", grip: 1, hazard: "geyser"
+        ambient: "embers", grip: 1, hazard: "geyser", bg: ["#1c0a0e", "#7a1a0a"]
     },
     frost: {
         id: "frost", name: "Frostgipfel", img: "ui/Map-Frost.png",
         text: "Spiegelglattes Eis: Wer getroffen wird, rutscht weit.",
-        ambient: "snow", grip: 0.32
+        ambient: "snow", grip: 0.32, bg: ["#16204a", "#4a6496"]
     }
 }
 const MAP_ORDER = ["sky", "classic", "volcano", "frost"]

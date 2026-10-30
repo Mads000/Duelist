@@ -1,9 +1,11 @@
-# Erzeugt die Maps "Vulkanschmiede" und "Frostgipfel" aus der Original-Arena (Arena2.png)
+# Erzeugt die Maps "Vulkanschmiede", "Frostgipfel" und "Wolkenhof" aus der Original-Arena (Arena2.png)
 # durch Umfärben der Bereiche Himmel / Boden / Steine / Pflanzen.
-# Aufruf: python tools/make_maps.py
+# Aufruf: python tools/make_maps.py [Dateiname ...]   (ohne Angabe: alle Maps)
 import colorsys
+import math
 import os
 import random
+import sys
 from collections import deque
 
 from PIL import Image, ImageFilter
@@ -151,5 +153,89 @@ def frost(kind, c, x, y, n, fine):
     return c
 
 
-make("Map-Vulkan.png", volcano)
-make("Map-Frost.png", frost)
+# ---------------- Wolkenhof ----------------
+# Marmorhof im Abendrot: helle Steinplatten, Emblem in der Mitte, Blütenbüsche
+EMBLEM = (768, 560)
+
+
+def clamp(c):
+    return tuple(max(0, min(255, int(v))) for v in c)
+
+
+def wolkenhof(kind, c, x, y, n, fine):
+    h, s, v = hsv(c)
+    if kind == "sky":
+        if s < 0.25:  # Wolken rosa angehaucht
+            return lerp((246, 196, 206), (255, 244, 238), v)
+        t = min(1, max(0, y / H * 1.1 + (n - 0.5) * 0.25))
+        return lerp((112, 128, 214), (255, 178, 150), t)
+    if kind == "floor":
+        cx, cy = EMBLEM
+        d = math.hypot(x - cx, (y - cy) * 1.3)
+        a = math.atan2((y - cy) * 1.3, x - cx)
+        if d < 172:
+            if d >= 162:
+                return (52, 78, 156)
+            if d >= 150:
+                return clamp(lerp((196, 150, 50), (255, 222, 120), v))
+            if d < 26:
+                return (255, 236, 170)
+            if 92 <= d < 98:
+                return clamp(lerp((196, 150, 50), (255, 222, 120), v))
+            if abs(math.sin(4 * a)) < 0.09 + 6 / max(d, 1):
+                return clamp(lerp((206, 160, 60), (255, 226, 130), 1 - d / 150))
+            return clamp(lerp((120, 156, 226), (176, 204, 246), v * 0.8 + fine * 0.2))
+        size = 72
+        lx, ly = x % size, (y + (size // 2 if (x // size) % 2 else 0)) % size
+        tone = 0.92 + (((x // size) * 7 + (y // size) * 13) % 5) * 0.022
+        g = (0.8 + v * 0.28) * tone
+        base = (222 * g, 214 * g, 204 * g)
+        if lx < 3 or ly < 3:
+            base = lerp(clamp(base), (150, 148, 170), 0.55)
+        elif fine > 0.9:
+            base = lerp(clamp(base), (196, 196, 214), 0.45)  # Marmor-Adern
+        return clamp(base)
+    if kind == "stone":
+        return clamp((150 * v + 72, 152 * v + 76, 172 * v + 82))
+    if kind == "plant":
+        if fine > 0.68:
+            return clamp(lerp((240, 120, 170), (255, 214, 232), v))
+        return clamp(lerp((34, 100, 70), (120, 196, 120), v))
+    return c
+
+
+# ---------------- Schwebende Insel (Menü-Hintergrund) ----------------
+# Original-Arena ohne Himmel, verkleinert, mit transparentem Rand
+def make_float(name):
+    # nur den zusammenhängenden Teil um die Mitte (keine Wolkenreste)
+    keep = bytearray(W * H)
+    q = deque([(W // 2, H // 2)])
+    while q:
+        x, y = q.popleft()
+        i = y * W + x
+        if keep[i] or sky[i]:
+            continue
+        keep[i] = 1
+        for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+            if 0 <= nx < W and 0 <= ny < H and not keep[ny * W + nx]:
+                q.append((nx, ny))
+    out = Image.new("RGBA", (W, H))
+    o = out.load()
+    for y in range(H):
+        for x in range(W):
+            if keep[y * W + x]:
+                o[x, y] = px[x, y] + (255,)
+    box = out.getbbox()
+    out = out.crop(box)
+    out = out.resize((out.width * 2 // 3, out.height * 2 // 3), Image.NEAREST)
+    path = os.path.join(ROOT, "ui", name)
+    out.save(path, optimize=True)
+    print("gespeichert:", path)
+
+
+ALL = {"Map-Vulkan.png": volcano, "Map-Frost.png": frost, "Map-Wolkenhof.png": wolkenhof, "Arena-Insel.png": None}
+for name in (sys.argv[1:] or ALL):
+    if ALL[name]:
+        make(name, ALL[name])
+    else:
+        make_float(name)

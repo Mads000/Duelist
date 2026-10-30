@@ -612,21 +612,16 @@ class Fighter {
         }
     }
 
-    // ---------- Arena-Grenzen (abgerundetes Rechteck) ----------
+    // ---------- Arena-Grenzen (vermessene Bodenform, siehe ARENA) ----------
     clampToArena() {
-        const r = ARENA.radius
-        const ix0 = ARENA.x0 + r, ix1 = ARENA.x1 - r
-        const iy0 = ARENA.y0 + r, iy1 = ARENA.y1 - r
-        const cx = Math.max(ix0, Math.min(ix1, this.x))
-        const cy = Math.max(iy0, Math.min(iy1, this.y))
-        const dx = this.x - cx
-        const dy = this.y - cy
-        const d = Math.hypot(dx, dy)
-        if (d > r) {
-            this.x = cx + dx / d * r
-            this.y = cy + dy / d * r
-            // an der Wand abprallen statt "kleben"
+        const [x, y] = ARENA.clamp(this.x, this.y)
+        // an der Mauer abprallen statt "kleben" – je Achse, damit man an der Wand entlanglaufen kann
+        if (x !== this.x) {
+            this.x = x
             this.vx *= -0.25
+        }
+        if (y !== this.y) {
+            this.y = y
             this.vy *= -0.25
         }
     }

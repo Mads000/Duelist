@@ -33,6 +33,18 @@ const UI = {
         for (const btn of $$("[data-go]")) btn.addEventListener("click", () => App.go(btn.dataset.go))
         for (const btn of $$("[data-back]")) btn.addEventListener("click", () => App.back())
 
+        // Hauptmenü: kurze Erklärung zum Modus unter dem Mauszeiger / Fokus
+        const info = $("#menuInfo")
+        const explain = btn => {
+            const [name, ...rest] = btn.dataset.info.split(": ")
+            info.innerHTML = `<b>${name}</b> ${rest.join(": ")}`
+        }
+        for (const btn of $$(".menu-panel [data-info]")) {
+            btn.addEventListener("mouseenter", () => explain(btn))
+            btn.addEventListener("focus", () => explain(btn))
+        }
+        explain($(".menu-arcade"))
+
         this.buildLore()
         this.buildSettings()
         this.buildSelect()
