@@ -659,9 +659,8 @@ class Fighter {
             case "blink": {
                 fx.smoke(this.x, this.y, 14, "rgba(150,220,255,0.6)")
                 const side = Math.sign(opp.x - this.x) || this.facing
-                this.x = opp.x + side * 110
-                this.y = opp.y
-                this.clampToArena()
+                // Teleport landet immer auf der Insel
+                ;[this.x, this.y] = ARENA.clamp(opp.x + side * 110, opp.y, 20)
                 this.facing = -side
                 this.iframes = 0.35
                 this.mvx = this.mvy = this.vx = this.vy = 0
@@ -717,11 +716,10 @@ class Fighter {
     clampToArena() {
         if (this.state === "fall") return
         const [x, y] = ARENA.clamp(this.x, this.y)
-        // Abgrund: wer mit Wucht durch eine Mauerlücke geschleudert wird, stürzt in die Wolken
-        const flung = (this.state === "hurt" || this.state === "dizzy") && Math.hypot(this.vx, this.vy) > 160
-        if ((x !== this.x || y !== this.y) && flung && this.match.ringOuts) {
-            // über die Mauer in die Wolken
-            if (Math.hypot(this.x - x, (this.y - y) * 1.8) > 30) this.startFall()
+        // Schwebende Insel: wer über die Kante läuft, gedasht oder geschleudert wird, stürzt in die Wolken
+        if ((x !== this.x || y !== this.y) && this.match.ringOuts && this.state !== "dead") {
+            if (Math.hypot(this.x - x, (this.y - y) * 1.8) > 26) this.startFall()
+            this.pushOutOfProps()
             return
         }
         // an der Mauer abprallen statt "kleben" – je Achse, damit man an der Wand entlanglaufen kann

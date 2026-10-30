@@ -74,6 +74,13 @@ class BotController {
             out.dash = true
             out.mx = this.dashDir.x
             out.my = this.dashDir.y
+            // nicht in den Abgrund dashen
+            const [sx, sy] = ARENA.clamp(me.x + out.mx * 170, me.y + out.my * 170, 10)
+            if (match.ringOuts && Math.hypot(sx - me.x - out.mx * 170, sy - me.y - out.my * 170) > 1) {
+                const l = Math.hypot(WORLD.width / 2 - me.x, 560 - me.y) || 1
+                out.mx = (WORLD.width / 2 - me.x) / l
+                out.my = (560 - me.y) / l
+            }
             return out
         }
 
@@ -177,7 +184,7 @@ class BotController {
             gx = item.x
             gy = item.y
         }
-        ;[gx, gy] = ARENA.clamp(gx, gy, 30)
+        ;[gx, gy] = ARENA.clamp(gx, gy, 70)
         let mx = gx - me.x
         let my = gy - me.y
         if (Math.abs(mx) < 10) mx = 0
@@ -192,6 +199,19 @@ class BotController {
         if (Math.random() > diff.accuracy) {
             out.mx += this.rand(-0.6, 0.6)
             out.my += this.rand(-0.6, 0.6)
+        }
+
+        // nicht selbst von der Insel laufen: Richtung Rand → zur Mitte lenken (schlaue Bots früher)
+        if (match.ringOuts) {
+            const look = 60 + diff.smart * 60
+            const [sx, sy] = ARENA.clamp(me.x + out.mx * look, me.y + out.my * look, 10)
+            if (Math.hypot(sx - (me.x + out.mx * look), sy - (me.y + out.my * look)) > 1) {
+                const cx = WORLD.width / 2 - me.x
+                const cy = 560 - me.y
+                const l = Math.hypot(cx, cy) || 1
+                out.mx = cx / l
+                out.my = cy / l
+            }
         }
 
         // ---- Angreifen ----
