@@ -204,6 +204,7 @@ class Fighter {
 
     updateFree(dt, opp, inp) {
         if (inp.dash && this.dashCd <= 0) return this.startDash(inp, opp)
+        if (this.bufLight > 0 && this.bufHeavy > 0) return this.startThrow(opp)
         if (this.bufHeavy > 0 && this.wantsSpecial(opp, inp)) return this.startSpecial(opp)
         if (this.bufHeavy > 0) return this.startAttack("heavy", 0, opp)
         if (this.bufLight > 0) return this.startAttack("light", 0, opp)
@@ -285,6 +286,15 @@ class Fighter {
         else this.vx += this.facing * amount
     }
 
+    // Wurf: Leicht + Schwer gleichzeitig – kurzes Ausholen, dann packen (siehe Match.tryThrow)
+    startThrow(opp) {
+        this.bufLight = 0
+        this.bufHeavy = 0
+        this.faceOpponent(opp, this.input)
+        this.vx += this.facing * 120
+        this.cast("heavy", this.champ.heavy.anim, 2, () => this.match.tryThrow(this, opp))
+    }
+
     // Spezialangriff: Richtung zum Gegner gedrückt halten + Schwer (wenn abgeklungen)
     wantsSpecial(opp, inp) {
         if (!this.champ.special || this.specialCd > 0) return false
@@ -348,6 +358,9 @@ class Fighter {
         const def = this.move
         const frame = this.frame
         const isHeavy = this.moveKind === "heavy"
+
+        // Leicht + Schwer kurz nacheinander gedrückt: doch ein Wurf
+        if (!isHeavy && this.comboStep === 0 && frame < 2 && this.bufHeavy > 0) return this.startThrow(opp)
 
         // Ausfallschritt des schweren Angriffs kurz vor dem Treffer
         if (isHeavy && def.hits.length && frame === def.hits[0][0] - 1 && !this.lunged) {
@@ -506,14 +519,14 @@ class Fighter {
     }
 
     // Treffer in die Deckung
-    blockHit(source, dmg, kb) {
+    blockHit(source, dmg, kb, guardMul = 1) {
         const chip = Math.max(1, Math.round(dmg * COMBAT.chip))
         this.hp = Math.max(1, this.hp - chip)
-        this.guard -= dmg * 6
+        this.guard -= dmg * 3.2 * guardMul // volle Deckung hält ~5 leichte oder ~2 schwere Treffer
         this.vx = (Math.sign(this.x - source.x) || -this.facing) * kb * 0.5
         this.state = "block"
         this.stateT = 0
-        this.stun = COMBAT.blockstun
+        this.stun = COMBAT.blockstun * (guardMul > 1 ? 1.6 : 1)
         this.mvx = 0
         this.mvy = 0
         if (this.champ.anims.block) this.setAnim("block")
@@ -708,7 +721,9 @@ class Fighter {
         const alpha = this.stealthAlpha()
 
         ctx.save()
-        ctx.translate(Math.round(this.x), Math.round(this.y))
+        // Getroffen: kurzes Zittern während des Treffer-Stopps (wie in klassischen Fightern)
+        const jitter = this.match.hitstop > 0 && this.state === "hurt" && this.stateT < 0.06 ? 5 : 0
+        ctx.translate(Math.round(this.x + (Math.random() - 0.5) * jitter), Math.round(this.y))
         if (this.facing < 0) ctx.scale(-1, 1)
 
         // Squash & Stretch

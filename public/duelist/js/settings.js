@@ -37,7 +37,7 @@ const GameSettings = {
 const emptyRecord = () => ({
     wins: 0, losses: 0, byDifficulty: {}, byChampion: {}, streak: 0, bestStreak: 0,
     unlocked: [], arcadeClears: 0,
-    highscores: { arcade: [], survival: [] }
+    highscores: { arcade: [] }
 })
 
 const PlayerRecord = {

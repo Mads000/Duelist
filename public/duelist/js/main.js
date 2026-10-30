@@ -28,6 +28,7 @@ const App = {
 
     async boot() {
         this.ctx = this.canvas.getContext("2d")
+        this.blockBrowserInput()
         this.loadConfig()
         Keyboard.init()
         Sound.setVolumes(GameSettings.get())
@@ -94,6 +95,39 @@ const App = {
         }
     },
 
+    // Browser-Eingaben abfangen, die das Spiel stören: Zoom, Kontextmenü, Markieren,
+    // Ziehen, Scrollen, Suchen/Speichern/Drucken/Neu laden, Alt-Menü, F-Tasten …
+    blockBrowserInput() {
+        const isField = e => !!(e.target && e.target.closest && e.target.closest("input, textarea"))
+        const opts = { passive: false }
+        window.addEventListener("wheel", e => {
+            if (e.ctrlKey || this.state === "game") e.preventDefault()
+        }, opts)
+        for (const t of ["gesturestart", "gesturechange", "gestureend"]) document.addEventListener(t, e => e.preventDefault(), opts)
+        document.addEventListener("touchmove", e => { if (e.touches.length > 1) e.preventDefault() }, opts)
+        document.addEventListener("dblclick", e => e.preventDefault(), opts)
+        document.addEventListener("contextmenu", e => { if (!isField(e)) e.preventDefault() })
+        document.addEventListener("dragstart", e => e.preventDefault())
+        document.addEventListener("selectstart", e => { if (!isField(e)) e.preventDefault() })
+        window.addEventListener("keydown", e => {
+            const field = isField(e)
+            const ctrl = e.ctrlKey || e.metaKey
+            // in Eingabefeldern Kopieren/Einfügen erlauben
+            if (ctrl && field && ["a", "c", "v", "x", "z"].includes(e.key.toLowerCase())) return
+            if (ctrl || e.altKey) e.preventDefault()
+            if (/^F([1-9]|10)$/.test(e.key)) e.preventDefault()   // F11 (Vollbild) und F12 bleiben
+            if (!field && ["Backspace", "Tab", "PageUp", "PageDown", "Home", "End"].includes(e.key)) e.preventDefault()
+            if (!field && this.state === "game" && [" ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) e.preventDefault()
+        }, { capture: true })
+        // Im Kampf vor versehentlichem Schließen/Neuladen warnen
+        window.addEventListener("beforeunload", e => {
+            if (this.state === "game" || this.state === "paused") {
+                e.preventDefault()
+                e.returnValue = ""
+            }
+        })
+    },
+
     loadConfig() {
         this.config = readStorage("duelist.lastConfig", this.config)
         if (!CHAMPIONS[this.config.champs[0]]) this.config.champs = ["vanguard", "warbrute"]
@@ -125,6 +159,7 @@ const App = {
             Modes.run = null
         }
         if (target === "tutorial") return Tutorial.begin()
+        if (target === "quick") return Modes.quick()
         if (target === "online") {
             UI.renderOnline()
             UI.show("online")
@@ -281,6 +316,7 @@ const App = {
         if (match !== this.match) return
         Modes.onEvent(type, data, match)
         Tutorial.onEvent(type, data)
+        Progress.onEvent(type, data, match)
         // Host meldet K.O. und Zeitablauf an den Gast
         if (match.netRole === "host") {
             if (type === "finisher") Net.send({ t: "ko", loser: data.loser.side, fin: data.fin })
@@ -314,7 +350,11 @@ const App = {
     finishMatch(match, winner) {
         if (match !== this.match) return
         Music.play("menu")
-        if (Modes.onMatchEnd(match, winner)) return
+        UI.progressInfo = Progress.onMatchEnd(match, winner)
+        if (Modes.onMatchEnd(match, winner)) {
+            if (UI.progressInfo && UI.current !== "results") UI.toast(`+${UI.progressInfo.xp} XP` + (UI.progressInfo.levelUp ? ` · LEVEL ${UI.progressInfo.levelUp}!` : ""))
+            return
+        }
         let note = ""
         if (match.mode === "solo") {
             PlayerRecord.addSoloResult(winner === 0, match.fighters[1].controller.diff.id, match.fighters[0].champId)

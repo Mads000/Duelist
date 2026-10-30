@@ -6,7 +6,7 @@ const $ = (sel, root = document) => root.querySelector(sel)
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel))
 
 const STAT_LABELS = { tempo: "Tempo", kraft: "Kraft", reichweite: "Reichweite" }
-const SINGLE_PICK_MODES = ["arcade", "survival", "training", "story", "online"]
+const SINGLE_PICK_MODES = ["arcade", "training", "story", "online"]
 
 const UI = {
     current: null,
@@ -59,7 +59,7 @@ const UI = {
             this.show("settings")
         })
         $("#rematchBtn").addEventListener("click", () => App.restart())
-        $("#changeBtn").addEventListener("click", () => App.go(App.config.mode))
+        $("#changeBtn").addEventListener("click", () => App.go(App.config.mode === "quick" ? "solo" : App.config.mode))
         $("#menuBtn").addEventListener("click", () => App.quitToMenu())
         $("#pauseBtn").addEventListener("click", () => App.pause())
         $("#swapPads").addEventListener("click", () => Link.swapSlots())
@@ -98,17 +98,7 @@ const UI = {
 
     // ---------------- Hauptmenü: Bilanz ----------------
     renderRecord() {
-        const r = PlayerRecord.data
-        const total = r.wins + r.losses
-        const rate = total ? Math.round(r.wins / total * 100) : 0
-        const best = (r.highscores.arcade[0] || {}).score || 0
-        $("#recordCard").innerHTML = `
-            <div><b>${r.wins}</b><span>Siege</span></div>
-            <div><b>${r.losses}</b><span>Niederlagen</span></div>
-            <div><b>${rate}%</b><span>Quote</span></div>
-            <div><b>${best.toLocaleString("de-DE")}</b><span>Arcade-Rekord</span></div>
-            <div><b>${r.bestStreak}</b><span>Beste Serie</span></div>
-        `
+        $("#recordCard").innerHTML = Progress.html()
     },
 
     // ---------------- Champions / Lore ----------------
@@ -754,7 +744,18 @@ const UI = {
             el.innerHTML = rows.join("")
         }
         fill($("#scoresArcade"), PlayerRecord.data.highscores.arcade || [])
-        fill($("#scoresSurvival"), PlayerRecord.data.highscores.survival || [])
+        const r = PlayerRecord.data
+        const total = r.wins + r.losses
+        const fav = Object.entries(r.byChampion || {}).sort((x, y) => (y[1].w + y[1].l) - (x[1].w + x[1].l))[0]
+        $("#profileBoard").innerHTML = [
+            ["Level", Progress.data.level],
+            ["Siege / Niederlagen", `${r.wins} / ${r.losses}`],
+            ["Siegquote", total ? Math.round(r.wins / total * 100) + " %" : "–"],
+            ["Beste Siegesserie", r.bestStreak],
+            ["Lieblings-Champion", fav && CHAMPIONS[fav[0]] ? CHAMPIONS[fav[0]].name : "–"],
+            ["Arcade geschafft", (r.arcadeClears || 0) + "×"],
+            ["Story beendet", (r.storyClears || []).length + " / " + CHAMPION_ORDER.length]
+        ].map(([k, v]) => `<div class="rc-row"><span>${k}</span><b>${v}</b></div>`).join("")
     },
 
     // ---------------- Handy-Controller ----------------
@@ -818,6 +819,18 @@ const UI = {
             </div>`
         }).join("")
         $("#resNote").textContent = note
+        // Fortschritt: XP, Level, geschaffte Aufgaben
+        const p = this.progressInfo
+        this.progressInfo = null
+        const box = $("#resProgress")
+        box.hidden = !p
+        if (p) {
+            const d = Progress.data
+            box.innerHTML = `<div class="rp-head"><b>+${p.xp} XP</b>${p.levelUp ? `<span class="rp-up">LEVEL UP! ${p.levelUp}</span>` : ""}</div>
+                <div class="pc-level"><b>LEVEL ${d.level}</b><div class="xp-bar"><i style="transform:scaleX(${d.xp / Progress.need(d.level)})"></i></div><span>${d.xp} / ${Progress.need(d.level)}</span></div>
+                <div class="rp-lines">${p.lines.map(l => `<span>${l}</span>`).join("")}</div>`
+            if (p.levelUp) Sound.play("victory")
+        }
         $("#rematchBtn").textContent = rematch
         $("#changeBtn").hidden = !change
         this.show("results")

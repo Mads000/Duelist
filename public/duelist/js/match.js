@@ -83,7 +83,7 @@ class Match {
     }
 
     callout(fighter, text, color) {
-        this.fx.text(fighter.x, fighter.y - 120, text, { color, size: 40, life: 1, vy: -90 })
+        this.fx.text(fighter.x, fighter.y - 120, text, { color, size: 32, life: 1, vy: -90 })
     }
 
     addShake(amount) {
@@ -267,8 +267,8 @@ class Match {
         // Deckung (rückwärts gedrückt halten, Gesicht zum Angreifer)
         const facingSrc = def.facing === (Math.sign(src.x - def.x) || def.facing)
         if (def.guarding && facingSrc) {
-            if (isHeavy) {
-                // Schwere Angriffe brechen die Deckung
+            if (move.guardBreak) {
+                // Spezialangriffe brechen die Deckung
                 def.guardBreak()
                 const dmg = Math.round(move.dmg * 0.5)
                 def.hp = Math.max(1, def.hp - dmg)
@@ -293,6 +293,8 @@ class Match {
                 this.fx.text(def.x, def.y - 125, "PERFEKT!", { color: "#fff4a8", size: 44, life: 0.9 })
                 this.sound("perfect")
                 this.hitstop = 0.1
+                this.slowmoT = Math.max(this.slowmoT, 0.14)
+                this.flash = Math.max(this.flash, 0.25)
                 def.state = "block"
                 def.stateT = 0
                 def.stun = 0.08
@@ -307,9 +309,12 @@ class Match {
                 this.emit("perfectBlock", { def })
                 return true
             }
-            const chip = def.blockHit(src, move.dmg, move.kb)
+            // Schwere Angriffe zehren stärker an der Deckung und halten länger im Block
+            const chip = def.blockHit(src, move.dmg, move.kb, isHeavy ? 1.6 : 1)
             def.stats.taken += chip
             att.stats.damage += chip
+            // Angreifer prallt ab – nach dem Block ist wieder Abstand
+            if (melee) att.vx -= att.facing * (isHeavy ? 260 : 160)
             this.fx.guardArc(def.x + def.facing * 18, def.y - 40, def.facing, false)
             this.fx.sparks(hitX, hitY, -dir, { count: 8, color: "#dff3ff", color2: "#9fc8ff", speed: 380 })
             this.sound("guard")
@@ -373,10 +378,11 @@ class Match {
         // Juice!
         this.fx.sparks(hitX, hitY, dir, { count: heavy ? 22 : 12, speed: heavy ? 700 : 480 })
         if (melee) this.fx.slash(hitX - att.facing * 20, hitY, att.facing, heavy ? "rgba(255,240,200,0.95)" : "rgba(255,255,255,0.85)", heavy)
-        this.fx.text(def.x, def.y - 110, String(dmg), { color: counter ? "#ff7a5a" : heavy ? "#ffd84a" : "#ffffff", size: heavy ? 60 : 44 })
+        this.fx.text(def.x, def.y - 110, String(dmg), { color: counter ? "#ff7a5a" : heavy ? "#ffd84a" : "#ffffff", size: heavy ? 46 : 34 })
         this.sound("hit", { heavy })
         this.hitstop = heavy ? 0.085 : counter ? 0.065 : 0.035
         this.addShake(heavy ? 15 : 5)
+        if (heavy || counter) this.punch = Math.max(this.punch || 0, heavy ? 0.07 : 0.045)
         this.vibrate(heavy ? 45 : 18, def)
 
         if (def.hp <= 0) {
@@ -399,6 +405,56 @@ class Match {
             b.x += dir * push
             a.clampToArena()
             b.clampToArena()
+        }
+    }
+
+    // ---------------- Wurf ----------------
+    // Leicht + Schwer nah am Gegner: geht durch jede Deckung, wird aber von Schlägen unterbrochen
+    tryThrow(att, def) {
+        if (this.phase !== "fight" || def.state === "dead") return
+        const close = Math.abs(def.x - att.x) < 125 && Math.abs(def.y - att.y) < COMBAT.depthReach * 1.3
+        const open = ["idle", "run", "block", "recover"].includes(def.state) && !def.invulnerable
+        if (!close || !open) {
+            this.fx.text(att.x, att.y - 110, "DANEBEN", { color: "#dfe7ff", size: 28, life: 0.6 })
+            this.sound("whiff")
+            return
+        }
+        // Wurf-Befreiung: der Gegner drückt im selben Moment auch Leicht + Schwer
+        if (def.bufLight > 0 && def.bufHeavy > 0) {
+            att.vx = -att.facing * 420
+            def.vx = att.facing * 420
+            this.fx.text((att.x + def.x) / 2, att.y - 120, "BEFREIT!", { color: "#bfe3ff", size: 34, life: 0.8 })
+            this.fx.ring((att.x + def.x) / 2, att.y, { radius: 90, color: "rgba(200,230,255,0.9)", life: 0.3, width: 6 })
+            this.sound("guard")
+            this.hitstop = 0.06
+            return
+        }
+        const dir = att.facing
+        let dmg = 10
+        if ((this.training || this.netRole === "guest") && def.hp - dmg < 1) dmg = Math.max(0, Math.ceil(def.hp - 1))
+        // über die Schulter: der Gegner landet hinter dem Werfer
+        def.x = att.x - dir * 40
+        def.clampToArena()
+        def.takeHit({ x: att.x + dir * 60, y: def.y }, dmg, 780, true)
+        def.guard = Math.max(def.guard, COMBAT.guardMax * 0.3)
+        att.facing = -dir
+        att.stats.damage += dmg
+        att.stats.hits++
+        def.stats.taken += dmg
+        if (!att.landedThisSwing) att.gainEnergy(1)
+        this.fx.text(def.x, def.y - 120, "WURF!", { color: "#ffd84a", size: 40, life: 0.9 })
+        this.fx.dust(def.x, def.y, { count: 12, size: 24, color: this.map.dust })
+        this.fx.ring(def.x, def.y, { radius: 120, color: "rgba(255,240,200,0.9)", life: 0.35, width: 8 })
+        this.sound("hit", { heavy: true })
+        this.hitstop = 0.09
+        this.punch = 0.06
+        this.addShake(16)
+        this.vibrate(50, def)
+        this.emit("throw", { att, def })
+        this.emit("hit", { att, def, dmg, heavy: true, counter: false })
+        if (def.hp <= 0) {
+            this.lastHit = { melee: true, heavy: true, throw: true }
+            this.knockout(att, def)
         }
     }
 
@@ -799,6 +855,8 @@ class Match {
         })
         if (r.i >= this.rec.length - 1 || skip) {
             this.emit("replay", { on: false })
+            this.setPhase("ko")       // letzte Szene ohne REPLAY-Balken stehen lassen
+            this.phaseT = 9
             this.over = true
             this.emit("matchEnd", { winner: this.roundWinner })
         }
@@ -862,6 +920,7 @@ class Match {
         if (h.combo >= 4) return { text: h.combo + "-HIT FINISH", sub: "Kombo-Finisher", big: true }
         if (h.aimY > 0) return { text: "VON OBEN!", sub: "Finisher", big: h.heavy }
         if (h.aimY < 0) return { text: "UPPERCUT!", sub: "Finisher", big: h.heavy }
+        if (h.throw) return { text: "WURF-K.O.", sub: "Über die Schulter", big: true }
         if (h.heavy) return { text: "BRUTAL!", sub: "Schwerer Finisher", big: true }
         return { text: "K.O.", sub: "" }
     }
@@ -912,7 +971,7 @@ class Match {
         if (decided || (tooLong && this.wins[0] !== this.wins[1])) {
             const winner = this.wins[0] > this.wins[1] ? 0 : 1
             // Entscheidender K.O.: Zeitlupen-Wiederholung des Finishers
-            if (this.koTime !== undefined && this.rec.length > 30 && this.roundWinner === winner && this.koTarget) {
+            if (this.settings.replay && this.koTime !== undefined && this.rec.length > 30 && this.roundWinner === winner && this.koTarget) {
                 this.roundWinner = winner
                 return this.startReplay()
             }
@@ -983,6 +1042,11 @@ class Match {
         const k = cam.ready ? 1 - Math.exp(-(this.koTarget ? 5 : 3.2) * dt) : 1
         const kPos = cam.ready ? 1 - Math.exp(-(me && !this.koTarget ? 9 : this.koTarget ? 5 : 3.2) * dt) : 1
         cam.zoom += (zoom - cam.zoom) * k
+        // kurzer Zoom-Stoß bei harten Treffern
+        if (this.punch > 0) {
+            cam.zoom *= 1 + this.punch
+            this.punch = Math.max(0, this.punch - dt * 0.6)
+        }
         cam.x += (cx - cam.x) * kPos
         cam.y += (cy - cam.y) * kPos
         cam.ready = true

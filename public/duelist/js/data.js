@@ -393,7 +393,6 @@ const MODES = {
     arcade:   { id: "arcade",   name: "Arcade",        sub: "7 Gegner · Endboss · Highscore" },
     solo:     { id: "solo",     name: "Gegen Bot",     sub: "Freies Duell gegen die KI" },
     local:    { id: "local",    name: "Lokales Duell", sub: "2 Spieler · Tastatur, Gamepad oder Handy" },
-    survival: { id: "survival", name: "Survival",      sub: "Ein Leben · endlose Gegner" },
     training: { id: "training", name: "Training",      sub: "Kombos üben ohne Druck" },
     story:    { id: "story",    name: "Story",         sub: "Die Geschichte deines Champions" }
 }

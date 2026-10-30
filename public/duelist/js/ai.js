@@ -199,8 +199,12 @@ class BotController {
         if (!me.busy && inRange && t >= this.inRangeSince) {
             const punish = op.state === "recover" || op.state === "hurt" || op.state === "throw" || op.state === "dizzy"
             const opBlocks = op.guarding || op.state === "block"
-            if (punish || Math.random() < diff.aggression * 0.35) {
-                // Gegen Blocker: schwerer Angriff bricht die Deckung
+            // Gegen Blocker nah dran: werfen
+            if (opBlocks && adx < 110 && Math.random() < diff.smart * 0.06) {
+                out.light = true
+                out.heavy = true
+            } else if (punish || Math.random() < diff.aggression * 0.35) {
+                // Gegen Blocker: schwerer Angriff drückt die Deckung leer
                 // Spezialangriff (zum Gegner + Schwer), wenn bereit
                 const special = me.specialReady && Math.random() < diff.heavy * 0.45
                 if (special || (opBlocks && Math.random() < diff.smart) || Math.random() < diff.heavy * 0.4) out.heavy = true

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>DUELIST</title>
-    <meta name="description" content="DUELIST – Pixel-Duelle in der Arena über den Wolken. Arcade, Survival, gegen den Bot oder zu zweit.">
+    <meta name="description" content="DUELIST – Pixel-Duelle in der Arena über den Wolken. Schnelle Matches, Arcade, Story, gegen den Bot, zu zweit oder online.">
     <meta name="theme-color" content="#091f5b">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,7 +19,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/app.css?v=3.0.20">
+    <link rel="stylesheet" href="css/app.css?v=3.0.23">
 </head>
 
 <body>
@@ -56,26 +56,23 @@
             <h1 class="logo logo-menu chrome">DUELIST</h1>
             <p class="menu-tag">Die Arena über den Wolken</p>
             <nav class="menu-panel glass">
-                <button class="btn start menu-arcade" data-go="arcade" data-info="Arcade: Kämpf dich durch 5 Gegner mit steigender Schwierigkeit bis zum Endboss. Punkte für Treffer, Konter und Finisher – ab in die Highscores! Wer gewinnt, schaltet einen geheimen Champion frei."><b>Arcade</b><small>5 Gegner · Endboss · Highscore</small></button>
+                <button class="btn start menu-arcade" data-go="quick" data-info="Schnelles Match: Sofort los – dein Champion gegen einen zufälligen Gegner, kurze 45-Sekunden-Runden. Perfekt für zwischendurch."><b>Schnelles Match</b><small>Sofort kämpfen · kurze Runden</small></button>
                 <div class="mode-grid">
-                    <button class="btn mode" data-go="solo" data-info="Gegen Bot: Ein freies Duell gegen die KI. Du wählst Gegner, Schwierigkeit (Rekrut bis Legende), Arena und ob Bomben vom Himmel fallen."><b>Gegen Bot</b><small>Freies Duell</small></button>
-                    <button class="btn mode" data-go="local" data-info="Lokales Duell: Zwei Spieler an einem Gerät – geteilte Tastatur, zwei Gamepads oder Handys als Controller."><b>Lokales Duell</b><small>2 Spieler</small></button>
-                    <button class="btn mode" data-go="online" data-info="Online-Duell: Spiel gegen einen Freund an seinem eigenen Gerät – einer erstellt einen Raum, der andere gibt den 4-stelligen Code ein."><b>Online-Duell</b><small>Per Code verbinden</small></button>
-                    <button class="btn mode" data-go="story" data-info="Story: Erlebe die Geschichte deines Champions – drei Rivalen, der Knochenkönig und ein eigenes Ende."><b>Story</b><small>Kapitel &amp; Ende</small></button>
-                    <button class="btn mode" data-go="survival" data-info="Survival: Ein Leben, endlose Gegner. Nach jedem Sieg heilst du nur 30 % – jeder 5. Gegner ist der Endboss. Wie weit kommst du?"><b>Survival</b><small>Ein Leben, endlos</small></button>
-                    <button class="btn mode" data-go="training" data-info="Training: Übe Kombos, Blocken und Fähigkeiten gegen einen Dummy. Unendlich Energie, niemand verliert."><b>Training</b><small>Kombos üben</small></button>
+                    <button class="btn mode" data-go="arcade" data-info="Arcade: Kämpf dich durch 5 Gegner bis zum Endboss. Punkte für Treffer, Konter und Finisher – ab in die Highscores!"><b>Arcade</b><small>5 Gegner · Endboss</small></button>
+                    <button class="btn mode" data-go="versus" data-info="Versus: Gegen den Bot, zu zweit an einem Gerät oder online gegen einen Freund."><b>Versus</b><small>Bot · Lokal · Online</small></button>
+                    <button class="btn mode" data-go="story" data-info="Story: Die Geschichte deines Champions – drei Rivalen, der Knochenkönig und ein eigenes Ende."><b>Story</b><small>Kapitel &amp; Ende</small></button>
+                    <button class="btn mode" data-go="training" data-info="Training: Übe Kombos, Würfe und Blocken gegen einen Dummy. Das Tutorial findest du unter „Steuerung“."><b>Training</b><small>Üben ohne Druck</small></button>
                 </div>
                 <p class="menu-info" id="menuInfo" aria-live="polite"></p>
                 <div class="menu-links">
-                    <button class="btn link" data-go="tutorial" data-info="Tutorial: Lerne Schritt für Schritt alle Techniken – Bewegen, Kombos, Blocken, Fähigkeit und Spezialangriff.">Tutorial</button>
-                    <button class="btn link" data-go="controller" data-info="Controller: Mach dein Handy zum Gamepad – QR-Code scannen oder 4-stelligen Code eingeben.">Controller</button>
-                    <button class="btn link" data-go="lore" data-info="Champions: Geschichte, Werte und Fähigkeit jedes Kämpfers.">Champions</button>
-                    <button class="btn link" data-go="scores" data-info="Highscores: Die besten 10 Läufe in Arcade und Survival.">Highscores</button>
-                    <button class="btn link" data-go="controls" data-info="Steuerung: Alle Tasten für Tastatur, Gamepad, Touch und Handy – plus Tipps zum Kampfsystem.">Steuerung</button>
-                    <button class="btn link" data-go="settings" data-info="Optionen: Lautstärke, Rundenanzahl, Spieltempo, Bildschirm-Wackeln und mehr.">Optionen</button>
+                    <button class="btn link" data-go="lore" data-info="Champions: Geschichte, Werte, Fähigkeit und Spezialangriff jedes Kämpfers.">Champions</button>
+                    <button class="btn link" data-go="scores" data-info="Highscores &amp; Profil: deine besten Arcade-Läufe und deine Statistik.">Highscores</button>
+                    <button class="btn link" data-go="controls" data-info="Steuerung: Alle Tasten und Tipps zum Kampfsystem – plus das Tutorial.">Steuerung</button>
+                    <button class="btn link" data-go="settings" data-info="Optionen: Lautstärke, Runden, Tastenbelegung und mehr.">Optionen</button>
+                    <button class="btn link" data-go="controller" data-info="Controller: Mach dein Handy zum Gamepad – QR-Code scannen oder Code eingeben.">Controller</button>
                 </div>
             </nav>
-            <div class="menu-stats" id="recordCard"></div>
+            <div class="menu-progress glass" id="recordCard"></div>
             </div>
         </div>
     </section>
@@ -164,7 +161,20 @@
         </header>
         <div class="scores-grid">
             <div class="board p1"><h3>Arcade</h3><ol class="score-list" id="scoresArcade"></ol></div>
-            <div class="board p2"><h3>Survival</h3><ol class="score-list" id="scoresSurvival"></ol></div>
+            <div class="board p2"><h3>Dein Profil</h3><div class="profile" id="profileBoard"></div></div>
+        </div>
+    </section>
+
+    <!-- ================= VERSUS ================= -->
+    <section id="screen-versus" class="screen">
+        <header class="screen-head">
+            <button class="back-btn" data-back aria-label="Zurück">‹</button>
+            <h2>Versus</h2>
+        </header>
+        <div class="versus-grid">
+            <button class="btn versus-card" data-go="solo"><b>Gegen Bot</b><small>Wähle Gegner, Schwierigkeit und Arena</small></button>
+            <button class="btn versus-card" data-go="local"><b>Lokal</b><small>Zu zweit an einem Gerät – Tastatur, Gamepad oder Handy</small></button>
+            <button class="btn versus-card" data-go="online"><b>Online</b><small>Gegen einen Freund an seinem Gerät – per Code</small></button>
         </div>
     </section>
 
@@ -283,6 +293,7 @@
         <header class="screen-head">
             <button class="back-btn" data-back aria-label="Zurück">‹</button>
             <h2>Steuerung</h2>
+            <button class="btn start tut-btn" data-go="tutorial">Tutorial starten</button>
         </header>
         <div class="controls-grid">
             <div class="glass panel">
@@ -322,10 +333,11 @@
                 <h3>Kampfsystem</h3>
                 <ul>
                     <li><b>Kombo:</b> Leicht, Leicht, <b>Schwer</b> – der schwere Schlag beendet die Kombo mit Wucht.</li>
+                    <li><b>Wurf:</b> <b>Leicht + Schwer</b> gleichzeitig, nah am Gegner – geht durch jede Deckung. Gleichzeitig ebenfalls Leicht + Schwer drücken = befreien.</li>
                     <li><b>Spezialangriff:</b> Zum Gegner drücken + <b>Schwer</b> – jeder Champion hat einen eigenen (z. B. Schildsturm, Feuersalve). Bricht die Deckung, danach 4 Sekunden Abklingzeit (SP im HUD).</li>
                     <li><b>Oben &amp; unten:</b> Halte hoch oder runter beim Angriff – oder steh einfach über/unter dem Gegner. Dann schlägst du in diese Richtung.</li>
                     <li><b>Blocken:</b> Vom Gegner <b>weg</b> drücken. Kurz vor dem Treffer = <b>PERFEKT</b>: kein Schaden, der Gegner taumelt.</li>
-                    <li><b>Schwere Angriffe</b> brechen jede Deckung (GUARD BREAK).</li>
+                    <li><b>Schwere Angriffe</b> leeren die Deckung schnell – ist sie leer: GUARD BREAK. Spezialangriffe brechen sie sofort.</li>
                     <li><b>Konter:</b> Triff den Gegner, während er zu einem schweren Angriff oder einer Fähigkeit ausholt – 40 % mehr Schaden.</li>
                     <li><b>Dash</b> macht kurz unverwundbar – perfekt gegen Bomben und Feuerbälle.</li>
                     <li><b>Fähigkeit:</b> Treffer laden sie auf (3 Treffer, Warbrute bis zu 5).</li>
@@ -462,6 +474,7 @@
             </div>
             <div class="res-stats glass" id="resStats"></div>
             <div class="res-note" id="resNote"></div>
+            <div class="res-progress glass" id="resProgress" hidden></div>
             <div class="res-actions">
                 <button class="btn start" id="rematchBtn">Revanche</button>
                 <button class="btn" id="changeBtn">Champion wechseln</button>
@@ -477,24 +490,25 @@
     <div id="fps" hidden></div>
     <div id="toast"></div>
 
-    <script src="js/arena_shape.js?v=3.0.20"></script>
-    <script src="js/data.js?v=3.0.20"></script>
-    <script src="js/audio.js?v=3.0.20"></script>
-    <script src="js/settings.js?v=3.0.20"></script>
-    <script src="js/assets.js?v=3.0.20"></script>
-    <script src="js/input.js?v=3.0.20"></script>
-    <script src="js/link.js?v=3.0.20"></script>
-    <script src="js/pad.js?v=3.0.20"></script>
-    <script src="js/fx.js?v=3.0.20"></script>
-    <script src="js/fighter.js?v=3.0.20"></script>
-    <script src="js/ai.js?v=3.0.20"></script>
-    <script src="js/match.js?v=3.0.20"></script>
-    <script src="js/ui.js?v=3.0.20"></script>
-    <script src="js/modes.js?v=3.0.20"></script>
-    <script src="js/net.js?v=3.0.20"></script>
-    <script src="js/tutorial.js?v=3.0.20"></script>
-    <script src="js/story.js?v=3.0.20"></script>
-    <script src="js/main.js?v=3.0.20"></script>
+    <script src="js/arena_shape.js?v=3.0.23"></script>
+    <script src="js/data.js?v=3.0.23"></script>
+    <script src="js/audio.js?v=3.0.23"></script>
+    <script src="js/settings.js?v=3.0.23"></script>
+    <script src="js/assets.js?v=3.0.23"></script>
+    <script src="js/input.js?v=3.0.23"></script>
+    <script src="js/link.js?v=3.0.23"></script>
+    <script src="js/pad.js?v=3.0.23"></script>
+    <script src="js/fx.js?v=3.0.23"></script>
+    <script src="js/fighter.js?v=3.0.23"></script>
+    <script src="js/ai.js?v=3.0.23"></script>
+    <script src="js/match.js?v=3.0.23"></script>
+    <script src="js/ui.js?v=3.0.23"></script>
+    <script src="js/modes.js?v=3.0.23"></script>
+    <script src="js/progress.js?v=3.0.23"></script>
+    <script src="js/net.js?v=3.0.23"></script>
+    <script src="js/tutorial.js?v=3.0.23"></script>
+    <script src="js/story.js?v=3.0.23"></script>
+    <script src="js/main.js?v=3.0.23"></script>
 </body>
 
 </html>

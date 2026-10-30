@@ -1,5 +1,5 @@
 // ============================================================
-//  Spielmodi – Arcade (Leiter + Endboss), Survival, Training,
+//  Spielmodi – Schnelles Match, Arcade (Leiter + Endboss), Story, Training,
 //  freies Duell gegen Bot und lokales Duell
 // ============================================================
 
@@ -16,13 +16,13 @@ function shuffle(list) {
 }
 
 const Modes = {
-    run: null,   // laufender Arcade-/Survival-Durchgang
+    run: null,   // laufender Arcade- oder Story-Durchgang
 
     begin(mode) {
         App.config.mode = mode
         if (mode === "arcade") return this.startArcade()
-        if (mode === "survival") return this.startSurvival()
         if (mode === "story") return this.startStory()
+        if (mode === "quick") return this.quick()
         this.run = null
         const c = App.config
         const map = c.map && c.map !== "random" ? c.map : MAP_ORDER[Math.floor(Math.random() * MAP_ORDER.length)]
@@ -66,7 +66,7 @@ const Modes = {
         UI.setScore(this.run.score)
     },
 
-    // Punkte aus dem Match-Geschehen (nur Arcade & Survival)
+    // Punkte aus dem Match-Geschehen (nur Arcade)
     onEvent(type, data, match) {
         if (!this.run) return
         const human = f => f && f.side === 0
@@ -107,6 +107,20 @@ const Modes = {
         App.setState("ladder")
     },
 
+    // ---------------- Schnelles Match ----------------
+    // Ein Tipp, sofort kämpfen: eigener Champion gegen Zufallsgegner, kurze Runden
+    quick() {
+        this.run = null
+        const c = App.config
+        c.mode = "quick"
+        c.champs[1] = pickRandomChamp([c.champs[0]])
+        App.startMatch({
+            rules: { mode: "solo", map: MAP_ORDER[Math.floor(Math.random() * MAP_ORDER.length)], rounds: 3, roundTime: 45, vs: true },
+            champs: [c.champs[0], c.champs[1]],
+            opponent: { difficulty: c.difficulty }
+        })
+    },
+
     // ---------------- Story ----------------
     startStory() {
         const champ = App.config.champs[0]
@@ -125,34 +139,6 @@ const Modes = {
             steps: r.ladder,
             current: r.stage,
             info: `<b>${s.title}</b> · gegen ${CHAMPIONS[s.champ].name}<br><span class="story-text">${s.text}</span>`
-        })
-        App.setState("ladder")
-    },
-
-    // ---------------- Survival ----------------
-    startSurvival() {
-        this.run = { mode: "survival", champ: App.config.champs[0], wins: 0, score: 0, stageStartScore: 0, hp: null, over: false }
-        this.nextSurvivalOpponent()
-    },
-
-    nextSurvivalOpponent() {
-        const r = this.run
-        const n = r.wins + 1
-        const boss = n % 5 === 0
-        const diff = r.wins < 2 ? "easy" : r.wins < 4 ? "normal" : r.wins < 7 ? "hard" : "nightmare"
-        r.current = {
-            champ: boss ? "gravelord" : pickRandomChamp([]),
-            diff,
-            map: MAP_ORDER[Math.floor(Math.random() * MAP_ORDER.length)],
-            boss
-        }
-        const maxHp = CHAMPIONS[r.champ].hp
-        const hp = r.hp === null ? maxHp : r.hp
-        UI.showLadder({
-            title: `GEGNER #${n}`,
-            steps: [r.current],
-            current: 0,
-            info: `<b>${CHAMPIONS[r.current.champ].name}</b> · ${DIFFICULTIES[diff].name}${boss ? " · BOSS" : ""}<br>Dein Leben: ${Math.ceil(hp)} / ${maxHp} · Siege: ${r.wins} · Punkte: ${r.score.toLocaleString("de-DE")}`
         })
         App.setState("ladder")
     },
@@ -182,13 +168,6 @@ const Modes = {
                     mode: "arcade", map: s.map, rounds: 3, roundTime: 60, vs: true,
                     stage: s.boss ? "ENDBOSS" : `STAGE ${r.stage + 1}/${r.ladder.length - 1}`
                 },
-                champs: [r.champ, s.champ],
-                opponent: { difficulty: s.diff }
-            })
-        } else {
-            const s = r.current
-            App.startMatch({
-                rules: { mode: "survival", map: s.map, rounds: 1, roundTime: 60, vs: true, stage: `GEGNER #${r.wins + 1}`, hp: [r.hp, null] },
                 champs: [r.champ, s.champ],
                 opponent: { difficulty: s.diff }
             })
@@ -255,18 +234,7 @@ const Modes = {
             return true
         }
 
-        // Survival
-        const me = match.fighters[0]
-        if (won) {
-            r.wins++
-            this.addScore(1500 * r.wins)
-            r.hp = Math.min(me.maxHp, me.hp + me.maxHp * 0.3)
-            this.nextSurvivalOpponent()
-        } else {
-            r.over = true
-            this.finishRun(match, winner, { title: "GAME OVER", sub: `${r.wins} Gegner besiegt` })
-        }
-        return true
+        return false
     },
 
     // Highscore eintragen (falls gut genug), dann Ergebnis zeigen
@@ -285,7 +253,7 @@ const Modes = {
         if (rank >= 0) {
             App.setState("entry")
             UI.showEntry(r.score, rank === 0 ? "NEUER REKORD!" : `PLATZ ${rank + 1}!`, name => {
-                const entry = { name, score: r.score, champ: r.champ, detail: mode === "survival" ? `${r.wins} Siege` : r.stage >= r.ladder.length ? "geschafft" : `Stage ${r.stage + 1}` }
+                const entry = { name, score: r.score, champ: r.champ, detail: r.stage >= r.ladder.length ? "geschafft" : `Stage ${r.stage + 1}` }
                 PlayerRecord.addHighscore(mode, entry)
                 showResults()
             })
