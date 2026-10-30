@@ -86,16 +86,12 @@ const UI = {
         const total = r.wins + r.losses
         const rate = total ? Math.round(r.wins / total * 100) : 0
         const best = (r.highscores.arcade[0] || {}).score || 0
-        const rows = DIFFICULTY_ORDER.map(id => {
-            const v = r.byDifficulty[id] || { w: 0, l: 0 }
-            return `<div class="rc-row"><span>${DIFFICULTIES[id].name}</span><b>${v.w} : ${v.l}</b></div>`
-        }).join("")
         $("#recordCard").innerHTML = `
-            <h3>Player 1</h3>
-            <div class="rc-big"><div><b>${r.wins}</b><span>Siege</span></div><div><b>${r.losses}</b><span>Niederlagen</span></div><div><b>${rate}%</b><span>Quote</span></div></div>
-            <div class="rc-list">${rows}</div>
-            <div class="rc-foot">Arcade-Rekord: <b>${best.toLocaleString("de-DE")}</b> · Beste Serie: <b>${r.bestStreak}</b></div>
-            ${r.unlocked.includes("gravelord") ? `<div class="rc-foot">👑 Gravelord freigeschaltet</div>` : `<div class="rc-foot">🔒 Schaffe Arcade für einen geheimen Champion</div>`}
+            <div><b>${r.wins}</b><span>Siege</span></div>
+            <div><b>${r.losses}</b><span>Niederlagen</span></div>
+            <div><b>${rate}%</b><span>Quote</span></div>
+            <div><b>${best.toLocaleString("de-DE")}</b><span>Arcade-Rekord</span></div>
+            <div><b>${r.bestStreak}</b><span>Beste Serie</span></div>
         `
     },
 
@@ -139,11 +135,11 @@ const UI = {
             <div class="stat"><span>${STAT_LABELS[k]}</span><div class="pips">${[1, 2, 3, 4, 5].map(n => `<i class="${n <= v ? "on" : ""}"></i>`).join("")}</div></div>`).join("")}</div>`
     },
 
-    abilityBox(c) {
+    abilityBox(c, who = "") {
         const a = c.ability
         return `<div class="ability-box">
             <img src="${ASSET_ROOT}${a.icon}" alt="">
-            <div><b>Ability: ${a.name}</b><p>${a.text}</p></div>
+            <div><b>${who}${who ? c.name + " · " : ""}Ability: ${a.name}</b><p>${a.text}</p></div>
         </div>`
     },
 
@@ -295,6 +291,7 @@ const UI = {
         st.hover[st.step] = id
         Sound.play("select")
         const side = st.step
+        st.lastSide = side
         if (id !== "random") {
             this.sidePreviews[side].set(id, "heavy")
             clearTimeout(this.pickTimer)
@@ -373,11 +370,12 @@ const UI = {
 
     renderAbility() {
         const st = this.select
-        const side = Math.min(st.step, 1)
+        // Nach der Wahl die Fähigkeit des zuletzt gewählten Champions zeigen (Einzelwahl: immer Spieler 1)
+        const side = st.single ? 0 : st.step <= 1 ? st.step : st.lastSide
         const id = st.picks[side] || st.hover[side]
         $("#selAbility").outerHTML = id === "random"
             ? `<div class="ability-box" id="selAbility"><div><b>Zufälliger Gegner</b><p>Lass dich überraschen!</p></div></div>`
-            : this.abilityBox(CHAMPIONS[id]).replace('class="ability-box"', 'class="ability-box" id="selAbility"')
+            : this.abilityBox(CHAMPIONS[id], st.single ? "" : side === 0 ? (st.mode === "local" ? "P1: " : "Du: ") : (st.mode === "local" ? "P2: " : "Gegner: ")).replace('class="ability-box"', 'class="ability-box" id="selAbility"')
     },
 
     confirmSelection() {
@@ -412,10 +410,29 @@ const UI = {
                 this.hudPreviews[f.side].set(f.champId, "idle")
             }
         }
+        this.renderHudKeys(match)
         $("#touch .t-ability img").src = ASSET_ROOT + match.fighters[0].champ.ability.icon
         $("#hudScore").hidden = !Modes.showsScore()
         document.body.classList.toggle("has-score", Modes.showsScore())
         this.setScore(Modes.score(), false)
+    },
+
+    // Steuerung unten links/rechts – nur für Spieler an der Tastatur
+    renderHudKeys(match) {
+        const k = (key, label) => `<span><kbd>${key}</kbd>${label}</span>`
+        const layouts = match.humanCount === 2
+            ? [
+                [k("WASD", "Laufen"), k("E", "Leicht"), k("F", "Schwer"), k("Q", "Dash"), k("R", "Spezial")],
+                [k("Pfeile", "Laufen"), k("Num1", "Leicht"), k("Num2", "Schwer"), k("Num3", "Dash"), k("Num0", "Spezial")]
+            ]
+            : [[k("WASD", "Laufen"), k("J", "Leicht"), k("K", "Schwer"), k("L", "Dash"), k("I", "Spezial"), k("Esc", "Pause")], null]
+        for (const side of [0, 1]) {
+            const el = $(`.hud-keys[data-side="${side}"]`)
+            const keys = layouts[side]
+            const show = keys && !isTouchDevice() && !Link.padFor(side) && match.fighters[side].isHuman
+            el.hidden = !show
+            if (show) el.innerHTML = `<b>${match.humanCount === 2 ? "P" + (side + 1) : "Steuerung"}</b>${keys.join("")}<small>Hoch/Runter + Angriff = nach oben/unten schlagen</small>`
+        }
     },
 
     updateHud(match) {
@@ -512,6 +529,7 @@ const UI = {
         $(".banner-sub", b).textContent = sub
         b.className = ""
         b.dataset.kind = kind
+        b.toggleAttribute("data-long", text.length > 6)
         if (side !== null) b.classList.add("side" + side)
         void b.offsetWidth
         b.classList.add("show")

@@ -30,7 +30,7 @@
     <!-- ================= LADEN ================= -->
     <section id="screen-loading" class="screen active">
         <div class="center-col">
-            <img class="logo" src="../assets/Überschriften/DUELIST.PNG" alt="DUELIST">
+            <h1 class="logo chrome">DUELIST</h1>
             <div class="progress"><div class="progress-fill" id="loadFill"></div></div>
             <p class="dark" id="loadText">Lade Arena …</p>
         </div>
@@ -39,7 +39,7 @@
     <!-- ================= TITEL (Attract-Modus) ================= -->
     <section id="screen-title" class="screen">
         <div class="center-col">
-            <img class="logo logo-big" src="../assets/Überschriften/DUELIST.PNG" alt="DUELIST">
+            <h1 class="logo logo-big chrome">DUELIST</h1>
             <p class="tagline">Die Arena über den Wolken</p>
             <p class="press-start" id="pressStart">PRESS START</p>
         </div>
@@ -48,25 +48,25 @@
 
     <!-- ================= HAUPTMENÜ ================= -->
     <section id="screen-menu" class="screen">
-        <div class="menu-layout">
-            <div class="menu-left">
-                <img class="logo logo-menu" src="../assets/Überschriften/DUELIST.PNG" alt="DUELIST">
-                <nav class="menu-grid">
-                    <button class="btn start wide" data-go="arcade"><img class="mi" src="../assets/ui/Knight Templar.png" alt=""><span><b>Arcade</b><small>5 Gegner · Endboss · Highscore</small></span><img class="mi flip" src="../assets/ui/Elite Orc.png" alt=""></button>
-                    <button class="btn" data-go="solo"><img class="mi" src="../assets/ui/Armored Skeleton.png" alt=""><span><b>Gegen Bot</b><small>Freies Duell</small></span></button>
-                    <button class="btn" data-go="local"><img class="mi" src="../assets/ui/Werebear.png" alt=""><span><b>Lokales Duell</b><small>2 Spieler</small></span></button>
-                    <button class="btn" data-go="survival"><img class="mi" src="../assets/Faehigkeiten/leben2.png" alt=""><span><b>Survival</b><small>Ein Leben, endlos</small></span></button>
-                    <button class="btn" data-go="training"><img class="mi" src="../assets/Faehigkeiten/schield.png" alt=""><span><b>Training</b><small>Kombos üben</small></span></button>
-                    <button class="btn phone wide" data-go="controller"><img class="mi" src="../assets/Faehigkeiten/unsichtbar.png" alt=""><span><b>📱 Handy als Controller</b><small>Bildschirm koppeln oder dieses Handy zum Gamepad machen</small></span></button>
-                    <button class="btn small" data-go="lore">Champions</button>
-                    <button class="btn small" data-go="scores">Highscores</button>
-                    <button class="btn small" data-go="controls">Steuerung</button>
-                    <button class="btn small" data-go="settings">Optionen</button>
-                </nav>
-            </div>
-            <div class="menu-right">
-                <div class="board p1" id="recordCard"></div>
-            </div>
+        <div class="menu-wrap">
+            <h1 class="logo logo-menu chrome">DUELIST</h1>
+            <nav class="menu-panel glass">
+                <button class="btn start menu-arcade" data-go="arcade"><b>Arcade</b><small>5 Gegner · Endboss · Highscore</small></button>
+                <div class="mode-grid">
+                    <button class="btn mode" data-go="solo"><b>Gegen Bot</b><small>Freies Duell</small></button>
+                    <button class="btn mode" data-go="local"><b>Lokales Duell</b><small>2 Spieler</small></button>
+                    <button class="btn mode" data-go="survival"><b>Survival</b><small>Ein Leben, endlos</small></button>
+                    <button class="btn mode" data-go="training"><b>Training</b><small>Kombos üben</small></button>
+                </div>
+                <div class="menu-links">
+                    <button class="btn link" data-go="controller">Controller</button>
+                    <button class="btn link" data-go="lore">Champions</button>
+                    <button class="btn link" data-go="scores">Highscores</button>
+                    <button class="btn link" data-go="controls">Steuerung</button>
+                    <button class="btn link" data-go="settings">Optionen</button>
+                </div>
+            </nav>
+            <div class="menu-stats" id="recordCard"></div>
         </div>
     </section>
 
@@ -74,7 +74,7 @@
     <section id="screen-select" class="screen">
         <header class="screen-head">
             <button class="back-btn" data-back aria-label="Zurück">‹</button>
-            <img class="head-img" src="../assets/Überschriften/SelctionText.PNG" alt="Selection">
+            <h2>Champion wählen</h2>
             <span class="step-pill" id="selStep">Spieler 1</span>
         </header>
 
@@ -200,7 +200,7 @@
     <!-- ================= CONTROLLER-ANSICHT (dieses Gerät = Gamepad) ================= -->
     <section id="screen-pad" class="screen">
         <div class="pad-connect center-col">
-            <img class="logo logo-menu" src="../assets/Überschriften/DUELIST.PNG" alt="DUELIST">
+            <h1 class="logo logo-menu chrome">DUELIST</h1>
             <div class="glass panel pad-form">
                 <div class="panel-head red">📱 Als Controller verbinden</div>
                 <input id="padCode" class="code-input" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD">
@@ -249,7 +249,7 @@
             <div class="glass panel">
                 <h3>Alleine (Tastatur)</h3>
                 <dl class="keys">
-                    <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>Pfeile</kbd></dt><dd>Bewegen</dd>
+                    <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>Pfeile</kbd></dt><dd>Bewegen · Hoch/Runter + Angriff = nach oben/unten schlagen</dd>
                     <dt><kbd>J</kbd> / <kbd>E</kbd></dt><dd>Leichter Angriff</dd>
                     <dt><kbd>K</kbd> / <kbd>F</kbd></dt><dd>Schwerer Angriff</dd>
                     <dt><kbd>L</kbd> / <kbd>Leertaste</kbd></dt><dd>Ausweichen (Dash)</dd>
@@ -283,11 +283,12 @@
                 <h3>Kampfsystem</h3>
                 <ul>
                     <li><b>Kombo:</b> Leicht, Leicht, <b>Schwer</b> – der schwere Schlag beendet die Kombo mit Wucht.</li>
+                    <li><b>Oben &amp; unten:</b> Halte hoch oder runter beim Angriff – oder steh einfach über/unter dem Gegner. Dann schlägst du in diese Richtung.</li>
                     <li><b>Blocken:</b> Vom Gegner <b>weg</b> drücken. Kurz vor dem Treffer = <b>PERFEKT</b>: kein Schaden, der Gegner taumelt.</li>
                     <li><b>Schwere Angriffe</b> brechen jede Deckung (GUARD BREAK).</li>
                     <li><b>Konter:</b> Triff den Gegner, während er zu einem schweren Angriff oder einer Fähigkeit ausholt – 40 % mehr Schaden.</li>
                     <li><b>Dash</b> macht kurz unverwundbar – perfekt gegen Bomben und Feuerbälle.</li>
-                    <li><b>Spezial:</b> Treffer laden die Fähigkeit auf (3 Treffer).</li>
+                    <li><b>Spezial:</b> Treffer laden die Fähigkeit auf (3 Treffer, Warbrute bis zu 5).</li>
                 </ul>
             </div>
         </div>
@@ -357,6 +358,10 @@
         </div>
     </div>
 
+    <!-- Tastenbelegung unten in den Ecken (nur am PC) -->
+    <div class="hud-keys" data-side="0" hidden></div>
+    <div class="hud-keys right" data-side="1" hidden></div>
+
     <button id="pauseBtn" hidden aria-label="Pause"><span></span><span></span></button>
 
     <div id="banner"><div class="banner-text"></div><div class="banner-sub"></div></div>
@@ -399,7 +404,6 @@
     <!-- ================= ERGEBNIS ================= -->
     <section id="screen-results" class="screen">
         <div class="results-box">
-            <img class="head-img res-img" src="../assets/Überschriften/end.PNG" alt="End">
             <div class="res-title" id="resTitle">SIEG!</div>
             <div class="res-sub" id="resSub"></div>
             <div class="res-main">

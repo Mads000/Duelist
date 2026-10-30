@@ -36,6 +36,7 @@ class Fighter {
         this.mvy = 0
         this.vx = 0            // Rückstoß
         this.vy = 0
+        this.aimY = 0 // Angriffsrichtung: 0 = seitlich, -1 = nach oben, 1 = nach unten
         this.facing = this.side === 0 ? 1 : -1
         if (!keepHp) this.hp = this.startHp !== null ? this.startHp : this.maxHp
         this.startHp = null
@@ -265,6 +266,21 @@ class Fighter {
         else if (inp && Math.abs(inp.mx) > 0.2) this.facing = Math.sign(inp.mx)
     }
 
+    // Nach oben/unten schlagen: Stick klar nach oben/unten – oder der Gegner steht deutlich darüber/darunter
+    pickAim(opp, inp) {
+        if (inp && Math.abs(inp.my) > 0.5 && Math.abs(inp.my) > Math.abs(inp.mx) * 1.2) return Math.sign(inp.my)
+        if (!opp || opp.stealthT > 0 || opp.state === "dead") return 0
+        const dx = Math.abs(opp.x - this.x)
+        const dy = opp.y - this.y
+        if (Math.abs(dy) > COMBAT.depthReach && Math.abs(dy) > dx * 0.8 && Math.abs(dy) < 280) return Math.sign(dy)
+        return 0
+    }
+
+    lungeBy(amount) {
+        if (this.aimY) this.vy += this.aimY * amount * 0.6
+        else this.vx += this.facing * amount
+    }
+
     startAttack(kind, step, opp) {
         const def = kind === "heavy" ? this.champ.heavy : this.champ.light[step]
         this.state = "attack"
@@ -282,7 +298,8 @@ class Fighter {
         this.bufHeavy = 0
         this.setAnim(kind === "heavy" ? "heavy" : "light" + step, def.anim)
         this.faceOpponent(opp, this.input)
-        this.vx += this.facing * def.lunge * (kind === "heavy" ? 0.55 : 1)
+        this.aimY = this.pickAim(opp, this.input)
+        this.lungeBy(def.lunge * (kind === "heavy" ? 0.55 : 1))
 
         if (kind === "heavy") {
             this.flashT = 0.08
@@ -307,7 +324,7 @@ class Fighter {
         // Ausfallschritt des schweren Angriffs kurz vor dem Treffer
         if (isHeavy && def.hits.length && frame === def.hits[0][0] - 1 && !this.lunged) {
             this.lunged = true
-            this.vx += this.facing * def.lunge * 0.7
+            this.lungeBy(def.lunge * 0.7)
         }
 
         // Schwung-Sound kurz vor dem ersten Treffer-Frame
@@ -352,7 +369,7 @@ class Fighter {
             const lastLight = !isHeavy && this.comboStep >= this.champ.light.length - 1
             this.state = "recover"
             this.stateT = 0
-            this.stun = isHeavy ? COMBAT.heavyRecovery : lastLight ? 0.24 : COMBAT.recovery
+            this.stun = def.recovery || (isHeavy ? COMBAT.heavyRecovery : lastLight ? 0.24 : COMBAT.recovery)
             if (this.landedThisSwing) this.stun *= 0.6
             this.comboStep = -1
             this.lunged = false
@@ -430,8 +447,14 @@ class Fighter {
         this.mvx *= 0.2
         this.mvy *= 0.2
         const dir = Math.sign(this.x - source.x) || -this.facing
-        this.vx = dir * kb
-        this.vy = Math.max(-140, Math.min(140, (this.y - source.y) * 3))
+        if (source.aimY) {
+            // Treffer von oben/unten stößt in Tiefenrichtung weg
+            this.vx = dir * kb * 0.25
+            this.vy = source.aimY * kb * 0.6
+        } else {
+            this.vx = dir * kb
+            this.vy = Math.max(-140, Math.min(140, (this.y - source.y) * 3))
+        }
         if (this.hp <= 0) {
             this.state = "dead"
             this.stateT = 0

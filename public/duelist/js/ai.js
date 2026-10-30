@@ -64,7 +64,7 @@ class BotController {
         const ady = Math.abs(dy)
         const toOp = Math.sign(dx) || 1
         const ranged = !!me.champ.light[0].projectile
-        const reach = ranged ? 620 : me.champ.light[0].reach * SPRITE_SCALE + COMBAT.bodyHalf
+        const reach = ranged ? 480 : me.champ.light[0].reach * SPRITE_SCALE + COMBAT.bodyHalf
         const opReach = op.champ.light[0].projectile ? 200 : op.champ.light[0].reach * SPRITE_SCALE + COMBAT.bodyHalf
         const dist = Math.hypot(dx, dy)
 
@@ -154,13 +154,13 @@ class BotController {
         // ---- Bewegung ----
         let gx = 0, gy = 0
         const side = Math.sign(me.x - tx) || (me.side === 0 ? -1 : 1)
-        const ideal = ranged ? 420 : reach * 0.72
+        const ideal = ranged ? 360 : reach * 0.72
 
         if (this.mode === "engage" || me.stealthT > 0) {
             gx = tx + side * ideal
             gy = ty
         } else if (this.mode === "space") {
-            gx = tx + side * (ranged ? 480 : opReach + 110)
+            gx = tx + side * (ranged ? 400 : opReach + 110)
             gy = ty + Math.sin(t * 1.7) * 90 * this.strafe
         } else if (this.mode === "retreat") {
             gx = tx + side * 420

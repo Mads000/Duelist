@@ -204,13 +204,20 @@ class Match {
 
         if (melee) {
             const reach = move.reach * SPRITE_SCALE + COMBAT.bodyHalf
-            const dx = (def.x - att.x) * att.facing
-            const dy = Math.abs(def.y - att.y)
-            if (dx < -COMBAT.bodyHalf || dx > reach || dy > COMBAT.depthReach) return false
+            if (att.aimY) {
+                // Schlag nach oben/unten: Reichweite in der Tiefe, schmal zur Seite
+                const dy = (def.y - att.y) * att.aimY
+                if (dy < -COMBAT.bodyHalf || dy > reach || Math.abs(def.x - att.x) > COMBAT.depthReach * 1.6) return false
+            } else {
+                const dx = (def.x - att.x) * att.facing
+                const dy = Math.abs(def.y - att.y)
+                if (dx < -COMBAT.bodyHalf || dx > reach || dy > COMBAT.depthReach) return false
+            }
         }
 
         const dir = Math.sign(def.x - src.x) || att.facing
-        const hitX = melee ? att.x + att.facing * Math.min(Math.max((def.x - att.x) * att.facing, 0), 120) * 0.7 : def.x - dir * 20
+        const vertical = melee && att.aimY
+        const hitX = vertical ? (att.x + def.x) / 2 : melee ? att.x + att.facing * Math.min(Math.max((def.x - att.x) * att.facing, 0), 120) * 0.7 : def.x - dir * 20
         const hitY = (src.y + def.y) / 2 - 42
 
         // Ausweichen macht unverwundbar
@@ -320,6 +327,7 @@ class Match {
             this.sound("counter")
             this.emit("counter", { att })
         }
+        const ambushHit = att.ambush
         if (att.ambush) {
             dmg *= 2
             kb *= 1.3
@@ -359,7 +367,10 @@ class Match {
         this.addShake(heavy ? 15 : 5)
         this.vibrate(heavy ? 45 : 18, def)
 
-        if (def.hp <= 0) this.knockout(att, def)
+        if (def.hp <= 0) {
+            this.lastHit = { melee, heavy: heavy || isHeavy, counter, ambush: ambushHit, aimY: melee ? att.aimY : 0, combo: att.comboCount }
+            this.knockout(att, def)
+        }
         return true
     }
 
@@ -382,11 +393,12 @@ class Match {
     // ---------------- Projektile (Feuerball) ----------------
     spawnProjectile(owner, move) {
         const p = move.projectile
+        const aimY = owner.aimY
         this.projectiles.push({
-            owner, move, cfg: p,
+            owner, move, cfg: p, aimY,
             img: champImage(owner.champId, p.effect),
-            x: owner.x + owner.facing * 70, y: owner.y, h: 62,
-            vx: owner.facing * p.speed, dist: 0,
+            x: owner.x + (aimY ? 0 : owner.facing * 70), y: owner.y + aimY * 30, h: 62,
+            vx: aimY ? 0 : owner.facing * p.speed, vy: aimY * p.speed * 0.78, dist: 0,
             t: 0, state: "fly", dodged: false
         })
     }
@@ -397,8 +409,9 @@ class Match {
             p.t += dt
             if (p.state === "fly") {
                 p.x += p.vx * dt
-                p.dist += Math.abs(p.vx * dt)
-                if (Math.random() < dt * 30) this.fx.sparks(p.x, p.y - p.h, -Math.sign(p.vx), { count: 1, speed: 80, size: 5, color: "#ffd08a", color2: "#ff7a2a" })
+                p.y += p.vy * dt
+                p.dist += Math.hypot(p.vx, p.vy) * dt
+                if (Math.random() < dt * 30) this.fx.sparks(p.x, p.y - p.h, -Math.sign(p.vx) || -p.owner.facing, { count: 1, speed: 80, size: 5, color: "#ffd08a", color2: "#ff7a2a" })
                 const def = this.fighters[1 - p.owner.side]
                 const touching = Math.abs(def.x - p.x) < 34 && Math.abs(def.y - p.y) < COMBAT.depthReach
                 let boom = false
@@ -410,10 +423,10 @@ class Match {
                             this.fx.text(def.x, def.y - 120, "AUSGEWICHEN", { color: "#bfe3ff", size: 32, life: 0.7 })
                         }
                     } else if (!def.invulnerable) {
-                        boom = this.tryHit(p.owner, def, p.move, 0, { x: p.x - Math.sign(p.vx) * 30, y: p.y })
+                        boom = this.tryHit(p.owner, def, p.move, 0, { x: p.x - Math.sign(p.vx) * 30, y: p.y - p.aimY * 20, aimY: p.aimY })
                     }
                 }
-                if (p.dist > p.cfg.range || p.x < ARENA.x0 - 60 || p.x > ARENA.x1 + 60) boom = true
+                if (p.dist > p.cfg.range || p.x < ARENA.x0 - 60 || p.x > ARENA.x1 + 60 || p.y < ARENA.y0 - 40 || p.y > ARENA.y1 + 40) boom = true
                 if (boom) {
                     p.state = "boom"
                     p.t = 0
@@ -428,15 +441,18 @@ class Match {
     spawnZone(owner, opp, move) {
         const z = move.zone
         let x, y
-        const dx = (opp.x - owner.x) * owner.facing
-        if (opp.stealthT <= 0 && dx > 0 && dx < z.maxDist && Math.abs(opp.y - owner.y) < 260) {
+        const aimY = owner.aimY
+        const inFront = aimY ? Math.sign(opp.y - owner.y) === aimY : (opp.x - owner.x) * owner.facing > 0
+        const dist = Math.hypot(opp.x - owner.x, (opp.y - owner.y) * 1.3)
+        if (opp.stealthT <= 0 && inFront && dist < z.maxDist) {
             x = opp.x
             y = opp.y
         } else {
-            x = owner.x + owner.facing * z.maxDist * 0.55
-            y = owner.y
+            x = owner.x + (aimY ? 0 : owner.facing * z.maxDist * 0.55)
+            y = owner.y + aimY * z.maxDist * 0.35
         }
         x = Math.max(ARENA.x0, Math.min(ARENA.x1, x))
+        y = Math.max(ARENA.y0, Math.min(ARENA.y1, y))
         const img = champImage(owner.champId, z.effect)
         this.fx.sheet(img, x, y - 50, z.frames, z.fps, { center: { x: 52, y: 50 } })
         this.zones.push({ owner, move, x, y, t: 0, hitAt: z.hitFrame / z.fps, radius: z.radius, done: false, color: "rgba(140,210,255,0.5)" })
@@ -548,7 +564,10 @@ class Match {
                 this.emit("hit", { att: b.owner, def, dmg, heavy: true })
             }
             this.fx.text(def.x, def.y - 120, String(dmg), { color: "#ff9a3c", size: 72 })
-            if (def.hp <= 0) this.knockout(b.owner || this.fighters[1 - def.side], def)
+            if (def.hp <= 0) {
+                this.lastHit = { bomb: true }
+                this.knockout(b.owner || this.fighters[1 - def.side], def)
+            }
         }
     }
 
@@ -582,7 +601,10 @@ class Match {
                 f.takeHit({ x: g.x, y: g.y }, 10, 450, true)
                 f.stats.taken += 10
                 this.fx.text(f.x, f.y - 120, "10", { color: "#ff9a3c", size: 56 })
-                if (f.hp <= 0) this.knockout(this.fighters[1 - f.side], f)
+                if (f.hp <= 0) {
+                    this.lastHit = { hazard: true }
+                    this.knockout(this.fighters[1 - f.side], f)
+                }
             }
         }
 
@@ -616,13 +638,46 @@ class Match {
         this.roundResolved = false
         this.roundWinner = winner.side
         this.koTarget = loser
-        this.slowmoT = 1.1
-        this.hitstop = 0.15
+        const fin = this.finisherName(this.lastHit || {})
+        this.lastHit = null
+        this.finisher = fin
+        this.slowmoT = fin.big ? 1.6 : 1.1
+        this.hitstop = fin.big ? 0.28 : 0.15
         this.flash = 0.8
-        this.addShake(30)
+        this.addShake(fin.big ? 40 : 30)
         this.sound("ko")
-        this.vibrate(160)
-        this.emit("banner", { text: "K.O.", kind: "ko", time: 1.4 })
+        if (fin.big) this.sound("guardBreak")
+        this.vibrate(fin.big ? 260 : 160)
+
+        // Finisher-Effekt: Schockwellen in der Farbe des Siegers, Funkenregen
+        const x = loser.x
+        const y = loser.y
+        const dir = Math.sign(loser.x - winner.x) || 1
+        this.fx.ring(x, y, { radius: 300, color: "rgba(255,255,255,0.95)", life: 0.8, width: 18 })
+        this.fx.ring(x, y, { radius: 200, color: winner.champ.color, life: 0.6, width: 24 })
+        this.fx.ring(x, y - 60, { radius: 150, color: "rgba(255,230,150,0.9)", life: 0.5, width: 10, ground: false })
+        this.fx.sparks(x, y - 60, dir, { count: 40, speed: 950, spread: 2.6, size: 9 })
+        this.fx.dust(x, y, { count: 14, size: 30, color: this.map.dust })
+        if (fin.big) {
+            this.fx.explosion(x, y, 110)
+            loser.vx *= 1.4
+        }
+        this.emit("finisher", { winner, loser, name: fin.text })
+        this.emit("banner", { text: fin.text, sub: fin.sub, kind: "ko", time: fin.big ? 1.8 : 1.4 })
+    }
+
+    // Name des Finishers – je nachdem, womit der letzte Treffer kam
+    finisherName(h) {
+        if (h.hazard) return { text: "K.O.", sub: "Die Arena schlägt zurück" }
+        if (h.bomb) return { text: "BOOM!", sub: "Bomben-Finish", big: true }
+        if (h.ambush) return { text: "SCHATTEN-FINISH", sub: "Aus dem Hinterhalt", big: true }
+        if (h.counter) return { text: "KONTER-K.O.", sub: "Perfekt abgepasst", big: true }
+        if (!h.melee) return { text: "SUPER FINISH", sub: "Magie-Treffer", big: true }
+        if (h.combo >= 4) return { text: h.combo + "-HIT FINISH", sub: "Kombo-Finisher", big: true }
+        if (h.aimY > 0) return { text: "VON OBEN!", sub: "Finisher", big: h.heavy }
+        if (h.aimY < 0) return { text: "UPPERCUT!", sub: "Finisher", big: h.heavy }
+        if (h.heavy) return { text: "BRUTAL!", sub: "Schwerer Finisher", big: true }
+        return { text: "K.O.", sub: "" }
     }
 
     endRound() {
@@ -779,6 +834,15 @@ class Match {
             ctx.fillStyle = `rgba(10,5,20,${Math.min(0.35, this.phaseT * 0.5)})`
             ctx.fillRect(0, 0, w, h)
         }
+        // Kino-Balken beim Finisher
+        if (this.phase === "ko") {
+            const t = this.phaseT
+            const k = Math.min(1, t * 5) * (t > 3.1 ? Math.max(0, 1 - (t - 3.1) * 3) : 1)
+            const bar = h * (this.finisher && this.finisher.big ? 0.1 : 0.07) * k
+            ctx.fillStyle = "#05070f"
+            ctx.fillRect(0, 0, w, bar)
+            ctx.fillRect(0, h - bar, w, bar)
+        }
         // Rote Ränder bei wenig Leben (nur wenn ein Mensch allein spielt)
         const human = this.humanCount === 1 && this.fighters.find(f => f.isHuman)
         if (human && human.hp > 0 && human.hp <= human.maxHp * 0.25) {
@@ -852,7 +916,8 @@ class Match {
             const s = SPRITE_SCALE * 1.3
             ctx.save()
             ctx.translate(p.x, p.y - p.h)
-            if (p.vx < 0) ctx.scale(-1, 1)
+            if (p.aimY && p.state === "fly") ctx.rotate(p.aimY * Math.PI / 2)
+            else if (p.vx < 0) ctx.scale(-1, 1)
             ctx.drawImage(p.img, frame * FRAME, 0, FRAME, FRAME, -51 * s, -51 * s, FRAME * s, FRAME * s)
             ctx.restore()
             if (p.state === "fly") {

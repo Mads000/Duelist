@@ -95,7 +95,7 @@ const CHAMPIONS = {
             icon: "Faehigkeiten/bombe2.png",
             cost: 3,
             maxEnergy: 5,
-            text: "Lädt mit jedem Treffer bis zu 3 Stufen: 12 / 24 / 36 Schaden. Die Bombe fliegt zum Gegner – man kann ausweichen!"
+            text: "Ab 3 Treffern bereit, lädt bis 5 Treffer weiter: 12 / 24 / 36 Schaden. Die Bombe fliegt zum Gegner – man kann ausweichen!"
         },
         lore: "Der einst mächtigste Krieger – jetzt die Verkörperung ungezähmter Zerstörung. Von Gier und Macht korrumpiert, wandte sich Warbrute gegen alles, was er einst liebte. In der Arena entfesselt er Bomben voller Chaos, während sein wilder Zorn die Luft zerreißt. Für ihn zählt nur Stärke – und die Welt wird seinen Triumph bezeugen."
     },
@@ -211,9 +211,9 @@ const CHAMPIONS = {
         folder: "Wizard",
         color: "#7fd8ff",
         anchor: { x: 50, y: 57 },
-        speed: 285,
-        hp: 90,
-        stats: { tempo: 3, kraft: 3, reichweite: 5 },
+        speed: 280,
+        hp: 85,
+        stats: { tempo: 3, kraft: 2, reichweite: 5 },
         anims: {
             idle: anim("Idle", 6, 8),
             run: anim("Walk", 8, 12),
@@ -222,20 +222,20 @@ const CHAMPIONS = {
         },
         // Feuerball als Projektil
         light: [
-            move(anim("Attack02", 6, 16), [], 6, 260, 0, {
-                lunge: 0, projectile: { frame: 4, speed: 820, range: 760, effect: "Attack02_Effect", flyFrames: 4, hitFrames: [4, 6] }
+            move(anim("Attack02", 6, 14), [], 4, 220, 0, {
+                lunge: 0, recovery: 0.4, projectile: { frame: 4, speed: 640, range: 520, effect: "Attack02_Effect", flyFrames: 4, hitFrames: [4, 6] }
             })
         ],
         // Eis-Explosion am Gegner
-        heavy: move(anim("Attack01", 6, 12), [], 12, 460, 0, {
-            lunge: 0, zone: { frame: 3, effect: "Attack01_Effect", frames: 10, fps: 18, hitFrame: 6, radius: 95, maxDist: 560 }
+        heavy: move(anim("Attack01", 6, 11), [], 9, 420, 0, {
+            lunge: 0, recovery: 0.55, zone: { frame: 3, effect: "Attack01_Effect", frames: 10, fps: 18, hitFrame: 8, radius: 80, maxDist: 400 }
         }),
         ability: {
             type: "blink",
             name: "Blink",
             icon: "Faehigkeiten/unsichtbar.png",
             cost: 3,
-            text: "Teleportiert sich in einer Lichtwolke hinter den Gegner und ist dabei kurz unverwundbar."
+            text: "Nach 3 Treffern verfügbar. Teleportiert sich hinter den Gegner und ist kurz unverwundbar. Leicht = Feuerball, Schwer = Eis-Explosion (langsam, aber auf Distanz)."
         },
         lore: "Er war der Kopf der Gruppe, der die Sterne las und den Verrat kommen sah – und schwieg. Seitdem sucht Arcanis in der Arena nach Vergebung, mit Feuer in der einen und Eis in der anderen Hand."
     },

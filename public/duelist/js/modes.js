@@ -73,6 +73,7 @@ const Modes = {
         if (type === "counter" && human(data.att)) this.addScore(200)
         if (type === "perfectBlock" && human(data.def)) this.addScore(300)
         if (type === "guardBreak" && human(data.att)) this.addScore(250)
+        if (type === "finisher" && human(data.winner) && data.name !== "K.O.") this.addScore(1500)
         if (type === "roundWin" && data.side === 0) {
             const hpPct = Math.round(data.hp / data.maxHp * 100)
             this.addScore(1000 + hpPct * 20 + Math.max(0, Math.ceil(data.timeLeft)) * 25 + (data.perfect ? 5000 : 0))
