@@ -424,8 +424,9 @@ const App = {
         const dt = Math.min(0.05, Math.max(0, (now - this.last) / 1000))
         this.last = now
 
-        // Im Kampf das Match, auf dem Titelbildschirm die Demo
-        const active = this.match || (UI.current === "title" ? this.demo : null)
+        // Im Kampf das Match, in Titel und Menüs läuft die Demo als Hintergrund
+        if (!this.match && !this.demo && UI.current !== "loading" && UI.current !== "pad") this.startDemo()
+        const active = this.match || (UI.current === "pad" ? null : this.demo)
         if (active) {
             // Variable Teilschritte (max. 1/120 s) – flüssig bei 60, 120 und 144 Hz
             const steps = Math.max(1, Math.ceil(dt / (1 / 120)))
