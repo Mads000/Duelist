@@ -1410,6 +1410,12 @@ class Match {
         this.fx.draw(top)
         this.fx.drawTexts(top)
         this.pixel.end(ctx)
+        if (this.phase === "fight") {
+            ctx.save()
+            toWorld()
+            this.drawAbilityCues(ctx)
+            ctx.restore()
+        }
         ctx.restore()
 
         // Bildschirm-Effekte
@@ -1461,6 +1467,50 @@ class Match {
             g.addColorStop(1, `rgba(200,0,20,${pulse})`)
             ctx.fillStyle = g
             ctx.fillRect(0, 0, w, h)
+        }
+    }
+
+    // Am PC: über dem eigenen Kämpfer erscheint die Taste, sobald die Fähigkeit bereit ist
+    drawAbilityCues(ctx) {
+        if (isTouchDevice()) return
+        for (const f of this.fighters) {
+            if (!f.isHuman || !f.abilityReady || f.state === "dead" || f.state === "fall") continue
+            if (this.localSide !== undefined && f.side !== this.localSide) continue
+            if (Link.padFor(f.slot)) continue
+            const map = keymap(this.humanCount === 2 && this.localSide === undefined ? (f.side === 0 ? "p1" : "p2") : "solo")
+            const key = keyLabel(map.ability[0])
+            const t = f.readyPulse
+            const pop = t < 0.35 ? 1 + Math.sin(t / 0.35 * Math.PI) * 0.6 : 1 + Math.sin(t * 6) * 0.06
+            const y = f.y - (this.team2 ? 172 : 140)
+            ctx.save()
+            ctx.translate(f.x, y)
+            ctx.scale(pop, pop)
+            ctx.font = '26px "Bebas Neue", Impact, sans-serif'
+            ctx.textBaseline = "middle"
+            const label = "FÄHIGKEIT"
+            const kw = Math.max(30, ctx.measureText(key).width + 16)
+            const lw = ctx.measureText(label).width
+            const w = kw + lw + 22
+            const x0 = -w / 2
+            ctx.fillStyle = "rgba(14,10,30,0.82)"
+            ctx.fillRect(x0 - 3, -20, w + 6, 40)
+            ctx.fillStyle = f.champ.color
+            ctx.fillRect(x0, -17, w, 34)
+            ctx.fillStyle = "rgba(14,10,30,0.55)"
+            ctx.fillRect(x0 + kw + 6, -17, w - kw - 6, 34)
+            ctx.fillStyle = "#fff"
+            ctx.fillRect(x0 + 4, -13, kw, 26)
+            ctx.fillStyle = "#16102a"
+            ctx.textAlign = "center"
+            ctx.fillText(key, x0 + 4 + kw / 2, 1)
+            ctx.fillStyle = "#fff"
+            ctx.textAlign = "left"
+            ctx.fillText(label, x0 + kw + 13, 1)
+            // kleiner Zeiger nach unten
+            ctx.fillStyle = "rgba(14,10,30,0.82)"
+            ctx.fillRect(-6, 20, 12, 5)
+            ctx.fillRect(-3, 25, 6, 5)
+            ctx.restore()
         }
     }
 

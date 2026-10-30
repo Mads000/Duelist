@@ -1820,6 +1820,19 @@ input[type="range"]::-moz-range-thumb {
     text-align: right;
 }
 
+/* Fähigkeit bereit: Taste in der Ecke leuchtet */
+.hud-keys.ready .ab-key {
+    padding: 1px 6px;
+    color: #2a1800;
+    background: linear-gradient(#ffe9a6, #ffbf2e);
+    border: 2px solid #fff;
+    animation: abKey 0.9s ease-in-out infinite;
+}
+
+@keyframes abKey {
+    50% { box-shadow: 0 0 12px 3px #ffd65a; }
+}
+
 .hud-keys[hidden],
 body:not(.in-game) .hud-keys {
     display: none;
@@ -3603,6 +3616,30 @@ canvas {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+.pc-name {
+    width: 9.5em;
+    min-width: 0;
+    padding: 3px 8px;
+    font: inherit;
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: 0.04em;
+    color: var(--btn-bottom);
+    background: rgba(255, 255, 255, 0.55);
+    border: 3px solid var(--line);
+    outline: none;
+}
+
+.pc-name:focus {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.pc-name::placeholder {
+    color: var(--btn-bottom);
+    opacity: 0.55;
 }
 
 .pc-level b {

@@ -34,6 +34,11 @@ const GameSettings = {
     }
 }
 
+// Eigener Name des Spielers (leer = noch keiner vergeben)
+function playerName() {
+    return String(GameSettings.get().name || "").trim()
+}
+
 const emptyRecord = () => ({
     wins: 0, losses: 0, byDifficulty: {}, byChampion: {}, streak: 0, bestStreak: 0,
     unlocked: [], arcadeClears: 0,

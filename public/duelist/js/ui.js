@@ -99,6 +99,10 @@ const UI = {
     // ---------------- Hauptmenü: Bilanz ----------------
     renderRecord() {
         $("#recordCard").innerHTML = Progress.html()
+        const field = $("#playerName")
+        field.value = playerName()
+        field.addEventListener("input", () => GameSettings.set("name", field.value.replace(/[<>]/g, "")))
+        field.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === "Escape") field.blur() })
         this.renderQuickChamp()
     },
 
@@ -479,8 +483,8 @@ const UI = {
                 name = `${f.champ.name} <small>& ${mate.champ.name}</small>`
             }
             $(".hud-name", el).innerHTML = name
-            $(".hp-text", el).textContent = match.localSide !== undefined ? (f.side === match.localSide ? "Du" : "Gegner (online)")
-                : match.humanCount === 2 ? `Player ${f.side + 1}` : f.side === 0 ? "Player 1" : (match.training ? "Dummy" : "CPU")
+            $(".hp-text", el).textContent = match.localSide !== undefined ? (f.side === match.localSide ? playerName() || "Du" : "Gegner (online)")
+                : match.humanCount === 2 ? `Player ${f.side + 1}` : f.side === 0 ? playerName() || "Player 1" : (match.training ? "Dummy" : "CPU")
             $(".energy", el).innerHTML = Array.from({ length: f.maxEnergy }, (_, i) =>
                 `<i class="${i === f.champ.ability.cost - 1 ? "cost" : ""}"></i>`).join("") +
                 `<img src="${ASSET_ROOT}${f.champ.ability.icon}" alt=""><span class="sp" title="Spezialangriff bereit">SP</span>`
@@ -504,7 +508,7 @@ const UI = {
         const keys = name => {
             const m = keymap(name)
             const move = [m.up, m.left, m.down, m.right].map(l => keyLabel(l[0])).join("")
-            return [k(move.length === 4 ? move : "Pfeile", "Laufen"), k(keyLabel(m.light[0]), "Leicht"), k(keyLabel(m.heavy[0]), "Schwer"), k(keyLabel(m.dash[0]), "Dash"), k(keyLabel(m.ability[0]), "Fähigkeit")]
+            return [k(move.length === 4 ? move : "Pfeile", "Laufen"), k(keyLabel(m.light[0]), "Leicht"), k(keyLabel(m.heavy[0]), "Schwer"), k(keyLabel(m.dash[0]), "Dash"), k(keyLabel(m.ability[0]), "Fähigkeit").replace("<span>", '<span class="ab-key">')]
         }
         const layouts = match.localSide !== undefined
             ? (match.localSide === 0 ? [keys("solo"), null] : [null, keys("solo")])
@@ -550,6 +554,7 @@ const UI = {
                 c.energy[f.side] = f.energy
                 $$(".energy i", el).forEach((pip, i) => pip.classList.toggle("on", i < f.energy))
                 el.classList.toggle("ready", f.abilityReady)
+                $(`.hud-keys[data-side="${f.side}"]`).classList.toggle("ready", f.abilityReady)
                 if (f.side === 0) this.updateTouchAbility(f)
             }
             const sp = f.specialReady
@@ -700,7 +705,10 @@ const UI = {
         const letters = ["A", "A", "A"]
         let pos = 0
         const last = (localStorage.getItem("duelist.initials") || "").split("")
+        // ohne frühere Initialen: die ersten Buchstaben des eigenen Namens
+        const fromName = playerName().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 3)
         if (last.length === 3) last.forEach((l, i) => { letters[i] = l })
+        else if (fromName) [...fromName].forEach((l, i) => { letters[i] = l })
         const ABC = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         const wrap = $("#entryLetters")
         const render = () => {

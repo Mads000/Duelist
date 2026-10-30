@@ -606,5 +606,6 @@ const DEFAULT_SETTINGS = {
     gameSpeed: 1,
     showFps: false,
     fullscreen: true,
-    replay: true
+    replay: true,
+    name: ""            // eigener Spielername (Menü, HUD, Highscore)
 }

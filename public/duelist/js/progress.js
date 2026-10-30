@@ -140,7 +140,7 @@ const Progress = {
             return `<div class="mis${m.done ? " done" : ""}"><span>${m.done ? "✔" : "◆"} ${def.text}</span><b>${m.progress}/${def.goal}</b></div>`
         }).join("")
         return `
-            <div class="pc-level"><b>LEVEL ${d.level}</b><div class="xp-bar"><i style="transform:scaleX(${d.xp / need})"></i></div><span>${d.xp} / ${need} XP</span></div>
+            <div class="pc-level"><input class="pc-name" id="playerName" maxlength="14" placeholder="Dein Name ✎" spellcheck="false" autocomplete="off" aria-label="Dein Name"><b>LEVEL ${d.level}</b><div class="xp-bar"><i style="transform:scaleX(${d.xp / need})"></i></div><span>${d.xp} / ${need} XP</span></div>
             <div class="pc-missions"><div class="pc-title">Heutige Aufgaben${this.daily().firstWin ? "" : " · Erster Sieg: +150 XP"}</div>${missions}</div>`
     }
 }
