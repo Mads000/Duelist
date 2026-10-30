@@ -806,9 +806,15 @@ class Match {
 
         const sx = this.shake ? (Math.random() - 0.5) * this.shake : 0
         const sy = this.shake ? (Math.random() - 0.5) * this.shake : 0
-        ctx.translate(w / 2 + sx, h / 2 + sy)
-        ctx.scale(cam.zoom, cam.zoom)
-        ctx.translate(-cam.x, -cam.y)
+        const px = SPRITE_SCALE * cam.zoom
+        this.pixel = this.pixel || new PixelLayer()
+        const toWorld = () => {
+            ctx.translate(w / 2 + sx, h / 2 + sy)
+            ctx.scale(cam.zoom, cam.zoom)
+            ctx.translate(-cam.x, -cam.y)
+        }
+        ctx.save()
+        toWorld()
 
         ctx.drawImage(this.featheredMap(), 0, 0, WORLD.width, WORLD.height)
 
@@ -822,18 +828,31 @@ class Match {
             ctx.restore()
         }
 
-        this.fx.drawGround(ctx)
-        this.drawTelegraphs(ctx)
-        for (const f of this.fighters) f.drawShadow(ctx)
+        ctx.restore()
 
+        // Boden-Effekte in Pixel-Auflösung: Brandflecken, Warnkreise, Schatten
+        const ground = this.pixel.begin(w, h, cam, sx, sy, px)
+        this.fx.drawGround(ground)
+        this.drawTelegraphs(ground)
+        for (const f of this.fighters) f.drawShadow(ground)
+        this.pixel.end(ctx)
+
+        // Figuren & Geschosse (Sprites)
+        ctx.save()
+        toWorld()
         // Tiefensortierung: wer weiter unten steht, wird später gezeichnet
         const drawables = [...this.fighters].sort((p, q) => p.y - q.y)
         for (const f of drawables) f.draw(ctx)
-
         this.drawProjectiles(ctx)
         this.drawBombs(ctx)
-        this.fx.draw(ctx)
-        this.fx.drawTexts(ctx)
+        ctx.restore()
+
+        // Effekte darüber in Pixel-Auflösung: Funken, Ringe, Rauch, Fähigkeiten, Zahlen
+        const top = this.pixel.begin(w, h, cam, sx, sy, px)
+        for (const f of drawables) f.drawFx(top)
+        this.fx.draw(top)
+        this.fx.drawTexts(top)
+        this.pixel.end(ctx)
         ctx.restore()
 
         // Bildschirm-Effekte

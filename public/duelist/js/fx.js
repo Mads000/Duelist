@@ -2,6 +2,40 @@
 //  Effekte – Partikel, Schadenszahlen, Ringe, Nachbilder
 // ============================================================
 
+// Zeichnet Effekte in Sprite-Auflösung und vergrößert sie ohne Glättung –
+// so haben Funken, Ringe, Rauch & Co. dieselben harten Pixel wie die Figuren.
+class PixelLayer {
+    constructor() {
+        this.canvas = document.createElement("canvas")
+        this.ctx = this.canvas.getContext("2d")
+    }
+
+    // px = Bildschirmpixel pro Sprite-Pixel
+    begin(w, h, cam, sx, sy, px) {
+        const lw = Math.ceil(w / px) + 1
+        const lh = Math.ceil(h / px) + 1
+        if (this.canvas.width !== lw || this.canvas.height !== lh) {
+            this.canvas.width = lw
+            this.canvas.height = lh
+        }
+        const c = this.ctx
+        c.setTransform(1, 0, 0, 1, 0, 0)
+        c.clearRect(0, 0, lw, lh)
+        c.imageSmoothingEnabled = false
+        const z = cam.zoom / px
+        c.setTransform(z, 0, 0, z, (w / 2 + sx) / px - cam.x * z, (h / 2 + sy) / px - cam.y * z)
+        this.px = px
+        return c
+    }
+
+    end(ctx) {
+        ctx.save()
+        ctx.imageSmoothingEnabled = false
+        ctx.drawImage(this.canvas, 0, 0, this.canvas.width * this.px, this.canvas.height * this.px)
+        ctx.restore()
+    }
+}
+
 class Effects {
     constructor() {
         this.particles = []

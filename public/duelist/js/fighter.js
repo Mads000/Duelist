@@ -695,17 +695,24 @@ class Fighter {
             drawTintedFrame(ctx, img, frame, -g.ax, -g.ay, g.w, g.h, "#fff1a0", 0.25 + Math.sin(this.match.time * 25) * 0.15)
         }
 
+        ctx.restore()
+    }
+
+    // Effekte an der Figur (werden in der Pixel-Ebene gezeichnet)
+    drawFx(ctx) {
         // Deckung: halbtransparenter Schild vor der Figur
         if (this.guarding && this.state !== "block" && !this.champ.anims.block) {
-            ctx.globalAlpha = 0.35 * alpha
+            ctx.save()
+            ctx.translate(Math.round(this.x), Math.round(this.y))
+            if (this.facing < 0) ctx.scale(-1, 1)
+            ctx.globalAlpha = 0.5 * this.stealthAlpha()
             ctx.strokeStyle = "#bfe0ff"
-            ctx.lineWidth = 4
+            ctx.lineWidth = 6
             ctx.beginPath()
             ctx.ellipse(18, -40, 22, 40, 0, -1.2, 1.2)
             ctx.stroke()
+            ctx.restore()
         }
-        ctx.restore()
-
         if (this.shieldT > 0) this.drawShield(ctx)
     }
 
