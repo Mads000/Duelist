@@ -51,8 +51,10 @@ class KeyboardSource {
         const x = (Keyboard.isDown(m.right) ? 1 : 0) - (Keyboard.isDown(m.left) ? 1 : 0)
         const y = (Keyboard.isDown(m.down) ? 1 : 0) - (Keyboard.isDown(m.up) ? 1 : 0)
         if (x || y) {
-            out.mx = x
-            out.my = y
+            // diagonal nicht schneller als geradeaus
+            const l = Math.hypot(x, y)
+            out.mx = x / l
+            out.my = y / l
         }
         for (const a of ACTIONS) {
             if (this.latch[a]) out[a] = true

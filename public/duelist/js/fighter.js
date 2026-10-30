@@ -181,6 +181,11 @@ class Fighter {
             case "recover":
                 if (inp.dash && this.dashCd <= 0) this.startDash(inp, opp)
                 else if (this.stateT >= this.stun) this.toIdle()
+                // ab der Hälfte: Richtung gedrückt = sofort wieder laufen bzw. blocken
+                else if (this.stateT >= this.stun * 0.5 && Math.hypot(inp.mx, inp.my) > 0.3) {
+                    this.toIdle()
+                    this.updateFree(dt, opp, inp)
+                }
                 break
             case "dash":
                 this.updateDash(dt)
@@ -209,19 +214,25 @@ class Fighter {
 
     updateFree(dt, opp, inp) {
         if (inp.dash && this.dashCd <= 0) return this.startDash(inp, opp)
-        if (this.bufLight > 0 && this.bufHeavy > 0) return this.startThrow(opp)
-        if (this.bufHeavy > 0 && this.wantsSpecial(opp, inp)) return this.startSpecial(opp)
-        if (this.bufHeavy > 0) return this.startAttack("heavy", 0, opp)
-        if (this.bufLight > 0) return this.startAttack("light", 0, opp)
+        const fresh = COMBAT.comboWindow - COMBAT.freshPress
+        const light = this.bufLight > fresh
+        const heavy = this.bufHeavy > fresh
+        if (light && this.bufHeavy > 0 || heavy && this.bufLight > 0) return this.startThrow(opp)
+        if (heavy && this.wantsSpecial(opp, inp)) return this.startSpecial(opp)
+        if (heavy) return this.startAttack("heavy", 0, opp)
+        if (light) return this.startAttack("light", 0, opp)
         if (inp.ability && this.tryAbility(opp)) return
 
         const dist = Math.abs(opp.x - this.x)
         const toOpp = Math.sign(opp.x - this.x) || this.facing
         const oppVisible = opp.stealthT <= 0 && opp.state !== "dead"
 
-        // Rückwärts drücken = Blocken (wie in klassischen Arcade-Fightern)
-        const holdingBack = inp.mx * toOpp < -0.3
-        const near = dist < 420 && oppVisible
+        // Vom Gegner weg drücken = Blocken – in jede Richtung (auch wenn er schräg, über oder unter dir steht)
+        const ox = opp.x - this.x
+        const oy = opp.y - this.y
+        const away = (inp.mx * ox + inp.my * oy) / (Math.hypot(ox, oy) || 1)
+        const holdingBack = Math.hypot(inp.mx, inp.my) > 0.3 && (away < -0.35 || inp.mx * toOpp < -0.3)
+        const near = dist < 700 && oppVisible
         if (holdingBack && near) {
             if (!this.wasGuarding) this.guardSince = this.match.time
             this.guarding = true
@@ -237,8 +248,8 @@ class Fighter {
         this.mvx += (tx - this.mvx) * k
         this.mvy += (ty - this.mvy) * k
 
-        // Blickrichtung: zum Gegner, wenn er nah ist – sonst in Laufrichtung
-        if (near) this.facing = toOpp
+        // Blickrichtung: zum Gegner, wenn er nah ist oder man blockt – sonst in Laufrichtung
+        if (near && (dist < 420 || this.guarding)) this.facing = toOpp
         else if (Math.abs(inp.mx) > 0.15) this.facing = Math.sign(inp.mx)
 
         this.moving = Math.hypot(this.mvx, this.mvy) > 40
@@ -438,7 +449,7 @@ class Fighter {
             const lastLight = !isHeavy && this.comboStep >= this.champ.light.length - 1
             this.state = "recover"
             this.stateT = 0
-            this.stun = def.recovery || (isHeavy ? COMBAT.heavyRecovery : lastLight ? 0.24 : COMBAT.recovery)
+            this.stun = def.recovery || (isHeavy ? COMBAT.heavyRecovery : lastLight ? 0.18 : COMBAT.recovery)
             if (this.landedThisSwing) this.stun *= 0.6
             this.comboStep = -1
             this.lunged = false

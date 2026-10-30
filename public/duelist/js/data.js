@@ -537,8 +537,9 @@ const COMBAT = {
     guardRegen: 22,
     perfectBlock: 0.14,  // Zeitfenster für perfektes Blocken
     comboWindow: 0.34,   // Eingabepuffer für die nächste Kombo-Stufe
-    recovery: 0.14,
-    heavyRecovery: 0.42,
+    recovery: 0.1,
+    heavyRecovery: 0.34,
+    freshPress: 0.2,     // aus dem Stand: nur frisch gedrückte Angriffe zählen (sonst klaut ein alter Tastendruck das Blocken)
     dashSpeed: 900,
     dashTime: 0.17,
     dashCooldown: 0.7,

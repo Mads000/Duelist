@@ -270,7 +270,9 @@ class Match {
         }
 
         // Deckung (rückwärts gedrückt halten, Gesicht zum Angreifer)
-        const facingSrc = def.facing === (Math.sign(src.x - def.x) || def.facing)
+        // Deckung hält von vorn – und gegen Angriffe von oben/unten (dort zählt die Blickrichtung nicht)
+        const fromAbove = Math.abs(def.y - src.y) > Math.abs(def.x - src.x)
+        const facingSrc = fromAbove || def.facing === (Math.sign(src.x - def.x) || def.facing)
         if (def.guarding && facingSrc) {
             if (move.guardBreak) {
                 // Spezialangriffe brechen die Deckung
