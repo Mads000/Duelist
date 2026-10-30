@@ -59,6 +59,8 @@ class Fighter {
         this.bufLight = 0
         this.bufHeavy = 0
         this.dashCd = 0
+        this.powerT = 0
+        this.slowT = 0
         this.specialCd = 0
         this.special = false
         this.iframes = 0
@@ -124,7 +126,7 @@ class Fighter {
     }
 
     get speedMul() {
-        return this.frenzyT > 0 ? 1.3 : 1
+        return (this.frenzyT > 0 ? 1.3 : 1) * (this.slowT > 0 ? 0.6 : 1)
     }
 
     // ---------- Update ----------
@@ -182,6 +184,9 @@ class Fighter {
                 break
             case "dash":
                 this.updateDash(dt)
+                break
+            case "fall":
+                if (this.stateT > 0.85) this.match.ringOut(this)
                 break
             default:
                 this.updateFree(dt, opp, inp)
@@ -287,6 +292,16 @@ class Fighter {
     }
 
     // Wurf: Leicht + Schwer gleichzeitig – kurzes Ausholen, dann packen (siehe Match.tryThrow)
+    hitProps(def) {
+        const reach = def.reach * SPRITE_SCALE + COMBAT.bodyHalf + 20
+        for (const pr of this.match.props) {
+            if (pr.hp <= 0) continue
+            const dx = (pr.x - this.x) * this.facing
+            const ok = def.around ? Math.abs(pr.x - this.x) < reach : dx > -10 && dx < reach + pr.r
+            if (ok && Math.abs(pr.y - this.y) < COMBAT.depthReach * 1.4) this.match.damageProp(pr, this)
+        }
+    }
+
     startThrow(opp) {
         this.bufLight = 0
         this.bufHeavy = 0
@@ -327,6 +342,7 @@ class Fighter {
         this.comboStep = step
         this.move = def
         this.windowsDone = def.hits.map(() => false)
+        this.propHits = []
         this.spawned = false
         this.lunged = false
         this.landedThisSwing = false
@@ -393,6 +409,10 @@ class Fighter {
         }
 
         def.hits.forEach(([s, e], i) => {
+            if (frame >= s && frame <= e && !this.propHits[i]) {
+                this.propHits[i] = true
+                this.hitProps(def)
+            }
             if (this.windowsDone[i]) return
             if (frame >= s && frame <= e) {
                 if (this.match.tryHit(this, opp, def, i)) this.windowsDone[i] = true
@@ -495,6 +515,7 @@ class Fighter {
         this.ambush = false
         this.mvx *= 0.2
         this.mvy *= 0.2
+        kb *= 1 + (1 - this.hp / this.maxHp) * 0.9
         const dir = Math.sign(this.x - source.x) || -this.facing
         if (source.aimY) {
             // Treffer von oben/unten stößt in Tiefenrichtung weg
@@ -592,7 +613,19 @@ class Fighter {
                 this.match.sound("stealth")
                 break
 
+            case "charge":
+                this.startAttack("heavy", 0, opp, ab.move)
+                this.match.callout(this, ab.name.toUpperCase() + "!", this.champ.color)
+                break
+
+            case "toxic":
+                this.faceOpponent(opp, null)
+                this.cast("light0", this.champ.light[0].anim, 3, () => this.match.spawnPuddle(this, opp))
+                this.match.callout(this, ab.name.toUpperCase() + "!", "#9dff6a")
+                break
+
             case "heal":
+                if (this.champ.anims.heal) this.cast("heal", this.champ.anims.heal, 99, null)
                 this.healLeft = ab.amount
                 fx.ring(this.x, this.y, { radius: 110, color: "rgba(120,255,150,0.9)", life: 0.5, width: 8 })
                 this.match.sound("heal")
@@ -642,6 +675,8 @@ class Fighter {
 
     updateAbilities(dt) {
         if (this.shieldT > 0) this.shieldT -= dt
+        if (this.powerT > 0) this.powerT -= dt
+        if (this.slowT > 0) this.slowT -= dt
         if (this.frenzyT > 0) {
             this.frenzyT -= dt
             if (Math.random() < dt * 14) this.match.fx.sparks(this.x, this.y - 50, Math.random() < 0.5 ? 1 : -1, { count: 1, color: "#ff6f91", color2: "#ff2a55", speed: 90, size: 5 })
@@ -663,7 +698,14 @@ class Fighter {
 
     // ---------- Arena-Grenzen (vermessene Bodenform, siehe ARENA) ----------
     clampToArena() {
+        if (this.state === "fall") return
         const [x, y] = ARENA.clamp(this.x, this.y)
+        // Abgrund: wer mit Wucht durch eine Mauerlücke geschleudert wird, stürzt in die Wolken
+        const flung = (this.state === "hurt" || this.state === "dizzy") && Math.abs(this.vx) > 160
+        if (x !== this.x && flung && this.match.gapAt(this.x, y)) {
+            if (Math.abs(this.x - x) > 40) this.startFall()
+            return
+        }
         // an der Mauer abprallen statt "kleben" – je Achse, damit man an der Wand entlanglaufen kann
         if (x !== this.x) {
             this.x = x
@@ -673,6 +715,38 @@ class Fighter {
             this.y = y
             this.vy *= -0.25
         }
+        this.pushOutOfProps()
+    }
+
+    // Deckung: um Säulen und Kisten herumgleiten
+    pushOutOfProps() {
+        for (const pr of this.match.props || []) {
+            if (pr.hp <= 0) continue
+            const rr = pr.r + 20
+            const dx = this.x - pr.x
+            const dy = (this.y - pr.y) * 2.2
+            const d = Math.hypot(dx, dy)
+            if (d >= rr) continue
+            const nx = d ? dx / d : 1
+            const ny = d ? dy / d : 0
+            this.x = pr.x + nx * rr
+            this.y = pr.y + ny * rr / 2.2
+            // geschleudert gegen eine Kiste: sie geht kaputt
+            if (Math.hypot(this.vx, this.vy) > 300 && pr.type === "crate") this.match.damageProp(pr, this)
+            const vn = this.vx * nx + this.vy * ny
+            if (vn < 0) {
+                this.vx -= vn * nx * 1.3
+                this.vy -= vn * ny * 1.3
+            }
+        }
+    }
+
+    startFall() {
+        this.state = "fall"
+        this.stateT = 0
+        this.mvx = this.mvy = 0
+        this.match.sound("whiff")
+        this.match.fx.text(this.x, this.y - 110, "AAAH!", { color: "#ffffff", size: 28, life: 0.7 })
     }
 
     // ---------- Zeichnen ----------
@@ -684,6 +758,7 @@ class Fighter {
     }
 
     drawShadow(ctx) {
+        if (this.state === "fall") return
         const alpha = this.stealthT > 0 ? 0.15 : 1
         ctx.save()
         ctx.globalAlpha = alpha
@@ -718,13 +793,18 @@ class Fighter {
         if (!img || !img.complete) return
         const g = this.geom
         const frame = this.frame
-        const alpha = this.stealthAlpha()
+        const alpha = this.stealthAlpha() * (this.state === "fall" ? 1 - Math.min(1, this.stateT / 0.85) : 1)
 
         ctx.save()
         // Getroffen: kurzes Zittern während des Treffer-Stopps (wie in klassischen Fightern)
         const jitter = this.match.hitstop > 0 && this.state === "hurt" && this.stateT < 0.06 ? 5 : 0
         ctx.translate(Math.round(this.x + (Math.random() - 0.5) * jitter), Math.round(this.y))
         if (this.facing < 0) ctx.scale(-1, 1)
+        if (this.state === "fall") {
+            const k = Math.min(1, this.stateT / 0.85)
+            ctx.translate(0, k * k * 140)
+            ctx.scale(1 - k * 0.6, 1 - k * 0.6)
+        }
 
         // Squash & Stretch
         if (this.state === "hurt" && this.stateT < 0.1) ctx.scale(1.1, 0.92)
@@ -738,6 +818,8 @@ class Fighter {
             drawTintedFrame(ctx, img, frame, -g.ax, -g.ay, g.w, g.h, "#ffffff", Math.min(1, this.flashT / 0.06) * alpha)
         } else if (this.healLeft > 0) {
             drawTintedFrame(ctx, img, frame, -g.ax, -g.ay, g.w, g.h, "#6dff8e", 0.35 + Math.sin(this.match.time * 20) * 0.15)
+        } else if (this.powerT > 0) {
+            drawTintedFrame(ctx, img, frame, -g.ax, -g.ay, g.w, g.h, "#ff7a3c", 0.22 + Math.sin(this.match.time * 14) * 0.1)
         } else if (this.frenzyT > 0) {
             drawTintedFrame(ctx, img, frame, -g.ax, -g.ay, g.w, g.h, "#ff2a55", 0.22 + Math.sin(this.match.time * 16) * 0.1)
         } else if (this.ambush && this.state === "attack") {

@@ -17,10 +17,10 @@ for (const id of MAP_ORDER) files.add("../assets/" + MAPS[id].img)
 for (const id of CHAMPION_ORDER) {
     const c = CHAMPIONS[id]
     const names = new Set([...Object.values(c.anims).map(a => a.file)])
-    for (const m of [...c.light, c.heavy]) {
+    for (const m of [...c.light, c.heavy, ...[c.special && c.special.move, c.ability.move].filter(Boolean)]) {
         names.add(m.anim.file)
         if (m.projectile) names.add(m.projectile.effect)
-        if (m.zone) names.add(m.zone.effect)
+        if (m.zone && m.zone.effect) names.add(m.zone.effect)
     }
     for (const n of names) files.add(`../assets/characters-hd/${c.folder}/${c.folder}-${n}.png`)
     files.add("../assets/" + c.ability.icon)

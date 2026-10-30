@@ -40,6 +40,10 @@ class Match {
         this.zones = []
         this.geysers = []
         this.blooms = []
+        this.items = []
+        this.puddles = []
+        this.itemT = 8 + Math.random() * 4
+        this.props = this.makeProps()
         this.wind = { t: 9 + Math.random() * 5, active: 0, warn: 0, dir: 1 }
         this.bloomT = 7 + Math.random() * 4
         this.rec = []          // Aufnahme der letzten Sekunden (für die Finisher-Wiederholung)
@@ -129,6 +133,7 @@ class Match {
         this.updateBombs(sdt)
         this.updateProjectiles(sdt)
         this.updateZones(sdt)
+        this.updateArena(sdt, fighting)
         if (fighting) this.updateHazards(sdt)
         this.updateTraining(sdt)
         this.fx.update(sdt)
@@ -344,6 +349,7 @@ class Match {
             this.sound("counter")
             this.emit("counter", { att })
         }
+        if (att.powerT > 0) dmg *= 1.3
         const ambushHit = att.ambush
         if (att.ambush) {
             dmg *= 2
@@ -506,6 +512,12 @@ class Match {
                     }
                 }
                 if (p.dist > p.cfg.range || !ARENA.contains(p.x, p.y, 50)) boom = true
+                // Deckung: Geschosse prallen an Säulen und Kisten ab
+                const cover = this.propAt(p.x, p.y, 0.8)
+                if (cover && !boom) {
+                    boom = true
+                    this.damageProp(cover, p.owner)
+                }
                 if (boom) {
                     p.state = "boom"
                     p.t = 0
@@ -570,6 +582,7 @@ class Match {
                 const def = this.fighters[1 - z.owner.side]
                 const inside = Math.hypot((def.x - z.x) / z.radius, (def.y - z.y) / (z.radius * 0.5)) <= 1
                 if (inside) this.tryHit(z.owner, def, z.move, 0, { x: z.x, y: z.y - 1 })
+                for (const pr of this.props) if (pr.hp > 0 && Math.hypot((pr.x - z.x) / z.radius, (pr.y - z.y) / (z.radius * 0.5)) <= 1) this.damageProp(pr, z.owner)
             }
             if (z.t > z.hitAt + 0.4) this.zones.splice(i, 1)
         }
@@ -771,6 +784,252 @@ class Match {
         }
     }
 
+    // ---------------- Arena: Deckung, Abgründe, Power-ups ----------------
+    get ringOuts() {
+        return !this.rules.noHazards && !this.demo
+    }
+
+    makeProps() {
+        const list = ARENA_PROPS[this.map.id] || []
+        // online (und im Tutorial) nur feste Deckung – zerstörbare Kisten würden auseinanderlaufen
+        return list.filter(p => !this.rules.noHazards || p.type === "pillar")
+            .map(p => ({ ...p, r: PROP_TYPES[p.type].r, hp: PROP_TYPES[p.type].hp, hitT: 0 }))
+    }
+
+    propAt(x, y, k = 1) {
+        return this.props.find(pr => pr.hp > 0 && Math.abs(x - pr.x) < pr.r * k && Math.abs(y - pr.y) < 30)
+    }
+
+    gapAt(x, y) {
+        if (!this.ringOuts) return false
+        return RING_GAPS.some(g => y >= g.y0 && y <= g.y1 && Math.sign(x - WORLD.width / 2) === g.side)
+    }
+
+    damageProp(pr, by) {
+        if (pr.hp === Infinity) {
+            this.fx.sparks(pr.x, pr.y - 50, by ? -by.facing : 1, { count: 6, speed: 300, color: "#ffffff", color2: "#aab4c8" })
+            return
+        }
+        if (pr.hp <= 0 || pr.hitT > 0.12) return
+        pr.hp--
+        pr.hitT = 0.25
+        this.fx.sparks(pr.x, pr.y - 30, by ? by.facing : 1, { count: 10, speed: 380, color: "#d89a58", color2: "#7a4a24", size: 8 })
+        this.sound("hit")
+        this.addShake(4)
+        if (pr.hp <= 0) {
+            this.fx.dust(pr.x, pr.y, { count: 10, size: 22, color: this.map.dust })
+            this.fx.sparks(pr.x, pr.y - 30, 1, { count: 22, speed: 560, spread: 3, color: "#d89a58", color2: "#7a4a24", size: 10 })
+            this.dropItem(pr.x, pr.y, true)
+        }
+    }
+
+    // Power-up: fällt vom Himmel (mit Schatten als Vorwarnung) oder liegt in einer Kiste
+    dropItem(x, y, instant = false) {
+        const types = Object.keys(ITEM_TYPES)
+        this.items.push({ x, y, type: types[Math.floor(Math.random() * types.length)], t: 0, fall: instant ? 0 : 1.1, life: 11 })
+    }
+
+    updateArena(dt, fighting) {
+        for (const pr of this.props) pr.hitT = Math.max(0, pr.hitT - dt)
+
+        // Power-ups vom Himmel
+        if (fighting && !this.rules.noHazards && !this.training) {
+            this.itemT -= dt
+            if (this.itemT <= 0 && this.items.length < 2) {
+                this.itemT = 10 + Math.random() * 5
+                for (let tries = 0; tries < 8; tries++) {
+                    const [x, y] = ARENA.clamp(ARENA.x0 + Math.random() * (ARENA.x1 - ARENA.x0), ARENA.y0 + Math.random() * (ARENA.y1 - ARENA.y0), 90)
+                    if (this.propAt(x, y, 2)) continue
+                    this.dropItem(x, y)
+                    break
+                }
+            }
+        }
+        for (let i = this.items.length - 1; i >= 0; i--) {
+            const it = this.items[i]
+            it.t += dt
+            if (it.fall > 0) {
+                it.fall -= dt
+                if (it.fall <= 0) {
+                    this.fx.ring(it.x, it.y, { radius: 60, color: ITEM_TYPES[it.type].color, life: 0.35, width: 6 })
+                    this.fx.dust(it.x, it.y, { count: 4, size: 14, color: this.map.dust })
+                    this.sound("block")
+                }
+                continue
+            }
+            const taker = fighting && this.fighters.find(f => f.state !== "dead" && f.state !== "fall" && Math.hypot(f.x - it.x, (f.y - it.y) * 1.5) < 48)
+            if (taker) {
+                this.items.splice(i, 1)
+                this.applyItem(taker, it)
+            } else if (it.t > it.life) {
+                this.items.splice(i, 1)
+            }
+        }
+
+        // Schleim-Pfützen: verlangsamen und ätzen
+        for (let i = this.puddles.length - 1; i >= 0; i--) {
+            const pd = this.puddles[i]
+            pd.t += dt
+            pd.tick += dt
+            const victim = this.fighters[1 - pd.owner.side]
+            const inside = Math.hypot((victim.x - pd.x) / 95, (victim.y - pd.y) / 42) <= 1
+            if (inside && victim.state !== "dead") {
+                victim.slowT = 0.2
+                if (pd.tick >= 0.5 && this.phase === "fight") {
+                    pd.tick = 0
+                    let dmg = 2
+                    if ((this.training || this.netRole === "guest") && victim.hp - dmg < 1) dmg = Math.max(0, Math.ceil(victim.hp - 1))
+                    victim.hp = Math.max(0, victim.hp - dmg)
+                    victim.stats.taken += dmg
+                    pd.owner.stats.damage += dmg
+                    this.fx.text(victim.x, victim.y - 100, String(dmg), { color: "#9dff6a", size: 24, life: 0.6 })
+                    if (victim.hp <= 0) {
+                        this.lastHit = { hazard: true }
+                        this.knockout(pd.owner, victim)
+                    }
+                }
+            }
+            if (pd.t > pd.life) this.puddles.splice(i, 1)
+        }
+    }
+
+    applyItem(f, it) {
+        const def = ITEM_TYPES[it.type]
+        if (it.type === "heal") {
+            f.hp = Math.min(f.maxHp, f.hp + 15)
+            this.fx.heal(f.x, f.y)
+        } else if (it.type === "energy") {
+            f.energy = f.maxEnergy
+        } else {
+            f.powerT = 7
+        }
+        this.fx.ring(f.x, f.y, { radius: 100, color: def.color, life: 0.45, width: 8 })
+        this.callout(f, def.text, def.color)
+        this.sound("coin")
+        this.emit("item", { fighter: f, type: it.type })
+    }
+
+    spawnPuddle(owner, opp) {
+        const visible = opp.stealthT <= 0 && Math.hypot(opp.x - owner.x, opp.y - owner.y) < 560
+        const [x, y] = visible ? [opp.x, opp.y] : ARENA.clamp(owner.x + owner.facing * 220, owner.y)
+        this.puddles.push({ owner, x, y, t: 0, tick: 0.4, life: 4.5 })
+        this.fx.ring(x, y, { radius: 110, color: "rgba(140,255,120,0.9)", life: 0.4, width: 8 })
+        this.fx.sparks(x, y - 20, 1, { count: 16, speed: 420, spread: 3, color: "#b6ff8a", color2: "#3aa04a", size: 9 })
+        this.sound("quake")
+    }
+
+    // Ring-Out: Schaden, dann zurück auf die Arena (oder K.O.)
+    ringOut(f) {
+        const opp = this.fighters[1 - f.side]
+        let dmg = RING_OUT_DMG
+        if ((this.training || this.netRole === "guest") && f.hp - dmg < 1) dmg = Math.max(0, Math.ceil(f.hp - 1))
+        f.hp = Math.max(0, f.hp - dmg)
+        f.stats.taken += dmg
+        opp.stats.damage += dmg
+        f.x = WORLD.width / 2 + (f.x < WORLD.width / 2 ? -180 : 180)
+        f.y = 560
+        f.vx = f.vy = f.mvx = f.mvy = 0
+        this.sound("hit", { heavy: true })
+        this.addShake(20)
+        this.flash = 0.3
+        this.vibrate(120, f)
+        this.emit("ringout", { fighter: f })
+        if (f.hp <= 0 && this.phase === "fight") {
+            f.state = "dead"
+            f.stateT = 0
+            f.setAnim("death")
+            this.lastHit = { ringout: true }
+            this.knockout(opp, f)
+            return
+        }
+        f.toIdle()
+        f.iframes = 1.2
+        f.flashT = 0.3
+        this.fx.smoke(f.x, f.y, 12, "rgba(255,255,255,0.7)")
+        this.fx.ring(f.x, f.y, { radius: 120, color: "rgba(255,255,255,0.9)", life: 0.5, width: 8 })
+        this.fx.text(f.x, f.y - 130, "RING-OUT! -" + dmg, { color: "#ffd84a", size: 36, life: 1.2 })
+    }
+
+    // Abgründe in das Kartenbild schneiden (Wolken scheinen durch), mit Felskante
+    cutGaps(g) {
+        for (const gap of RING_GAPS) {
+            const edgeAt = y => {
+                const [l, r] = ARENA.span(Math.max(ARENA.y0, Math.min(ARENA.y1, y)))
+                const jag = Math.round(Math.sin(y * 0.09) * 6 + Math.sin(y * 0.31) * 3)
+                return gap.side < 0 ? l - 30 + jag : r + 30 + jag
+            }
+            for (let y = gap.y0 - 40; y <= gap.y1 + 50; y += 3) {
+                const e = edgeAt(y)
+                g.globalCompositeOperation = "destination-out"
+                g.fillStyle = "#000"
+                if (gap.side < 0) g.fillRect(0, y, e, 3)
+                else g.fillRect(e, y, WORLD.width - e, 3)
+                // Abbruchkante: Erdschicht in zwei Tönen
+                if (y < gap.y0 - 10 || y > gap.y1 + 30) continue
+                g.globalCompositeOperation = "source-over"
+                g.fillStyle = "#6b4528"
+                g.fillRect(gap.side < 0 ? e : e - 10, y, 10, 3)
+                g.fillStyle = "#3a2416"
+                g.fillRect(gap.side < 0 ? e : e - 4, y, 4, 3)
+            }
+        }
+        g.globalCompositeOperation = "source-over"
+    }
+
+    drawArenaGround(ctx) {
+        // Schatten unter Säulen und Kisten
+        for (const pr of this.props) {
+            if (pr.hp <= 0) continue
+            ctx.fillStyle = "rgba(20,10,5,0.32)"
+            ctx.beginPath()
+            ctx.ellipse(pr.x, pr.y + 6, pr.r + 6, 12, 0, 0, Math.PI * 2)
+            ctx.fill()
+        }
+        // Schleim-Pfützen
+        for (const pd of this.puddles) {
+            const fade = Math.min(1, (pd.life - pd.t) * 2, pd.t * 6)
+            ctx.save()
+            ctx.globalAlpha = 0.75 * fade
+            ctx.fillStyle = "#4fbf3c"
+            ctx.beginPath()
+            ctx.ellipse(pd.x, pd.y, 95, 42, 0, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.fillStyle = "#9dff6a"
+            for (let k = 0; k < 5; k++) {
+                const a = k * 1.3 + pd.t * 0.7
+                const bubble = (Math.sin(pd.t * 4 + k) + 1) * 4
+                ctx.fillRect(pd.x + Math.cos(a) * 55, pd.y + Math.sin(a) * 22 - bubble, 8, 8)
+            }
+            ctx.restore()
+        }
+        // Power-ups: Schatten beim Fallen, dann schwebender Orb
+        for (const it of this.items) {
+            const color = ITEM_TYPES[it.type].color
+            if (it.fall > 0) {
+                const k = 1 - it.fall / 1.1
+                ctx.save()
+                ctx.globalAlpha = 0.25 + k * 0.4
+                ctx.fillStyle = "rgba(20,10,5,0.5)"
+                ctx.beginPath()
+                ctx.ellipse(it.x, it.y, 14 + k * 20, 6 + k * 8, 0, 0, Math.PI * 2)
+                ctx.fill()
+                ctx.restore()
+                drawItemOrb(ctx, it.x, it.y - it.fall * 520, it.type, it.t)
+                continue
+            }
+            const blink = it.life - it.t < 2.5 && Math.sin(it.t * 20) > 0
+            if (blink) continue
+            ctx.save()
+            ctx.globalAlpha = 0.3
+            ctx.fillStyle = color
+            ctx.beginPath()
+            ctx.ellipse(it.x, it.y, 26, 10, 0, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.restore()
+            drawItemOrb(ctx, it.x, it.y, it.type, it.t)
+        }
+    }
+
     // ---------------- Online (Gast) ----------------
     // Spielstand vom Host übernehmen: kleine Abweichungen weich, große hart korrigieren
     applySnapshot(msg) {
@@ -912,6 +1171,7 @@ class Match {
 
     // Name des Finishers – je nachdem, womit der letzte Treffer kam
     finisherName(h) {
+        if (h.ringout) return { text: "RING-OUT!", sub: "Ab in die Wolken", big: true }
         if (h.hazard) return { text: "K.O.", sub: "Die Arena schlägt zurück" }
         if (h.bomb) return { text: "BOOM!", sub: "Bomben-Finish", big: true }
         if (h.ambush) return { text: "SCHATTEN-FINISH", sub: "Aus dem Hinterhalt", big: true }
@@ -987,6 +1247,9 @@ class Match {
         this.zones.length = 0
         this.geysers.length = 0
         this.blooms.length = 0
+        this.items.length = 0
+        this.puddles.length = 0
+        this.props = this.makeProps()
         this.rec.length = 0
         this.koTime = undefined
         this.fx.clear()
@@ -1102,6 +1365,7 @@ class Match {
         const ground = this.pixel.begin(w, h, cam, sx, sy, px)
         this.fx.drawGround(ground)
         this.drawTelegraphs(ground)
+        this.drawArenaGround(ground)
         if (this.phase !== "replay") for (const f of this.fighters) f.drawShadow(ground)
         this.pixel.end(ctx)
 
@@ -1112,7 +1376,11 @@ class Match {
         const drawables = [...this.fighters].sort((p, q) => p.y - q.y)
         if (this.phase === "replay") this.drawReplay(ctx)
         else {
-            for (const f of drawables) f.draw(ctx)
+            const scene = [
+                ...this.fighters.map(f => ({ y: f.state === "fall" ? -1 : f.y, d: () => f.draw(ctx) })),
+                ...this.props.filter(pr => pr.hp > 0).map(pr => ({ y: pr.y, d: () => drawProp(ctx, pr, this.map.id) }))
+            ].sort((p, q) => p.y - q.y)
+            for (const o of scene) o.d()
             this.drawProjectiles(ctx)
         }
         this.drawBombs(ctx)
@@ -1223,7 +1491,7 @@ class Match {
 
     // Map-Bild mit weich ausgeblendeten Rändern (einmal pro Map erzeugt)
     featheredMap() {
-        const key = "feather:" + this.map.id
+        const key = "feather:" + this.map.id + (this.ringOuts ? ":gaps" : "")
         if (IMAGES[key]) return IMAGES[key]
         const src = IMAGES["map:" + this.map.id]
         const c = document.createElement("canvas")
@@ -1246,6 +1514,7 @@ class Match {
             g.fillStyle = gr
             g.fillRect(rx, ry, rw, rh)
         }
+        if (this.ringOuts) this.cutGaps(g)
         IMAGES[key] = c
         return c
     }

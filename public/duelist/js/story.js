@@ -58,6 +58,33 @@ const STORY = {
         boss: "Hinter allem stand Gravelord. Das hast selbst du nicht kommen sehen.",
         ending: "Die Sterne leuchten wieder klar. Arcanis spricht endlich aus, was er wusste – und findet die Vergebung, die er suchte."
     },
+    seraphina: {
+        chapters: [
+            { opp: "boneguard", map: "classic", diff: "normal", title: "Die verirrte Seele", text: "Boneguard wandelt zwischen Leben und Tod. Vielleicht kann dein Licht ihn erlösen – aber erst muss er stillhalten." },
+            { opp: "gloop", map: "sky", diff: "normal", title: "Ein klebriges Problem", text: "Ein Schleim hat den Tempelbrunnen besetzt und weigert sich zu gehen. Freundlich bitten hat nicht funktioniert." },
+            { opp: "rageclaw", map: "frost", diff: "hard", title: "Fluch und Segen", text: "Rageclaws Fluch frisst ihn auf. Dein Segen könnte helfen – wenn er dich nahe genug heranlässt." }
+        ],
+        boss: "Der Knochenkönig hat das Licht des Tempels gestohlen. Hol es dir zurück.",
+        ending: "Das Licht kehrt in den Tempel zurück. Seraphina kniet am Altar – müde, aber lächelnd. Über den Wolken geht die Sonne wieder auf."
+    },
+    valor: {
+        chapters: [
+            { opp: "nightfang", map: "frost", diff: "normal", title: "Wettlauf", text: "Nightfang behauptet, schneller zu sein als jedes Pferd. Zeit, ihm das Gegenteil zu zeigen." },
+            { opp: "warbrute", map: "volcano", diff: "normal", title: "Die gesperrte Brücke", text: "Warbrute versperrt den letzten Weg zur Arena. Er weicht nicht – also reitest du durch ihn hindurch." },
+            { opp: "vanguard", map: "sky", diff: "hard", title: "Ehre gegen Ruhm", text: "Vanguard nennt dich einen Söldner. Du nennst ihn langsam. Nur einer behält recht." }
+        ],
+        boss: "Gravelord hat die Wolkenbrücken zerstört. Ohne Brücken gibt es keine Boten mehr – und keinen Wind unter den Hufen.",
+        ending: "Die Brücken werden neu gebaut, und der erste, der darüber reitet, ist Valor. Diesmal mit einer Botschaft: Die Arena ist frei."
+    },
+    gloop: {
+        chapters: [
+            { opp: "arcanis", map: "classic", diff: "normal", title: "Ein Experiment", text: "Arcanis will dich in ein Glas stecken und untersuchen. Du hast andere Pläne." },
+            { opp: "seraphina", map: "sky", diff: "normal", title: "Der Brunnen", text: "Seraphina will dich aus dem Tempelbrunnen werfen. Aber der Brunnen ist so gemütlich!" },
+            { opp: "warbrute", map: "volcano", diff: "hard", title: "Der Große", text: "Warbrute lacht über den kleinen Schleim. Er lacht nicht mehr lange." }
+        ],
+        boss: "Der Knochenkönig will alle Wolken austrocknen. Ohne Wolken gibt es keinen Regen – und ohne Regen keinen Gloop.",
+        ending: "Gloop hüpft auf Gravelords Thron und macht es sich gemütlich. Niemand traut sich, ihn zu vertreiben. Der neue Herrscher der Arena ist … klebrig."
+    },
     gravelord: {
         chapters: [
             { opp: "vanguard", map: "sky", diff: "hard", title: "Der Anführer", text: "Vanguard hielt die Gruppe zusammen. Brich zuerst ihn – dann zerfällt der Rest." },

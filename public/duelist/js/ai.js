@@ -171,6 +171,12 @@ class BotController {
         }
 
         // Nicht in die Wand laufen: Ziel in die Arena ziehen
+        // Power-ups in der Nähe einsammeln
+        const item = (match.items || []).find(it => it.fall <= 0 && Math.hypot(it.x - me.x, it.y - me.y) < 380)
+        if (item && Math.random() < 0.3 + diff.smart * 0.6 && !(op.state === "attack" && Math.abs(op.x - me.x) < 200)) {
+            gx = item.x
+            gy = item.y
+        }
         ;[gx, gy] = ARENA.clamp(gx, gy, 30)
         let mx = gx - me.x
         let my = gy - me.y
@@ -278,6 +284,10 @@ class BotController {
                 return smart ? (dist < 160 && hpK < 0.6) || (op.state === "attack" && dist < 220) : Math.random() < 0.2
             case "quake":
                 return dist < 220 || (!smart && Math.random() < 0.2)
+            case "charge":
+                return smart ? dist > 140 && dist < 460 : Math.random() < 0.3
+            case "toxic":
+                return op.stealthT <= 0 && (smart ? dist < 480 && op.state !== "dash" : Math.random() < 0.35)
             case "bomb": {
                 const max = me.energy >= me.maxEnergy
                 const lethal = (me.energy >= 5 && op.hp <= 36) || (me.energy >= 4 && op.hp <= 24) || op.hp <= 12

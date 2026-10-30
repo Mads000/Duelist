@@ -1,6 +1,6 @@
 // Service Worker – macht DUELIST nach dem ersten Laden komplett offline spielbar
 // (automatisch erzeugt von tools/make_sw.js)
-const CACHE = "duelist-v3.0.23"
+const CACHE = "duelist-v3.0.27"
 const PRECACHE = [
     "./",
     "index.html",
@@ -10,6 +10,7 @@ const PRECACHE = [
     "icons/icon-192.png",
     "icons/icon-512.png",
     "js/ai.js",
+    "js/arena.js",
     "js/arena_shape.js",
     "js/assets.js",
     "js/audio.js",
@@ -87,6 +88,27 @@ const PRECACHE = [
     "../assets/characters-hd/Wizard/Wizard-Attack02_Effect.png",
     "../assets/characters-hd/Wizard/Wizard-Attack01.png",
     "../assets/characters-hd/Wizard/Wizard-Attack01_Effect.png",
+    "../assets/characters-hd/Priest/Priest-Idle.png",
+    "../assets/characters-hd/Priest/Priest-Walk.png",
+    "../assets/characters-hd/Priest/Priest-Hurt.png",
+    "../assets/characters-hd/Priest/Priest-Death.png",
+    "../assets/characters-hd/Priest/Priest-Heal.png",
+    "../assets/characters-hd/Priest/Priest-Attack.png",
+    "../assets/characters-hd/Priest/Priest-Attack_Effect.png",
+    "../assets/characters-hd/Lancer/Lancer-Idle.png",
+    "../assets/characters-hd/Lancer/Lancer-Walk01.png",
+    "../assets/characters-hd/Lancer/Lancer-Hurt.png",
+    "../assets/characters-hd/Lancer/Lancer-Death.png",
+    "../assets/characters-hd/Lancer/Lancer-Attack01.png",
+    "../assets/characters-hd/Lancer/Lancer-Attack03.png",
+    "../assets/characters-hd/Lancer/Lancer-Attack02.png",
+    "../assets/Faehigkeiten/schield2.png",
+    "../assets/characters-hd/Slime/Slime-Idle.png",
+    "../assets/characters-hd/Slime/Slime-Walk.png",
+    "../assets/characters-hd/Slime/Slime-Hurt.png",
+    "../assets/characters-hd/Slime/Slime-Death.png",
+    "../assets/characters-hd/Slime/Slime-Attack01.png",
+    "../assets/characters-hd/Slime/Slime-Attack02.png",
     "../assets/characters-hd/Greatsword Skeleton/Greatsword Skeleton-Idle.png",
     "../assets/characters-hd/Greatsword Skeleton/Greatsword Skeleton-Walk.png",
     "../assets/characters-hd/Greatsword Skeleton/Greatsword Skeleton-Hurt.png",

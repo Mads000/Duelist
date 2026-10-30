@@ -302,6 +302,126 @@ const CHAMPIONS = {
         lore: "Er war der Kopf der Gruppe, der die Sterne las und den Verrat kommen sah – und schwieg. Seitdem sucht Arcanis in der Arena nach Vergebung, mit Feuer in der einen und Eis in der anderen Hand."
     },
 
+    seraphina: {
+        id: "seraphina",
+        legacy: "Priest",
+        name: "Seraphina",
+        title: "Die Lichtbringerin",
+        role: "Heilerin",
+        folder: "Priest",
+        color: "#ffe9a6",
+        anchor: { x: 51, y: 58 },
+        speed: 290,
+        hp: 90,
+        stats: { tempo: 3, kraft: 2, reichweite: 4 },
+        anims: {
+            idle: anim("Idle", 6, 8),
+            run: anim("Walk", 8, 12),
+            hurt: anim("Hurt", 4, 16),
+            death: anim("Death", 4, 7),
+            heal: anim("Heal", 6, 10)
+        },
+        light: [
+            move(anim("Attack", 9, 24), [[4, 5]], 5, 200, 24, { lunge: 150 }),
+            move(anim("Attack", 9, 28), [[4, 5]], 6, 240, 24, { lunge: 170 })
+        ],
+        // Lichtsäule am Gegner
+        heavy: move(anim("Attack", 9, 14), [], 10, 460, 0, {
+            lunge: 0, recovery: 0.5, zone: { frame: 4, effect: "Attack_Effect", frames: 5, fps: 12, hitFrame: 2, radius: 78, maxDist: 440 }
+        }),
+        special: {
+            name: "Heiliger Kreis",
+            text: "Ein Lichtring um sie herum schleudert alle Angreifer weg.",
+            move: move(anim("Attack", 9, 18), [[4, 6]], 10, 760, 36, { lunge: 0, around: true, guardBreak: true, recovery: 0.5 })
+        },
+        ability: {
+            type: "heal",
+            name: "Segen",
+            icon: "Faehigkeiten/leben.png",
+            cost: 3,
+            amount: 30,
+            text: "Nach 3 Treffern verfügbar. Ein Gebet heilt 30 Leben – aber während des Gebets ist sie verwundbar."
+        },
+        lore: "Seraphina hütete das Licht im Tempel über den Wolken, lange bevor die Arena gebaut wurde. Als der Knochenkönig erwachte, legte sie die Gebetsbücher beiseite und nahm den Stab in die Hand. Sie heilt, wen sie retten kann – und richtet, wen nicht."
+    },
+
+    valor: {
+        id: "valor",
+        legacy: "Lancer",
+        name: "Valor",
+        title: "Der Sturmreiter",
+        role: "Lanzenreiter",
+        folder: "Lancer",
+        color: "#e0b050",
+        anchor: { x: 47, y: 57 },
+        speed: 305,
+        hp: 105,
+        stats: { tempo: 4, kraft: 3, reichweite: 5 },
+        anims: {
+            idle: anim("Idle", 6, 8),
+            run: anim("Walk01", 8, 14),
+            hurt: anim("Hurt", 4, 16),
+            death: anim("Death", 4, 7)
+        },
+        light: [
+            move(anim("Attack01", 6, 18), [[3, 4]], 6, 220, 40, { lunge: 110 }),
+            move(anim("Attack03", 8, 20), [[1, 2], [4, 5]], 4, 200, 38, { lunge: 90 })
+        ],
+        heavy: move(anim("Attack02", 9, 15), [[2, 5]], 13, 640, 44, { lunge: 260 }),
+        special: {
+            name: "Lanzenstoß",
+            text: "Ein Stoß mit gewaltiger Reichweite, der jede Deckung bricht.",
+            move: move(anim("Attack01", 6, 15), [[3, 4]], 11, 640, 62, { lunge: 200, guardBreak: true, recovery: 0.5 })
+        },
+        ability: {
+            type: "charge",
+            name: "Sturmritt",
+            icon: "Faehigkeiten/schield2.png",
+            cost: 3,
+            move: move(anim("Attack02", 9, 16), [[2, 6]], 15, 900, 44, { lunge: 0, rush: [1, 6, 950], guardBreak: true, recovery: 0.4 }),
+            text: "Nach 3 Treffern verfügbar. Galoppiert quer über die Arena und reißt alles mit – perfekt, um Gegner in den Abgrund zu stoßen."
+        },
+        lore: "Valor ritt einst als Bote zwischen den Wolkeninseln. Als die Brücken fielen, blieb nur die Arena. Er kämpft für niemanden – nur für den Wind unter den Hufen und den Ruhm, der Schnellste zu sein."
+    },
+
+    gloop: {
+        id: "gloop",
+        legacy: "Slime",
+        name: "Gloop",
+        title: "Der Wolkenschleim",
+        role: "Trickster",
+        folder: "Slime",
+        color: "#5fd0ff",
+        anchor: { x: 48, y: 57 },
+        speed: 335,
+        hp: 82,
+        stats: { tempo: 5, kraft: 2, reichweite: 2 },
+        anims: {
+            idle: anim("Idle", 6, 9),
+            run: anim("Walk", 6, 12),
+            hurt: anim("Hurt", 4, 16),
+            death: anim("Death", 4, 7)
+        },
+        light: [
+            move(anim("Attack01", 6, 18), [[3, 4]], 5, 200, 28, { lunge: 190 }),
+            move(anim("Attack01", 6, 22), [[3, 4]], 6, 240, 28, { lunge: 210 })
+        ],
+        heavy: move(anim("Attack02", 12, 18), [[8, 9]], 14, 700, 38, { lunge: 120 }),
+        special: {
+            name: "Sensenwirbel",
+            text: "Zieht eine versteckte Sense und mäht rundherum alles um.",
+            move: move(anim("Attack02", 12, 22), [[8, 10]], 12, 700, 40, { lunge: 0, around: true, guardBreak: true, recovery: 0.5 })
+        },
+        ability: {
+            type: "toxic",
+            name: "Glibberpfütze",
+            icon: "Faehigkeiten/unsichtbar.png",
+            cost: 3,
+            text: "Nach 3 Treffern verfügbar. Spuckt eine Pfütze unter den Gegner – sie verlangsamt und ätzt 4 Sekunden lang."
+        },
+        lore: "Niemand weiß, woher Gloop kam. Manche sagen, er tropfte eines Nachts aus einer Regenwolke direkt in die Arena. Er ist klein, schnell und unterschätzt – und genau das liebt er."
+    },
+
     gravelord: {
         id: "gravelord",
         legacy: "Gravelord",
@@ -343,7 +463,7 @@ const CHAMPIONS = {
     }
 }
 
-const CHAMPION_ORDER = ["vanguard", "warbrute", "boneguard", "rageclaw", "nightfang", "arcanis", "gravelord"]
+const CHAMPION_ORDER = ["vanguard", "warbrute", "boneguard", "rageclaw", "nightfang", "arcanis", "seraphina", "valor", "gloop", "gravelord"]
 
 function isUnlocked(id) {
     return !CHAMPIONS[id].boss || PlayerRecord.data.unlocked.includes(id)

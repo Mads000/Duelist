@@ -25,10 +25,11 @@ function loadImage(key, src) {
 function championFiles(champ) {
     const files = new Set()
     for (const a of Object.values(champ.anims)) files.add(a.file)
-    for (const m of [...champ.light, champ.heavy]) {
+    const extra = [champ.special && champ.special.move, champ.ability.move].filter(Boolean)
+    for (const m of [...champ.light, champ.heavy, ...extra]) {
         files.add(m.anim.file)
         if (m.projectile) files.add(m.projectile.effect)
-        if (m.zone) files.add(m.zone.effect)
+        if (m.zone && m.zone.effect) files.add(m.zone.effect)
     }
     return files
 }
