@@ -6,7 +6,7 @@ const $ = (sel, root = document) => root.querySelector(sel)
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel))
 
 const STAT_LABELS = { tempo: "Tempo", kraft: "Kraft", reichweite: "Reichweite" }
-const SINGLE_PICK_MODES = ["arcade", "training", "story", "online", "team"]
+const SINGLE_PICK_MODES = ["quick", "arcade", "training", "story", "online", "team"]
 
 const UI = {
     current: null,
@@ -59,7 +59,7 @@ const UI = {
             this.show("settings")
         })
         $("#rematchBtn").addEventListener("click", () => App.restart())
-        $("#changeBtn").addEventListener("click", () => App.go(App.config.mode === "quick" ? "solo" : App.config.mode))
+        $("#changeBtn").addEventListener("click", () => App.go(App.config.mode === "quick" ? "quickpick" : App.config.mode))
         $("#menuBtn").addEventListener("click", () => App.quitToMenu())
         $("#pauseBtn").addEventListener("click", () => App.pause())
         $("#swapPads").addEventListener("click", () => Link.swapSlots())
@@ -99,6 +99,15 @@ const UI = {
     // ---------------- Hauptmenü: Bilanz ----------------
     renderRecord() {
         $("#recordCard").innerHTML = Progress.html()
+        this.renderQuickChamp()
+    },
+
+    // Schnelles Match: zeigt, mit wem man gleich kämpft
+    renderQuickChamp() {
+        const id = isUnlocked(App.config.champs[0]) ? App.config.champs[0] : "vanguard"
+        $("#quickName").textContent = CHAMPIONS[id].name
+        if (!this.quickPreview) this.quickPreview = new SpritePreview($("#quickPortrait"), id, "idle", { zoom: 1.6 })
+        else if (this.quickPreview.champId !== id) this.quickPreview.set(id, "idle")
     },
 
     // ---------------- Champions / Lore ----------------

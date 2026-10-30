@@ -608,6 +608,46 @@ body.crt #crt {
     letter-spacing: 0.16em;
 }
 
+.quick-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+}
+
+.btn.quick-champ {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 14px 4px 6px;
+    text-align: left;
+}
+
+.quick-champ canvas {
+    width: 56px;
+    height: 56px;
+    image-rendering: pixelated;
+}
+
+.quick-champ small,
+.quick-champ em {
+    display: block;
+    font-size: 11px;
+    font-style: normal;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.75;
+}
+
+.quick-champ b {
+    font-size: 1.15em;
+    line-height: 1.1;
+}
+
+.quick-champ em {
+    color: var(--gold, #ffd65a);
+    opacity: 1;
+}
+
 .mode-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -2945,6 +2985,15 @@ kbd,
 
     .menu-arcade {
         padding: 6px 12px;
+    }
+
+    .quick-champ canvas {
+        width: 40px;
+        height: 40px;
+    }
+
+    .quick-champ small {
+        display: none;
     }
 
     .mode-grid {

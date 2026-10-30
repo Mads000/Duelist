@@ -19,7 +19,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/app.css?v=3.0.33">
+    <link rel="stylesheet" href="css/app.css?v=3.0.34">
 </head>
 
 <body>
@@ -56,7 +56,10 @@
             <h1 class="logo logo-menu chrome">DUELIST</h1>
             <p class="menu-tag">Die Arena über den Wolken</p>
             <nav class="menu-panel glass">
-                <button class="btn start menu-arcade" data-go="quick" data-info="Schnelles Match: Sofort los – dein Champion gegen einen zufälligen Gegner, kurze 45-Sekunden-Runden. Perfekt für zwischendurch."><b>Schnelles Match</b><small>Sofort kämpfen · kurze Runden</small></button>
+                <div class="quick-row">
+                    <button class="btn start menu-arcade" data-go="quick" data-info="Schnelles Match: Sofort los – dein gewählter Champion gegen einen zufälligen Gegner, kurze 45-Sekunden-Runden. Perfekt für zwischendurch."><b>Schnelles Match</b><small>Sofort kämpfen · kurze Runden</small></button>
+                    <button class="btn quick-champ" data-go="quickpick" data-info="Champion wechseln: Wähle, mit wem du ins Schnelle Match gehst. Die Wahl bleibt gespeichert."><canvas id="quickPortrait" width="56" height="56"></canvas><span><small>Dein Champion</small><b id="quickName">Vanguard</b><em>Wechseln</em></span></button>
+                </div>
                 <div class="mode-grid">
                     <button class="btn mode" data-go="arcade" data-info="Arcade: Kämpf dich durch 5 Gegner bis zum Endboss. Punkte für Treffer, Konter und Finisher – ab in die Highscores!"><b>Arcade</b><small>5 Gegner · Endboss</small></button>
                     <button class="btn mode" data-go="versus" data-info="Versus: Gegen den Bot, zu zweit an einem Gerät, online gegen einen Freund oder 2 gegen 2."><b>Versus</b><small>Bot · Lokal · Online · 2v2</small></button>
@@ -492,26 +495,26 @@
     <div id="fps" hidden></div>
     <div id="toast"></div>
 
-    <script src="js/arena_shape.js?v=3.0.33"></script>
-    <script src="js/data.js?v=3.0.33"></script>
-    <script src="js/audio.js?v=3.0.33"></script>
-    <script src="js/settings.js?v=3.0.33"></script>
-    <script src="js/assets.js?v=3.0.33"></script>
-    <script src="js/input.js?v=3.0.33"></script>
-    <script src="js/link.js?v=3.0.33"></script>
-    <script src="js/pad.js?v=3.0.33"></script>
-    <script src="js/fx.js?v=3.0.33"></script>
-    <script src="js/arena.js?v=3.0.33"></script>
-    <script src="js/fighter.js?v=3.0.33"></script>
-    <script src="js/ai.js?v=3.0.33"></script>
-    <script src="js/match.js?v=3.0.33"></script>
-    <script src="js/ui.js?v=3.0.33"></script>
-    <script src="js/modes.js?v=3.0.33"></script>
-    <script src="js/progress.js?v=3.0.33"></script>
-    <script src="js/net.js?v=3.0.33"></script>
-    <script src="js/tutorial.js?v=3.0.33"></script>
-    <script src="js/story.js?v=3.0.33"></script>
-    <script src="js/main.js?v=3.0.33"></script>
+    <script src="js/arena_shape.js?v=3.0.34"></script>
+    <script src="js/data.js?v=3.0.34"></script>
+    <script src="js/audio.js?v=3.0.34"></script>
+    <script src="js/settings.js?v=3.0.34"></script>
+    <script src="js/assets.js?v=3.0.34"></script>
+    <script src="js/input.js?v=3.0.34"></script>
+    <script src="js/link.js?v=3.0.34"></script>
+    <script src="js/pad.js?v=3.0.34"></script>
+    <script src="js/fx.js?v=3.0.34"></script>
+    <script src="js/arena.js?v=3.0.34"></script>
+    <script src="js/fighter.js?v=3.0.34"></script>
+    <script src="js/ai.js?v=3.0.34"></script>
+    <script src="js/match.js?v=3.0.34"></script>
+    <script src="js/ui.js?v=3.0.34"></script>
+    <script src="js/modes.js?v=3.0.34"></script>
+    <script src="js/progress.js?v=3.0.34"></script>
+    <script src="js/net.js?v=3.0.34"></script>
+    <script src="js/tutorial.js?v=3.0.34"></script>
+    <script src="js/story.js?v=3.0.34"></script>
+    <script src="js/main.js?v=3.0.34"></script>
 </body>
 
 </html>

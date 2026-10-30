@@ -160,6 +160,11 @@ const App = {
         }
         if (target === "tutorial") return Tutorial.begin()
         if (target === "quick") return Modes.quick()
+        if (target === "quickpick") {
+            this.setState("select")
+            UI.openSelect("quick")
+            return
+        }
         if (target === "online") {
             UI.renderOnline()
             UI.show("online")
