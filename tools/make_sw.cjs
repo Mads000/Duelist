@@ -22,7 +22,7 @@ for (const id of CHAMPION_ORDER) {
         if (m.projectile) names.add(m.projectile.effect)
         if (m.zone) names.add(m.zone.effect)
     }
-    for (const n of names) files.add(`../assets/characters/${c.folder}/${c.folder}-${n}.png`)
+    for (const n of names) files.add(`../assets/characters-hd/${c.folder}/${c.folder}-${n}.png`)
     files.add("../assets/" + c.ability.icon)
 }
 for (const f of files) {

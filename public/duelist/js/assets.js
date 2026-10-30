@@ -5,7 +5,8 @@
 const IMAGES = {}
 
 function spritePath(champ, file) {
-    return `${ASSET_ROOT}characters/${champ.folder}/${champ.folder}-${file}.png`
+    // aufgewertete Sprites (Umriss, Licht & Schatten) – erzeugt von tools/make_sprites.py
+    return `${ASSET_ROOT}characters-hd/${champ.folder}/${champ.folder}-${file}.png`
 }
 
 function loadImage(key, src) {
