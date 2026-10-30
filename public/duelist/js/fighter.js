@@ -200,7 +200,8 @@ class Fighter {
         // Laufbewegung (mit Beschleunigung) und Rückstoß (mit Reibung)
         const grip = this.match.map.grip
         if (this.state !== "idle" && this.state !== "run") {
-            const f = Math.exp(-COMBAT.accel * 0.6 * dt)
+            const carry = this.state === "attack" && this.moveKind === "light" ? 0.22 : 0.6
+            const f = Math.exp(-COMBAT.accel * carry * dt)
             this.mvx *= f
             this.mvy *= f
         }
@@ -289,10 +290,15 @@ class Fighter {
 
     // Nach oben/unten schlagen: Stick klar nach oben/unten – oder der Gegner steht deutlich darüber/darunter
     pickAim(opp, inp) {
+        const visible = opp && opp.stealthT <= 0 && opp.state !== "dead"
+        const dx = visible ? Math.abs(opp.x - this.x) : Infinity
+        const dy = visible ? opp.y - this.y : 0
+        // Steht der Gegner seitlich in Reichweite, wird immer zur Seite geschlagen –
+        // auch wenn man gerade hoch/runter läuft (sonst geht der Schlag ins Leere)
+        const reach = this.champ.light[0].reach * SPRITE_SCALE + COMBAT.bodyHalf + 40
+        if (visible && dx < reach && Math.abs(dy) <= COMBAT.depthReach) return 0
         if (inp && Math.abs(inp.my) > 0.5 && Math.abs(inp.my) > Math.abs(inp.mx) * 1.2) return Math.sign(inp.my)
-        if (!opp || opp.stealthT > 0 || opp.state === "dead") return 0
-        const dx = Math.abs(opp.x - this.x)
-        const dy = opp.y - this.y
+        if (!visible) return 0
         if (Math.abs(dy) > COMBAT.depthReach && Math.abs(dy) > dx * 0.8 && Math.abs(dy) < 280) return Math.sign(dy)
         return 0
     }
@@ -531,7 +537,7 @@ class Fighter {
         if (source.aimY) {
             // Treffer von oben/unten stößt in Tiefenrichtung weg
             this.vx = dir * kb * 0.25
-            this.vy = source.aimY * kb * 0.6
+            this.vy = source.aimY * kb * 0.8
         } else {
             this.vx = dir * kb
             this.vy = Math.max(-140, Math.min(140, (this.y - source.y) * 3))
@@ -712,9 +718,10 @@ class Fighter {
         if (this.state === "fall") return
         const [x, y] = ARENA.clamp(this.x, this.y)
         // Abgrund: wer mit Wucht durch eine Mauerlücke geschleudert wird, stürzt in die Wolken
-        const flung = (this.state === "hurt" || this.state === "dizzy") && Math.abs(this.vx) > 160
-        if (x !== this.x && flung && this.match.gapAt(this.x, y)) {
-            if (Math.abs(this.x - x) > 40) this.startFall()
+        const flung = (this.state === "hurt" || this.state === "dizzy") && Math.hypot(this.vx, this.vy) > 160
+        if ((x !== this.x || y !== this.y) && flung && this.match.ringOuts) {
+            // über die Mauer in die Wolken
+            if (Math.hypot(this.x - x, (this.y - y) * 1.8) > 30) this.startFall()
             return
         }
         // an der Mauer abprallen statt "kleben" – je Achse, damit man an der Wand entlanglaufen kann

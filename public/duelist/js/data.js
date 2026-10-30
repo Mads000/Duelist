@@ -527,7 +527,7 @@ const DIFFICULTY_ORDER = ["easy", "normal", "hard", "nightmare"]
 
 // Allgemeine Kampfwerte
 const COMBAT = {
-    depthReach: 42,      // wie weit ein Schlag nach oben/unten trifft (Welt)
+    depthReach: 50,      // wie weit ein Schlag nach oben/unten trifft (Welt)
     bodyHalf: 24,        // halbe Körperbreite (Welt)
     hitstun: 0.26,
     heavyStun: 0.5,

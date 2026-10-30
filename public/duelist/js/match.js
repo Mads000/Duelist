@@ -802,11 +802,6 @@ class Match {
         return this.props.find(pr => pr.hp > 0 && Math.abs(x - pr.x) < pr.r * k && Math.abs(y - pr.y) < 30)
     }
 
-    gapAt(x, y) {
-        if (!this.ringOuts) return false
-        return RING_GAPS.some(g => y >= g.y0 && y <= g.y1 && Math.sign(x - WORLD.width / 2) === g.side)
-    }
-
     damageProp(pr, by) {
         if (pr.hp === Infinity) {
             this.fx.sparks(pr.x, pr.y - 50, by ? -by.facing : 1, { count: 6, speed: 300, color: "#ffffff", color2: "#aab4c8" })
@@ -950,32 +945,6 @@ class Match {
         this.fx.smoke(f.x, f.y, 12, "rgba(255,255,255,0.7)")
         this.fx.ring(f.x, f.y, { radius: 120, color: "rgba(255,255,255,0.9)", life: 0.5, width: 8 })
         this.fx.text(f.x, f.y - 130, "RING-OUT! -" + dmg, { color: "#ffd84a", size: 36, life: 1.2 })
-    }
-
-    // Abgründe in das Kartenbild schneiden (Wolken scheinen durch), mit Felskante
-    cutGaps(g) {
-        for (const gap of RING_GAPS) {
-            const edgeAt = y => {
-                const [l, r] = ARENA.span(Math.max(ARENA.y0, Math.min(ARENA.y1, y)))
-                const jag = Math.round(Math.sin(y * 0.09) * 6 + Math.sin(y * 0.31) * 3)
-                return gap.side < 0 ? l - 30 + jag : r + 30 + jag
-            }
-            for (let y = gap.y0 - 40; y <= gap.y1 + 50; y += 3) {
-                const e = edgeAt(y)
-                g.globalCompositeOperation = "destination-out"
-                g.fillStyle = "#000"
-                if (gap.side < 0) g.fillRect(0, y, e, 3)
-                else g.fillRect(e, y, WORLD.width - e, 3)
-                // Abbruchkante: Erdschicht in zwei Tönen
-                if (y < gap.y0 - 10 || y > gap.y1 + 30) continue
-                g.globalCompositeOperation = "source-over"
-                g.fillStyle = "#6b4528"
-                g.fillRect(gap.side < 0 ? e : e - 10, y, 10, 3)
-                g.fillStyle = "#3a2416"
-                g.fillRect(gap.side < 0 ? e : e - 4, y, 4, 3)
-            }
-        }
-        g.globalCompositeOperation = "source-over"
     }
 
     drawArenaGround(ctx) {
@@ -1493,7 +1462,7 @@ class Match {
 
     // Map-Bild mit weich ausgeblendeten Rändern (einmal pro Map erzeugt)
     featheredMap() {
-        const key = "feather:" + this.map.id + (this.ringOuts ? ":gaps" : "")
+        const key = "feather:" + this.map.id
         if (IMAGES[key]) return IMAGES[key]
         const src = IMAGES["map:" + this.map.id]
         const c = document.createElement("canvas")
@@ -1516,7 +1485,6 @@ class Match {
             g.fillStyle = gr
             g.fillRect(rx, ry, rw, rh)
         }
-        if (this.ringOuts) this.cutGaps(g)
         IMAGES[key] = c
         return c
     }

@@ -2887,8 +2887,7 @@ kbd,
         grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr) minmax(0, 1fr);
     }
 
-    .stat-bars,
-    .ability-box p {
+    .stat-bars {
         display: none;
     }
 
@@ -3000,8 +2999,18 @@ kbd,
 
     .sel-role,
     .stat-bars,
-    .ability-box p {
+    .ability-box .sp-line {
         display: none;
+    }
+
+    /* Fähigkeit auch am Handy erklären – kurz, höchstens zwei Zeilen */
+    .ability-box p {
+        font-size: 10px;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 
     /* Karten oben ausrichten statt zentrieren – sonst ragen sie bei wenig Höhe über den Rand */

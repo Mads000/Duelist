@@ -3,8 +3,7 @@
 //  Ring-Outs und Power-ups, die vom Himmel fallen
 // ============================================================
 
-// Mauerlücken links und rechts – wer mit Wucht hindurchfliegt, stürzt in die Wolken
-const RING_GAPS = [{ side: -1, y0: 470, y1: 650 }, { side: 1, y0: 470, y1: 650 }]
+// Ring-Out: wer mit Wucht über den Rand der Arena geschleudert wird, stürzt in die Wolken
 const RING_OUT_DMG = 20
 
 const PROP_TYPES = {

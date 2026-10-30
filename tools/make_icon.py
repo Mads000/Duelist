@@ -1,140 +1,113 @@
 # Erzeugt das App-Icon als Pixel-Art (64x64, ohne Glättung hochskaliert):
-# blau-roter Hintergrund mit Lichtschein, zwei gekreuzte Schwerter und ein großes Chrom-"D".
+# Gloop, der Wolkenschleim, mit Krone auf dem Wolkenteppich vor dem Himmel.
 # Aufruf: python tools/make_icon.py
 import math
 import os
 
 from PIL import Image, ImageDraw
 
-ROOT = os.path.join(os.path.dirname(__file__), "..", "public", "duelist", "icons")
+ROOT = os.path.join(os.path.dirname(__file__), "..", "public")
+OUT_DIR = os.path.join(ROOT, "duelist", "icons")
+SLIME = os.path.join(ROOT, "assets", "characters-hd", "Slime")
 N = 64
-
-NAVY = (14, 22, 58)
-OUT = (10, 14, 34)
+OUTLINE = (14, 18, 46)
 
 
 def lerp(a, b, t):
     return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
 
-img = Image.new("RGB", (N, N))
+img = Image.new("RGBA", (N, N))
 px = img.load()
 
-# Hintergrund: diagonal geteilt (P1 blau / P2 rot), Lichtschein in der Mitte, dunkler Rand
+# Himmel: oben tiefblau, unten hell, mit Sonnenschein oben rechts und Pixel-Dithering
 for y in range(N):
     for x in range(N):
-        d = math.hypot(x - 31.5, y - 31.5) / 45
-        blue = (x + y) < 64
-        base = lerp((70, 120, 235), (20, 40, 120), d) if blue else lerp((240, 90, 90), (110, 18, 26), d)
-        # Pixel-Raster-Schimmer (Dithering) im Lichtschein
-        if d < 0.55 and (x + y) % 2 == 0:
-            base = lerp(base, (255, 255, 255), 0.08)
-        px[x, y] = base
+        c = lerp((40, 92, 214), (150, 205, 255), y / (N - 1))
+        sun = max(0, 1 - math.hypot(x - 50, y - 12) / 26)
+        c = lerp(c, (255, 246, 210), sun * 0.75)
+        if sun > 0.15 and (x + y) % 2 == 0:
+            c = lerp(c, (255, 255, 255), 0.12)
+        px[x, y] = c + (255,)
 
 d = ImageDraw.Draw(img)
-# feine helle Trennlinie zwischen Blau und Rot
+
+
+def cloud(cx, cy, w, shade=(214, 230, 250)):
+    # Pixel-Wolke aus Kreisen, unten flach, mit Schattenkante
+    for r, dx, dy in ((w * 0.32, -w * 0.25, 0), (w * 0.42, 0, -w * 0.12), (w * 0.3, w * 0.28, 0.02 * w)):
+        d.ellipse([cx + dx - r, cy + dy - r, cx + dx + r, cy + dy + r], fill=(255, 255, 255, 255))
+    d.rectangle([cx - w * 0.55, cy, cx + w * 0.55, cy + w * 0.22], fill=(255, 255, 255, 255))
+    d.rectangle([cx - w * 0.55, cy + w * 0.16, cx + w * 0.55, cy + w * 0.22], fill=shade + (255,))
+
+
+cloud(10, 18, 14)
+cloud(58, 34, 12)
+# Wolkenteppich unten, auf dem Gloop sitzt
 for x in range(N):
-    y = 63 - x
-    if 0 <= y < N:
-        px[x, y] = lerp(px[x, y], (255, 245, 220), 0.55)
+    h = 50 + int(2.5 * math.sin(x * 0.45) + 1.5 * math.sin(x * 1.3))
+    d.line([(x, h), (x, N)], fill=(255, 255, 255, 255))
+    d.line([(x, h + 6), (x, N)], fill=(206, 224, 248, 255))
+    d.point((x, h + 11), fill=(176, 200, 236, 255))
 
+# Gloop, doppelt so groß
+frame = Image.open(os.path.join(SLIME, "Slime-Idle.png")).convert("RGBA").crop((0, 0, 100, 100))
+frame = frame.crop(frame.getbbox())
+k = 2
+gloop = frame.resize((frame.width * k, frame.height * k), Image.NEAREST)
+# Weißer Umriss (2 Pixel) für Sticker-Look
+alpha = gloop.split()[3]
+mask = Image.new("L", gloop.size, 0)
+for dx in range(-2, 3):
+    for dy in range(-2, 3):
+        if abs(dx) + abs(dy) <= 2:
+            mask.paste(255, (0, 0), alpha.transform(alpha.size, Image.AFFINE, (1, 0, -dx, 0, 1, -dy)))
+sticker = Image.new("RGBA", (gloop.width + 4, gloop.height + 4), (0, 0, 0, 0))
+outline_layer = Image.new("RGBA", gloop.size, (255, 255, 255, 255))
+sticker.paste(outline_layer, (2, 2), mask)
+sticker.alpha_composite(gloop, (2, 2))
+gx = (N - sticker.width) // 2
+gy = 54 - sticker.height + 2
+img.alpha_composite(sticker, (gx, gy))
 
-def sword(flip):
-    """Langes Schwert von unten-außen nach oben-innen, kreuzt hinter dem D."""
-    def P(x, y):
-        return (63 - x, y) if flip else (x, y)
-    # Klinge: 3 Pixel breit (hell, mittel, dunkel) mit Umriss
-    for i in range(44):
-        x, y = 12 + i, 51 - i
-        if y < 3:
-            break
-        d.point(P(x - 1, y - 1), fill=OUT)
-        d.point(P(x, y - 1), fill=(255, 255, 255))
-        d.point(P(x, y), fill=(206, 216, 232))
-        d.point(P(x + 1, y), fill=(130, 144, 170))
-        d.point(P(x + 1, y + 1), fill=OUT)
-        d.point(P(x + 2, y + 1), fill=OUT)
-    # Spitze
-    d.point(P(56, 6), fill=OUT)
-    # Parierstange (gold, quer zur Klinge)
-    for k in range(-5, 6):
-        x, y = 12 + k, 51 + k
-        d.point(P(x, y), fill=(255, 214, 90))
-        d.point(P(x + 1, y), fill=(196, 132, 28))
-        d.point(P(x - 1, y), fill=OUT)
-        d.point(P(x + 2, y), fill=OUT)
-    # Griff und Knauf
-    for k in range(1, 6):
-        d.point(P(11 - k, 52 + k), fill=(132, 78, 40))
-        d.point(P(12 - k, 52 + k), fill=(92, 52, 26))
-    for q in ((4, 58), (5, 58), (4, 59), (5, 59)):
-        d.point(P(*q), fill=(255, 214, 90))
+# Augen – damit Gloop auch als kleines Icon ein Gesicht hat
+top = gy + 2
+mid = N // 2
+for ex in (mid - 8, mid + 5):
+    d.rectangle([ex - 1, top + 9, ex + 5, top + 17], fill=OUTLINE + (255,))
+    d.rectangle([ex, top + 10, ex + 4, top + 16], fill=(255, 255, 255, 255))
+    d.rectangle([ex + 1, top + 12, ex + 3, top + 16], fill=(20, 30, 70, 255))
+    px[ex + 1, top + 12] = (255, 255, 255, 255)
 
-
-sword(False)
-sword(True)
-
-# Großes "D" als Pixel-Buchstabe (18 x 24), Chrom-Verlauf, dunkler Umriss + Schatten
-D = [
-    "11111111111110....",
-    "111111111111111...",
-    "1111111111111111..",
-    "11111.......111111",
-    "11111........11111",
-    "11111.........1111",
-    "11111.........1111",
-    "11111.........1111",
-    "11111.........1111",
-    "11111.........1111",
-    "11111.........1111",
-    "11111.........1111",
-    "11111.........1111",
-    "11111.........1111",
-    "11111.........1111",
-    "11111.........1111",
-    "11111.........1111",
-    "11111.........1111",
-    "11111........11111",
-    "11111.......111111",
-    "1111111111111111..",
-    "111111111111111...",
-    "11111111111110....",
-    "",
+# Goldene Krone (doppelt so groß) auf dem Kopf
+crown = [
+    "Y...Y...Y",
+    "YY.YYY.YY",
+    "YYYYYYYYY",
+    "YRYYBYYRY",
+    "YYYYYYYYY",
 ]
-ox, oy = 23, 18
-cells = {(ox + x, oy + y) for y, row in enumerate(D) for x, c in enumerate(row) if c == "1"}
-# Innenraum des D dunkel füllen (keine Schwerter sichtbar)
-for y, row in enumerate(D):
-    xs = [x for x, c in enumerate(row) if c == "1"]
-    if xs:
-        for x in range(xs[0], xs[-1] + 1):
-            if (ox + x, oy + y) not in cells:
-                px[ox + x, oy + y] = NAVY
-# Schatten
+cols = {"Y": (255, 214, 72), "R": (230, 60, 70), "B": (90, 170, 255)}
+cw = len(crown[0]) * 2
+cx, cy = mid - cw // 2 + 2, top - 9
+cells = {(x, y) for y, row in enumerate(crown) for x, ch in enumerate(row) if ch != "."}
 for (x, y) in cells:
-    for dx, dy in ((2, 2), (1, 2), (2, 1)):
-        if (x + dx, y + dy) not in cells:
-            px[x + dx, y + dy] = NAVY
-# Umriss
+    for ox in range(-1, 2):
+        for oy in range(-1, 2):
+            if (x + ox, y + oy) not in cells:
+                d.rectangle([cx + (x + ox) * 2, cy + (y + oy) * 2, cx + (x + ox) * 2 + 1, cy + (y + oy) * 2 + 1], fill=OUTLINE + (255,))
 for (x, y) in cells:
-    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1)):
-        q = (x + dx, y + dy)
-        if q not in cells and 0 <= q[0] < N and 0 <= q[1] < N:
-            px[q] = OUT
-# Chrom: hell oben, Kante in der Mitte, kühles Grau unten
-for (x, y) in cells:
-    t = (y - oy) / 22
-    if t < 0.45:
-        c = lerp((255, 255, 255), (222, 230, 242), t / 0.45)
-    elif t < 0.52:
-        c = (150, 164, 186)
-    else:
-        c = lerp((205, 214, 230), (130, 142, 168), (t - 0.52) / 0.48)
-    if (x - ox) < 2:
-        c = lerp(c, (255, 255, 255), 0.4)
-    px[x, y] = c
+    c = cols[crown[y][x]]
+    if crown[y][x] == "Y" and y == 2:
+        c = (255, 240, 160)
+    d.rectangle([cx + x * 2, cy + y * 2, cx + x * 2 + 1, cy + y * 2 + 1], fill=c + (255,))
 
-big = img.resize((512, 512), Image.NEAREST)
-big.save(os.path.join(ROOT, "icon-512.png"), optimize=True)
-img.resize((192, 192), Image.NEAREST).save(os.path.join(ROOT, "icon-192.png"), optimize=True)
+# Funkeln
+for sx, sy in ((50, 8), (8, 34), (42, 22)):
+    for ox, oy in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)):
+        px[sx + ox, sy + oy] = (255, 255, 255, 255)
+
+img = img.convert("RGB")
+img.resize((512, 512), Image.NEAREST).save(os.path.join(OUT_DIR, "icon-512.png"), optimize=True)
+img.resize((192, 192), Image.NEAREST).save(os.path.join(OUT_DIR, "icon-192.png"), optimize=True)
 print("Icons gespeichert")
