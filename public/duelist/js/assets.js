@@ -130,6 +130,11 @@ class SpritePreview {
         const img = champImage(this.champId, anim.file)
         if (!img || !img.complete) return
 
+        // Angriffe einmal abspielen, danach zurück in die Ruhehaltung
+        if (!["idle", "run", "death"].includes(this.animName) && this.time * anim.fps >= anim.frames) {
+            this.set(this.champId, "idle")
+            return this.draw(0)
+        }
         let frame = Math.floor(this.time * anim.fps) % anim.frames
         if (this.animName === "death") frame = Math.min(anim.frames - 1, Math.floor(this.time * anim.fps))
 

@@ -797,13 +797,7 @@ class Match {
         const cam = this.camera
         ctx.save()
         ctx.imageSmoothingEnabled = false
-        // Hintergrund außerhalb des Map-Bildes: Farbverlauf passend zur Map
-        const [bgTop, bgBottom] = this.map.bg || ["#3d78d8", "#8ec5ff"]
-        const bg = ctx.createLinearGradient(0, 0, 0, h)
-        bg.addColorStop(0, bgTop)
-        bg.addColorStop(1, bgBottom)
-        ctx.fillStyle = bg
-        ctx.fillRect(0, 0, w, h)
+        this.drawBackdrop(ctx, w, h)
 
         // Umgebungspartikel (nicht zu viele)
         if (this.fx.particles.length < 260 && Math.random() < (this.map.ambient === "snow" ? 0.9 : this.map.ambient === "embers" ? 0.6 : this.map.ambient === "petals" ? 0.25 : 0.15)) {
@@ -816,7 +810,7 @@ class Match {
         ctx.scale(cam.zoom, cam.zoom)
         ctx.translate(-cam.x, -cam.y)
 
-        ctx.drawImage(IMAGES["map:" + this.map.id], 0, 0, WORLD.width, WORLD.height)
+        ctx.drawImage(this.featheredMap(), 0, 0, WORLD.width, WORLD.height)
 
         // Lava-Glühen auf der Vulkan-Map
         if (this.map.id === "volcano") {
@@ -870,6 +864,78 @@ class Match {
             ctx.fillStyle = g
             ctx.fillRect(0, 0, w, h)
         }
+    }
+
+    // Wolkenhimmel hinter der Map (bewegt sich langsamer als die Kamera = Tiefe), je Map eingefärbt
+    drawBackdrop(ctx, w, h) {
+        const img = IMAGES.sky
+        const cam = this.camera
+        const [top, bottom] = this.map.bg || ["#3f7bd9", "#9ccaf5"]
+        const grad = ctx.createLinearGradient(0, 0, 0, h)
+        grad.addColorStop(0, top)
+        grad.addColorStop(1, bottom)
+        ctx.fillStyle = grad
+        ctx.fillRect(0, 0, w, h)
+        if (!img || !img.complete) return
+        const s = Math.max(h * 1.25 / img.height, w * 0.6 / img.width)
+        const tw = img.width * s
+        const th = img.height * s
+        const shift = (cam.x * cam.zoom * 0.35 + this.time * 14) % (tw * 2)
+        const y = (h - th) / 2 - (cam.y - WORLD.height / 2) * cam.zoom * 0.2
+        ctx.save()
+        ctx.imageSmoothingEnabled = true
+        ctx.globalAlpha = this.map.cloudAlpha ?? 1
+        // abwechselnd gespiegelt, damit keine Nahtstelle sichtbar ist
+        for (let i = -1, x = -shift; x < w; i++, x += tw) {
+            if (x + tw < 0) continue
+            ctx.save()
+            if (Math.abs(i) % 2 === 1) {
+                ctx.translate(x + tw, y)
+                ctx.scale(-1, 1)
+                ctx.drawImage(img, 0, 0, tw, th)
+            } else {
+                ctx.drawImage(img, x, y, tw, th)
+            }
+            ctx.restore()
+        }
+        ctx.restore()
+        // Einfärbung passend zur Map (Abendrot, Glut, Nacht)
+        if (this.map.tint) {
+            ctx.save()
+            ctx.globalAlpha = this.map.tint[1]
+            ctx.fillStyle = this.map.tint[0]
+            ctx.fillRect(0, 0, w, h)
+            ctx.restore()
+        }
+    }
+
+    // Map-Bild mit weich ausgeblendeten Rändern (einmal pro Map erzeugt)
+    featheredMap() {
+        const key = "feather:" + this.map.id
+        if (IMAGES[key]) return IMAGES[key]
+        const src = IMAGES["map:" + this.map.id]
+        const c = document.createElement("canvas")
+        c.width = WORLD.width
+        c.height = WORLD.height
+        const g = c.getContext("2d")
+        g.drawImage(src, 0, 0)
+        g.globalCompositeOperation = "destination-out"
+        const F = 160
+        const edges = [
+            [0, 0, F, 0, 0, 0, F, WORLD.height],
+            [WORLD.width, 0, WORLD.width - F, 0, WORLD.width - F, 0, F, WORLD.height],
+            [0, 0, 0, F, 0, 0, WORLD.width, F],
+            [0, WORLD.height, 0, WORLD.height - F, 0, WORLD.height - F, WORLD.width, F]
+        ]
+        for (const [x0, y0, x1, y1, rx, ry, rw, rh] of edges) {
+            const gr = g.createLinearGradient(x0, y0, x1, y1)
+            gr.addColorStop(0, "rgba(0,0,0,1)")
+            gr.addColorStop(1, "rgba(0,0,0,0)")
+            g.fillStyle = gr
+            g.fillRect(rx, ry, rw, rh)
+        }
+        IMAGES[key] = c
+        return c
     }
 
     drawTelegraphs(ctx) {

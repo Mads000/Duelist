@@ -331,17 +331,17 @@ const MAPS = {
     classic: {
         id: "classic", name: "Wolkenhof", img: "ui/Map-Wolkenhof.png",
         text: "Ein Marmorhof im Abendrot – Blüten wehen über den Platz.",
-        ambient: "petals", grip: 1, dust: "rgba(236,230,242,0.6)", bg: ["#7080d6", "#ffb496"]
+        ambient: "petals", grip: 1, dust: "rgba(236,230,242,0.6)", bg: ["#7080d6", "#ffb496"], tint: ["#ff9a8a", 0.35]
     },
     volcano: {
         id: "volcano", name: "Vulkanschmiede", img: "ui/Map-Vulkan.png",
         text: "Glut steigt auf – und manchmal bricht der Boden auf. Achte auf Feuerfontänen!",
-        ambient: "embers", grip: 1, hazard: "geyser", bg: ["#1c0a0e", "#7a1a0a"]
+        ambient: "embers", grip: 1, hazard: "geyser", bg: ["#1c0a0e", "#7a1a0a"], tint: ["#3a0806", 0.72]
     },
     frost: {
         id: "frost", name: "Frostgipfel", img: "ui/Map-Frost.png",
         text: "Spiegelglattes Eis: Wer getroffen wird, rutscht weit.",
-        ambient: "snow", grip: 0.32, bg: ["#16204a", "#4a6496"]
+        ambient: "snow", grip: 0.32, bg: ["#16204a", "#4a6496"], tint: ["#16204a", 0.6]
     }
 }
 const MAP_ORDER = ["sky", "classic", "volcano", "frost"]

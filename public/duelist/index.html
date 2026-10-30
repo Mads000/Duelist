@@ -19,7 +19,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/app.css?v=3.0.12">
+    <link rel="stylesheet" href="css/app.css?v=3.0.15">
 </head>
 
 <body>
@@ -52,7 +52,13 @@
     <!-- ================= HAUPTMENÜ ================= -->
     <section id="screen-menu" class="screen">
         <div class="menu-wrap">
+            <div class="menu-hero left">
+                <canvas id="heroL" width="300" height="300"></canvas>
+                <span class="hero-tag p1" id="heroLName"></span>
+            </div>
+            <div class="menu-center">
             <h1 class="logo logo-menu chrome">DUELIST</h1>
+            <p class="menu-tag">Die Arena über den Wolken</p>
             <nav class="menu-panel glass">
                 <button class="btn start menu-arcade" data-go="arcade" data-info="Arcade: Kämpf dich durch 5 Gegner mit steigender Schwierigkeit bis zum Endboss. Punkte für Treffer, Konter und Finisher – ab in die Highscores! Wer gewinnt, schaltet einen geheimen Champion frei."><b>Arcade</b><small>5 Gegner · Endboss · Highscore</small></button>
                 <div class="mode-grid">
@@ -71,6 +77,11 @@
                 </div>
             </nav>
             <div class="menu-stats" id="recordCard"></div>
+            </div>
+            <div class="menu-hero right">
+                <canvas id="heroR" width="300" height="300"></canvas>
+                <span class="hero-tag p2" id="heroRName"></span>
+            </div>
         </div>
     </section>
 
@@ -432,21 +443,21 @@
     <div id="fps" hidden></div>
     <div id="toast"></div>
 
-    <script src="js/arena_shape.js?v=3.0.12"></script>
-    <script src="js/data.js?v=3.0.12"></script>
-    <script src="js/audio.js?v=3.0.12"></script>
-    <script src="js/settings.js?v=3.0.12"></script>
-    <script src="js/assets.js?v=3.0.12"></script>
-    <script src="js/input.js?v=3.0.12"></script>
-    <script src="js/link.js?v=3.0.12"></script>
-    <script src="js/pad.js?v=3.0.12"></script>
-    <script src="js/fx.js?v=3.0.12"></script>
-    <script src="js/fighter.js?v=3.0.12"></script>
-    <script src="js/ai.js?v=3.0.12"></script>
-    <script src="js/match.js?v=3.0.12"></script>
-    <script src="js/ui.js?v=3.0.12"></script>
-    <script src="js/modes.js?v=3.0.12"></script>
-    <script src="js/main.js?v=3.0.12"></script>
+    <script src="js/arena_shape.js?v=3.0.15"></script>
+    <script src="js/data.js?v=3.0.15"></script>
+    <script src="js/audio.js?v=3.0.15"></script>
+    <script src="js/settings.js?v=3.0.15"></script>
+    <script src="js/assets.js?v=3.0.15"></script>
+    <script src="js/input.js?v=3.0.15"></script>
+    <script src="js/link.js?v=3.0.15"></script>
+    <script src="js/pad.js?v=3.0.15"></script>
+    <script src="js/fx.js?v=3.0.15"></script>
+    <script src="js/fighter.js?v=3.0.15"></script>
+    <script src="js/ai.js?v=3.0.15"></script>
+    <script src="js/match.js?v=3.0.15"></script>
+    <script src="js/ui.js?v=3.0.15"></script>
+    <script src="js/modes.js?v=3.0.15"></script>
+    <script src="js/main.js?v=3.0.15"></script>
 </body>
 
 </html>
