@@ -42,6 +42,7 @@ const App = {
         UI.init()
         this.touch = new TouchSource(document.getElementById("touch"))
         Link.onChange = () => { if (UI.current === "controller") UI.renderController() }
+        Net.onChange = () => { if (UI.current === "online") UI.renderOnline() }
         this.bindGlobalKeys()
 
         // Direkt als Controller starten (QR-Code: ...?pad=ABCD) – dafür braucht es keine Grafiken
@@ -123,6 +124,12 @@ const App = {
             this.match = null
             Modes.run = null
         }
+        if (target === "tutorial") return Tutorial.begin()
+        if (target === "online") {
+            UI.renderOnline()
+            UI.show("online")
+            return
+        }
         if (MODES[target]) {
             if (target === "local" && isTouchDevice() && !Link.pads.length) {
                 UI.toast("Tipp: Mit „Handy als Controller“ spielt ihr zu zweit – oder mit Tastatur / Gamepads.")
@@ -142,6 +149,8 @@ const App = {
 
     back() {
         const cur = UI.current
+        if (cur === "select" && UI.select && UI.select.mode === "online") Net.close(true)
+        if (cur === "online" && Net.status !== "off") Net.close(false)
         if (cur === "select" && UI.select && UI.select.step > 0 && !UI.select.single) {
             UI.select.step = Math.min(UI.select.step, 2) - 1
             UI.select.picks[UI.select.step] = null
@@ -175,15 +184,25 @@ const App = {
     },
 
     // ---------------- Matches ----------------
-    buildControllers(mode, opponent) {
+    buildControllers(mode, opponent, net) {
         for (const c of this.controllers) if (c.destroy) c.destroy()
         const touch = isTouchDevice() ? [this.touch] : []
         let p1, p2
+        if (net) {
+            // Online: eigene Eingaben gehen ans Netz, die des Gegners kommen von dort
+            const local = new NetTapController(new Controller([new KeyboardSource(keymap("solo")), new GamepadSource("any"), new PhoneSource(0), new PhoneSource(1), ...touch]))
+            const remote = new Controller([new RemoteSource()])
+            this.controllers = net === "host" ? [local, remote] : [remote, local]
+            return this.controllers
+        }
         if (mode === "local") {
-            p1 = new Controller([new KeyboardSource(KEYMAPS.p1), new GamepadSource(0), new PhoneSource(0), ...touch])
-            p2 = new Controller([new KeyboardSource(KEYMAPS.p2), new GamepadSource(1), new PhoneSource(1)])
+            p1 = new Controller([new KeyboardSource(keymap("p1")), new GamepadSource(0), new PhoneSource(0), ...touch])
+            p2 = new Controller([new KeyboardSource(keymap("p2")), new GamepadSource(1), new PhoneSource(1)])
+        } else if (opponent && opponent.controller) {
+            p1 = new Controller([new KeyboardSource(keymap("solo")), new GamepadSource("any"), new PhoneSource(0), new PhoneSource(1), ...touch])
+            p2 = opponent.controller
         } else {
-            p1 = new Controller([new KeyboardSource(KEYMAPS.solo), new GamepadSource("any"), new PhoneSource(0), new PhoneSource(1), ...touch])
+            p1 = new Controller([new KeyboardSource(keymap("solo")), new GamepadSource("any"), new PhoneSource(0), new PhoneSource(1), ...touch])
             p2 = opponent && opponent.dummy
                 ? new BotController("easy", { dummy: opponent.dummy })
                 : new BotController((opponent && opponent.difficulty) || "normal")
@@ -193,17 +212,18 @@ const App = {
         return this.controllers
     },
 
-    startMatch({ rules, champs, opponent }) {
+    startMatch({ rules, champs, opponent, net }) {
         Sound.unlock()
         this.lastStart = { rules, champs, opponent }
         writeStorage("duelist.lastConfig", this.config)
         this.demo = null
-        const local = rules.mode === "local"
+        if (rules.mode !== "tutorial") Tutorial.stop()
+        const two = rules.mode === "local" || !!net
         this.match = new Match({
-            rules,
+            rules: { ...rules, net },
             champs,
-            controllers: this.buildControllers(rules.mode, opponent),
-            humans: [true, local],
+            controllers: this.buildControllers(rules.mode, opponent, net),
+            humans: [true, two],
             settings: { ...GameSettings.get() },
             onEvent: (type, data, m) => this.onMatchEvent(type, data, m)
         })
@@ -218,13 +238,19 @@ const App = {
     },
 
     restart() {
+        if (this.match && this.match.netRole) {
+            this.match = null
+            return Net.rematch()
+        }
         this.match = null
+        if (Tutorial.active) return Tutorial.begin()
         Modes.restart()
     },
 
     pause() {
         if (this.state !== "game" || !this.match) return
-        this.match.paused = true
+        // Online läuft das Spiel weiter – nur das Menü öffnet sich
+        if (!this.match.netRole) this.match.paused = true
         this.setState("paused")
         UI.show("pause")
         this.touch.reset()
@@ -239,6 +265,8 @@ const App = {
     },
 
     quitToMenu() {
+        if (Net.connected) Net.close(true)
+        Tutorial.stop()
         this.match = null
         Modes.run = null
         UI.hideBanner()
@@ -252,6 +280,12 @@ const App = {
     onMatchEvent(type, data, match) {
         if (match !== this.match) return
         Modes.onEvent(type, data, match)
+        Tutorial.onEvent(type, data)
+        // Host meldet K.O. und Zeitablauf an den Gast
+        if (match.netRole === "host") {
+            if (type === "finisher") Net.send({ t: "ko", loser: data.loser.side, fin: data.fin })
+            if (type === "timeUp") Net.send({ t: "timeup" })
+        }
         switch (type) {
             case "banner":
                 UI.banner(data)
@@ -349,6 +383,8 @@ const App = {
             if (this.match) {
                 UI.updateHud(this.match)
                 Link.syncMatch(this.match)
+                if (this.match.netRole) Net.syncMatch(this.match)
+                Tutorial.update(this.match)
             }
         }
 

@@ -15,7 +15,10 @@ class Match {
         this.rules = rules
         this.mode = rules.mode
         this.demo = rules.mode === "demo"
-        this.training = rules.mode === "training"
+        this.training = rules.mode === "training" || rules.mode === "tutorial"
+        // Online: Host rechnet verbindlich, Gast spielt mit und wird korrigiert
+        this.netRole = rules.net || null
+        this.localSide = this.netRole === "host" ? 0 : this.netRole === "guest" ? 1 : undefined
         this.settings = settings
         this.onEvent = onEvent || (() => {})
         this.map = { ...MAPS[rules.map || "sky"], dust: MAP_DUST[rules.map || "sky"] }
@@ -140,7 +143,7 @@ class Match {
             }
             if (this.timer <= 0) {
                 this.timer = 0
-                this.endRound()
+                if (this.netRole !== "guest") this.endRound()
             }
         }
 
@@ -348,8 +351,8 @@ class Match {
         dmg = Math.max(1, Math.round(dmg * scale))
         const heavy = finisher || dmg >= 12 || (isHeavy && !move.hits.length)
 
-        // Training: niemand stirbt
-        if (this.training && def.hp - dmg < 1) dmg = Math.max(0, Math.ceil(def.hp - 1))
+        // Training: niemand stirbt – online entscheidet nur der Host über ein K.O.
+        if ((this.training || this.netRole === "guest") && def.hp - dmg < 1) dmg = Math.max(0, Math.ceil(def.hp - 1))
 
         def.takeHit(src, dmg, kb, isHeavy && (finisher || !move.hits.length), { stun })
         att.stats.damage += dmg
@@ -604,6 +607,7 @@ class Match {
 
     // ---------------- Map-Gefahren & Chaos ----------------
     updateHazards(dt) {
+        if (this.rules.noHazards) return
         if (!this.training) {
             if (this.map.hazard === "wind") this.updateWind(dt)
             if (this.map.hazard === "bloom") this.updateBlooms(dt)
@@ -711,6 +715,43 @@ class Match {
         }
     }
 
+    // ---------------- Online (Gast) ----------------
+    // Spielstand vom Host übernehmen: kleine Abweichungen weich, große hart korrigieren
+    applySnapshot(msg) {
+        msg.f.forEach(([x, y, hp, energy, guard, spcd], i) => {
+            const f = this.fighters[i]
+            if (f.state === "dead") return
+            const d = Math.hypot(f.x - x, f.y - y)
+            const k = d > 70 ? 1 : 0.35
+            f.x += (x - f.x) * k
+            f.y += (y - f.y) * k
+            if (hp > 0) f.hp = hp
+            f.energy = energy
+            f.guard = guard
+            f.specialCd = spcd
+        })
+        if (this.phase === "fight") {
+            this.timer = msg.timer
+            this.wins = [...msg.wins]
+        }
+    }
+
+    netKnockout(msg) {
+        if (this.phase !== "fight") return
+        const loser = this.fighters[msg.loser]
+        const winner = this.fighters[1 - msg.loser]
+        loser.hp = 0
+        loser.state = "dead"
+        loser.stateT = 0
+        loser.setAnim("death")
+        this.forcedFinisher = msg.fin
+        this.knockout(winner, loser)
+    }
+
+    netTimeUp() {
+        this.endRound()
+    }
+
     // ---------------- Finisher-Wiederholung ----------------
     // Merkt sich die letzten ~1,6 s (Figuren + Geschosse), solange gekämpft wird
     record() {
@@ -782,7 +823,8 @@ class Match {
         this.roundWinner = winner.side
         this.koTarget = loser
         this.koTime = this.time
-        const fin = this.finisherName(this.lastHit || {})
+        const fin = this.forcedFinisher || this.finisherName(this.lastHit || {})
+        this.forcedFinisher = null
         this.lastHit = null
         this.finisher = fin
         this.slowmoT = fin.big ? 1.6 : 1.1
@@ -806,7 +848,7 @@ class Match {
             this.fx.explosion(x, y, 110)
             loser.vx *= 1.4
         }
-        this.emit("finisher", { winner, loser, name: fin.text })
+        this.emit("finisher", { winner, loser, name: fin.text, fin })
         this.emit("banner", { text: fin.text, sub: fin.sub, kind: "ko", time: fin.big ? 1.8 : 1.4 })
     }
 
@@ -832,6 +874,7 @@ class Match {
         const ra = a.hp / a.maxHp
         const rb = b.hp / b.maxHp
         this.roundWinner = Math.abs(ra - rb) < 0.001 ? -1 : ra > rb ? 0 : 1
+        this.emit("timeUp")
         this.emit("banner", { text: "TIME!", kind: "ko", time: 1.2 })
         this.sound("ko")
     }
@@ -858,6 +901,7 @@ class Match {
 
     winnerName(side) {
         if (this.demo) return this.fighters[side].champ.name.toUpperCase()
+        if (this.localSide !== undefined) return side === this.localSide ? "DU" : "GEGNER"
         if (this.humanCount === 1) return side === 0 ? "DU" : this.fighters[1].champ.name.toUpperCase()
         return side === 0 ? "SPIELER 1" : "SPIELER 2"
     }
@@ -906,7 +950,7 @@ class Match {
         const [a, b] = this.fighters
         // Allein: die eigene Figur steht immer in der Bildmitte, der Gegner bleibt im Bild.
         // Zu zweit (oder Demo): Mitte zwischen beiden.
-        const me = this.humanCount === 1 ? this.fighters.find(f => f.isHuman) : null
+        const me = this.localSide !== undefined ? this.fighters[this.localSide] : this.humanCount === 1 ? this.fighters.find(f => f.isHuman) : null
         let cx, cy, needW, needH
         if (me) {
             const op = this.fighters[1 - me.side]

@@ -524,7 +524,7 @@ body.crt #crt {
 .menu-wrap {
     display: flex;
     justify-content: center;
-    width: min(620px, 100%);
+    width: min(720px, 100%);
     margin: auto;
 }
 
@@ -610,7 +610,7 @@ body.crt #crt {
 
 .mode-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
 }
 
@@ -640,7 +640,7 @@ body.crt #crt {
 
 .menu-links {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 8px;
     padding-top: 10px;
     border-top: 3px solid rgba(108, 143, 182, 0.6);
@@ -2947,7 +2947,7 @@ kbd,
     }
 
     .mode-grid {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 7px;
     }
 
@@ -3225,6 +3225,15 @@ kbd,
     }
 
 
+
+    .btn.mode small,
+    .menu-info {
+        display: none;
+    }
+
+    .btn.mode {
+        padding: 5px 8px;
+    }
 }
 
 /* Hochformat (Menüs auf dem Handy) */
@@ -3353,4 +3362,135 @@ body.replaying #pauseBtn,
 body.replaying #touch {
     opacity: 0;
     pointer-events: none;
+}
+
+/* Tastenbelegung */
+.key-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+    margin: 10px 0;
+}
+
+.key-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.key-btn {
+    min-width: 110px;
+    padding: 4px 8px;
+    font-size: 17px;
+}
+
+.key-btn.waiting {
+    color: #fff;
+    background: var(--glass-red);
+    animation: blink 0.8s infinite;
+}
+
+body.is-touch .keys-panel {
+    display: none;
+}
+
+#keyTabs button {
+    font-size: 16px;
+    white-space: nowrap;
+}
+
+/* Online-Duell */
+.online-layout {
+    grid-template-columns: 1fr 1fr;
+    max-width: 900px;
+}
+
+.online-code {
+    text-align: center;
+}
+
+/* Tutorial-Box oben im Bild */
+#tutorial {
+    position: fixed;
+    top: calc(118px + var(--safe-t));
+    left: 50%;
+    z-index: 6;
+    width: min(560px, 92vw);
+    padding: 10px 16px 12px;
+    transform: translateX(-50%);
+    color: var(--btn-bottom);
+    animation: fadeUp 0.4s both;
+}
+
+#tutorial[hidden],
+body:not(.in-game) #tutorial {
+    display: none;
+}
+
+.tut-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: var(--font-display);
+}
+
+.tut-head span {
+    font-size: 15px;
+    letter-spacing: 0.1em;
+    color: var(--start-bottom);
+}
+
+.tut-head b {
+    font-weight: 400;
+    font-size: 26px;
+}
+
+#tutorial p {
+    margin: 4px 0 8px;
+    font-size: 15px;
+}
+
+.tut-bar {
+    height: 6px;
+    background: rgba(9, 31, 91, 0.2);
+}
+
+.tut-bar i {
+    display: block;
+    height: 100%;
+    background: var(--glass-red);
+    transform-origin: left;
+    transition: transform 0.3s;
+}
+
+.story-text {
+    display: inline-block;
+    max-width: 640px;
+    margin-top: 6px;
+    font-style: italic;
+    line-height: 1.5;
+}
+
+@media (max-height: 560px) {
+    #tutorial {
+        top: calc(70px + var(--safe-t));
+        padding: 6px 12px 8px;
+    }
+
+    .tut-head b {
+        font-size: 20px;
+    }
+
+    #tutorial p {
+        font-size: 12px;
+        margin: 2px 0 5px;
+    }
+}
+
+@media (orientation: portrait) and (max-width: 700px) {
+    .online-layout {
+        grid-template-columns: 1fr;
+    }
 }

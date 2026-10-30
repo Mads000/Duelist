@@ -6,7 +6,7 @@ const $ = (sel, root = document) => root.querySelector(sel)
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel))
 
 const STAT_LABELS = { tempo: "Tempo", kraft: "Kraft", reichweite: "Reichweite" }
-const SINGLE_PICK_MODES = ["arcade", "survival", "training"]
+const SINGLE_PICK_MODES = ["arcade", "survival", "training", "story", "online"]
 
 const UI = {
     current: null,
@@ -71,6 +71,10 @@ const UI = {
         $("#joinBtn").addEventListener("click", () => PadMode.open($("#joinCode").value))
         $("#joinCode").addEventListener("input", e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "") })
         $("#joinCode").addEventListener("keydown", e => { if (e.key === "Enter") PadMode.open(e.target.value) })
+        $("#onlineHostBtn").addEventListener("click", () => Net.host())
+        $("#onlineJoinBtn").addEventListener("click", () => Net.join($("#onlineJoinCode").value))
+        $("#onlineJoinCode").addEventListener("input", e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "") })
+        $("#onlineJoinCode").addEventListener("keydown", e => { if (e.key === "Enter") Net.join(e.target.value) })
     },
 
     show(id) {
@@ -155,6 +159,49 @@ const UI = {
         </div>`
     },
 
+    // ---------------- Online-Duell ----------------
+    renderOnline() {
+        const st = Net.status
+        const hosting = Net.role === "host"
+        $("#onlineCode").textContent = hosting && st !== "error" ? Net.code : "····"
+        $("#onlineHostStatus").textContent = !hosting ? "" : st === "waiting" ? "Warte auf den Gegner … Gib ihm diesen Code." : st === "error" ? Net.error : ""
+        $("#onlineJoinStatus").textContent = Net.role === "guest" ? (st === "connecting" ? "Verbinde …" : st === "error" ? Net.error : "") : ""
+        $("#onlineHostBtn").textContent = hosting ? "Neuen Code erstellen" : "Raum erstellen"
+    },
+
+    // ---------------- Tastenbelegung ----------------
+    buildKeys() {
+        const tab = this.keyTab || "solo"
+        $$("#keyTabs button").forEach(b => b.classList.toggle("on", b.dataset.map === tab))
+        const m = keymap(tab)
+        $("#keyList").innerHTML = KEY_ACTIONS.map(([a, label]) =>
+            `<div class="key-row"><span>${label}</span><button class="btn small key-btn" data-action="${a}">${keyLabel(m[a][0])}</button></div>`).join("")
+        for (const btn of $$("#keyList .key-btn")) btn.addEventListener("click", () => this.captureKey(tab, btn))
+    },
+
+    captureKey(map, btn) {
+        btn.textContent = "Taste …"
+        btn.classList.add("waiting")
+        const onKey = e => {
+            e.preventDefault()
+            e.stopImmediatePropagation()
+            window.removeEventListener("keydown", onKey, true)
+            btn.classList.remove("waiting")
+            if (e.code !== "Escape") {
+                const all = readStorage("duelist.keys", {})
+                const custom = all[map] || {}
+                // dieselbe Taste nicht doppelt belegen
+                for (const a of Object.keys(custom)) if (custom[a] === e.code) delete custom[a]
+                custom[btn.dataset.action] = e.code
+                all[map] = custom
+                writeStorage("duelist.keys", all)
+                Sound.play("select")
+            }
+            this.buildKeys()
+        }
+        window.addEventListener("keydown", onKey, true)
+    },
+
     // ---------------- Einstellungen ----------------
     buildSettings() {
         const s = GameSettings.get()
@@ -190,6 +237,18 @@ const UI = {
                 input.addEventListener("change", () => Sound.play("hit", { heavy: false }))
             }
         }
+        for (const b of $$("#keyTabs button")) b.addEventListener("click", () => {
+            this.keyTab = b.dataset.map
+            this.buildKeys()
+        })
+        $("#resetKeys").addEventListener("click", () => {
+            const all = readStorage("duelist.keys", {})
+            delete all[this.keyTab || "solo"]
+            writeStorage("duelist.keys", all)
+            this.buildKeys()
+            this.toast("Tastenbelegung zurückgesetzt")
+        })
+        this.buildKeys()
         $("#resetRecord").addEventListener("click", () => {
             if (confirm("Bilanz und Highscores wirklich löschen?")) {
                 PlayerRecord.reset()
@@ -333,12 +392,13 @@ const UI = {
         // Wer steuert womit? (Handy wird automatisch erkannt)
         const input = slot => Link.padFor(slot) ? "📱 Handy" : slot === 0 ? (isTouchDevice() ? "Touch / WASD" : "WASD + E F Q R") : "Pfeile + Numpad"
         $("#selTag0").innerHTML = (m === "local" ? "PLAYER 1" : "DU") + (m === "local" ? `<small>${input(0)}</small>` : "")
+        if (m === "online") $("#selTag0").innerHTML = `DU<small>${Net.role === "host" ? "Host · wählt die Map" : "Gast"}</small>`
         $("#selTag1").innerHTML = m === "local" ? `PLAYER 2<small>${input(1)}</small>` : m === "training" ? "TRAININGSPUPPE" : "BOT · " + DIFFICULTIES[App.config.difficulty].name.toUpperCase()
         $(".sel-side[data-side='1']").hidden = st.single
         $(".sel-stage").style.gridTemplateColumns = st.single ? "minmax(0,1fr) minmax(0,2.1fr)" : ""
 
         $("#difficulty").hidden = !vsBot
-        $("#mapPick").hidden = !["solo", "local", "training"].includes(m)
+        $("#mapPick").hidden = !(["solo", "local", "training"].includes(m) || (m === "online" && Net.role === "host"))
         $("#dummyPick").hidden = m !== "training"
         $("#chaosToggle").hidden = !["solo", "local"].includes(m)
         for (const b of $$("#difficulty button")) b.classList.toggle("on", b.dataset.diff === App.config.difficulty)
@@ -393,6 +453,11 @@ const UI = {
     confirmSelection() {
         const st = this.select
         if (!st || !st.picks[0] || (!st.single && !st.picks[1])) return
+        if (st.mode === "online") {
+            App.config.champs[0] = st.picks[0]
+            $("#fightBtn").disabled = true
+            return Net.pick(st.picks[0], App.config.map)
+        }
         App.config.mode = st.mode
         App.config.champs[0] = st.picks[0]
         if (!st.single) {
@@ -411,7 +476,8 @@ const UI = {
             let name = f.champ.name
             if (match.humanCount === 1 && f.side === 1) name += match.training ? " <small>Training</small>" : ` <small>BOT · ${DIFFICULTIES[match.fighters[1].controller.diff ? match.fighters[1].controller.diff.id : "normal"].name}</small>`
             $(".hud-name", el).innerHTML = name
-            $(".hp-text", el).textContent = match.humanCount === 2 ? `Player ${f.side + 1}` : f.side === 0 ? "Player 1" : (match.training ? "Dummy" : "CPU")
+            $(".hp-text", el).textContent = match.localSide !== undefined ? (f.side === match.localSide ? "Du" : "Gegner (online)")
+                : match.humanCount === 2 ? `Player ${f.side + 1}` : f.side === 0 ? "Player 1" : (match.training ? "Dummy" : "CPU")
             $(".energy", el).innerHTML = Array.from({ length: f.maxEnergy }, (_, i) =>
                 `<i class="${i === f.champ.ability.cost - 1 ? "cost" : ""}"></i>`).join("") +
                 `<img src="${ASSET_ROOT}${f.champ.ability.icon}" alt=""><span class="sp" title="Spezialangriff bereit">SP</span>`
@@ -432,18 +498,20 @@ const UI = {
     // Steuerung unten links/rechts – nur für Spieler an der Tastatur
     renderHudKeys(match) {
         const k = (key, label) => `<span><kbd>${key}</kbd>${label}</span>`
-        const layouts = match.humanCount === 2
-            ? [
-                [k("WASD", "Laufen"), k("E", "Leicht"), k("F", "Schwer"), k("Q", "Dash"), k("R", "Fähigkeit")],
-                [k("Pfeile", "Laufen"), k("Num1", "Leicht"), k("Num2", "Schwer"), k("Num3", "Dash"), k("Num0", "Fähigkeit")]
-            ]
-            : [[k("WASD", "Laufen"), k("J", "Leicht"), k("K", "Schwer"), k("L", "Dash"), k("I", "Fähigkeit"), k("Esc", "Pause")], null]
+        const keys = name => {
+            const m = keymap(name)
+            const move = [m.up, m.left, m.down, m.right].map(l => keyLabel(l[0])).join("")
+            return [k(move.length === 4 ? move : "Pfeile", "Laufen"), k(keyLabel(m.light[0]), "Leicht"), k(keyLabel(m.heavy[0]), "Schwer"), k(keyLabel(m.dash[0]), "Dash"), k(keyLabel(m.ability[0]), "Fähigkeit")]
+        }
+        const layouts = match.localSide !== undefined
+            ? (match.localSide === 0 ? [keys("solo"), null] : [null, keys("solo")])
+            : match.humanCount === 2 ? [keys("p1"), keys("p2")] : [[...keys("solo"), k("Esc", "Pause")], null]
         for (const side of [0, 1]) {
             const el = $(`.hud-keys[data-side="${side}"]`)
             const keys = layouts[side]
             const show = keys && !isTouchDevice() && !Link.padFor(side) && match.fighters[side].isHuman
             el.hidden = !show
-            if (show) el.innerHTML = `<b>${match.humanCount === 2 ? "P" + (side + 1) : "Steuerung"}</b>${keys.join("")}<small>Zum Gegner + Schwer = Spezialangriff · Hoch/Runter + Angriff = nach oben/unten</small>`
+            if (show) el.innerHTML = `<b>${match.humanCount === 2 && match.localSide === undefined ? "P" + (side + 1) : "Steuerung"}</b>${keys.join("")}<small>Zum Gegner + Schwer = Spezialangriff · Hoch/Runter + Angriff = nach oben/unten</small>`
         }
     },
 
@@ -710,12 +778,13 @@ const UI = {
 
     // ---------------- Ergebnis ----------------
     showResults(match, winner, { title, sub, note = "", rematch = "Revanche", change = true } = {}) {
-        const solo = match.humanCount === 1
-        const won = winner === 0
+        const online = match.localSide !== undefined
+        const solo = match.humanCount === 1 || online
+        const won = winner === (online ? match.localSide : 0)
         const t = $("#resTitle")
         t.textContent = title || (solo ? (won ? "YOU WIN!" : "YOU LOSE") : `PLAYER ${winner + 1} WINS`)
         t.className = "res-title " + (solo ? (won ? "win" : "lose") : "p" + (winner + 1))
-        const opp = match.fighters[1]
+        const opp = match.fighters[online ? 1 - match.localSide : 1]
         $("#resSub").textContent = sub || (solo
             ? `gegen ${opp.champ.name} · ${match.map.name}`
             : `${match.fighters[winner].champ.name} beherrscht die Arena`)

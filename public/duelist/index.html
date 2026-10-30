@@ -19,7 +19,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/app.css?v=3.0.18">
+    <link rel="stylesheet" href="css/app.css?v=3.0.20">
 </head>
 
 <body>
@@ -60,11 +60,14 @@
                 <div class="mode-grid">
                     <button class="btn mode" data-go="solo" data-info="Gegen Bot: Ein freies Duell gegen die KI. Du wählst Gegner, Schwierigkeit (Rekrut bis Legende), Arena und ob Bomben vom Himmel fallen."><b>Gegen Bot</b><small>Freies Duell</small></button>
                     <button class="btn mode" data-go="local" data-info="Lokales Duell: Zwei Spieler an einem Gerät – geteilte Tastatur, zwei Gamepads oder Handys als Controller."><b>Lokales Duell</b><small>2 Spieler</small></button>
+                    <button class="btn mode" data-go="online" data-info="Online-Duell: Spiel gegen einen Freund an seinem eigenen Gerät – einer erstellt einen Raum, der andere gibt den 4-stelligen Code ein."><b>Online-Duell</b><small>Per Code verbinden</small></button>
+                    <button class="btn mode" data-go="story" data-info="Story: Erlebe die Geschichte deines Champions – drei Rivalen, der Knochenkönig und ein eigenes Ende."><b>Story</b><small>Kapitel &amp; Ende</small></button>
                     <button class="btn mode" data-go="survival" data-info="Survival: Ein Leben, endlose Gegner. Nach jedem Sieg heilst du nur 30 % – jeder 5. Gegner ist der Endboss. Wie weit kommst du?"><b>Survival</b><small>Ein Leben, endlos</small></button>
                     <button class="btn mode" data-go="training" data-info="Training: Übe Kombos, Blocken und Fähigkeiten gegen einen Dummy. Unendlich Energie, niemand verliert."><b>Training</b><small>Kombos üben</small></button>
                 </div>
                 <p class="menu-info" id="menuInfo" aria-live="polite"></p>
                 <div class="menu-links">
+                    <button class="btn link" data-go="tutorial" data-info="Tutorial: Lerne Schritt für Schritt alle Techniken – Bewegen, Kombos, Blocken, Fähigkeit und Spezialangriff.">Tutorial</button>
                     <button class="btn link" data-go="controller" data-info="Controller: Mach dein Handy zum Gamepad – QR-Code scannen oder 4-stelligen Code eingeben.">Controller</button>
                     <button class="btn link" data-go="lore" data-info="Champions: Geschichte, Werte und Fähigkeit jedes Kämpfers.">Champions</button>
                     <button class="btn link" data-go="scores" data-info="Highscores: Die besten 10 Läufe in Arcade und Survival.">Highscores</button>
@@ -163,6 +166,35 @@
             <div class="board p1"><h3>Arcade</h3><ol class="score-list" id="scoresArcade"></ol></div>
             <div class="board p2"><h3>Survival</h3><ol class="score-list" id="scoresSurvival"></ol></div>
         </div>
+    </section>
+
+    <!-- ================= ONLINE-DUELL ================= -->
+    <section id="screen-online" class="screen scroll">
+        <header class="screen-head">
+            <button class="back-btn" data-back aria-label="Zurück">‹</button>
+            <h2>Online-Duell</h2>
+        </header>
+        <div class="controller-layout online-layout">
+            <div class="glass panel role-card">
+                <div class="panel-head">🌐 Raum erstellen</div>
+                <div class="role-body column">
+                    <p class="dark">Erstelle einen Raum und gib deinem Gegner den Code. Du bist Host und wählst die Map.</p>
+                    <div class="pair-code online-code">Code: <b id="onlineCode">····</b></div>
+                    <button class="btn start" id="onlineHostBtn">Raum erstellen</button>
+                    <p class="dark small" id="onlineHostStatus"></p>
+                </div>
+            </div>
+            <div class="glass panel role-card">
+                <div class="panel-head red">🎮 Raum beitreten</div>
+                <div class="role-body column">
+                    <p class="dark">Gib den 4-stelligen Code deines Gegners ein:</p>
+                    <input id="onlineJoinCode" class="code-input" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD">
+                    <button class="btn start" id="onlineJoinBtn">Beitreten</button>
+                    <p class="dark small" id="onlineJoinStatus"></p>
+                </div>
+            </div>
+        </div>
+        <p class="dark small center-note">Beide Geräte brauchen Internet. Die Verbindung läuft direkt zwischen euch – am besten im selben WLAN oder mit gutem Empfang.</p>
     </section>
 
     <!-- ================= HANDY-CONTROLLER ================= -->
@@ -334,6 +366,12 @@
                 <label class="toggle"><input type="checkbox" data-setting="showFps"><span></span>FPS anzeigen</label>
                 <button class="btn small" id="resetRecord">Bilanz zurücksetzen</button>
             </div>
+            <div class="glass panel keys-panel">
+                <h3>Tastenbelegung</h3>
+                <div class="seg" id="keyTabs"><button data-map="solo" class="on">Alleine</button><button data-map="p1">Spieler 1</button><button data-map="p2">Spieler 2</button></div>
+                <div class="key-list" id="keyList"></div>
+                <button class="btn small" id="resetKeys">Belegung zurücksetzen</button>
+            </div>
         </div>
     </section>
 
@@ -366,6 +404,8 @@
             <div class="combo"></div>
         </div>
     </div>
+
+    <div id="tutorial" class="glass" hidden></div>
 
     <!-- Tastenbelegung unten in den Ecken (nur am PC) -->
     <div class="hud-keys" data-side="0" hidden></div>
@@ -437,21 +477,24 @@
     <div id="fps" hidden></div>
     <div id="toast"></div>
 
-    <script src="js/arena_shape.js?v=3.0.18"></script>
-    <script src="js/data.js?v=3.0.18"></script>
-    <script src="js/audio.js?v=3.0.18"></script>
-    <script src="js/settings.js?v=3.0.18"></script>
-    <script src="js/assets.js?v=3.0.18"></script>
-    <script src="js/input.js?v=3.0.18"></script>
-    <script src="js/link.js?v=3.0.18"></script>
-    <script src="js/pad.js?v=3.0.18"></script>
-    <script src="js/fx.js?v=3.0.18"></script>
-    <script src="js/fighter.js?v=3.0.18"></script>
-    <script src="js/ai.js?v=3.0.18"></script>
-    <script src="js/match.js?v=3.0.18"></script>
-    <script src="js/ui.js?v=3.0.18"></script>
-    <script src="js/modes.js?v=3.0.18"></script>
-    <script src="js/main.js?v=3.0.18"></script>
+    <script src="js/arena_shape.js?v=3.0.20"></script>
+    <script src="js/data.js?v=3.0.20"></script>
+    <script src="js/audio.js?v=3.0.20"></script>
+    <script src="js/settings.js?v=3.0.20"></script>
+    <script src="js/assets.js?v=3.0.20"></script>
+    <script src="js/input.js?v=3.0.20"></script>
+    <script src="js/link.js?v=3.0.20"></script>
+    <script src="js/pad.js?v=3.0.20"></script>
+    <script src="js/fx.js?v=3.0.20"></script>
+    <script src="js/fighter.js?v=3.0.20"></script>
+    <script src="js/ai.js?v=3.0.20"></script>
+    <script src="js/match.js?v=3.0.20"></script>
+    <script src="js/ui.js?v=3.0.20"></script>
+    <script src="js/modes.js?v=3.0.20"></script>
+    <script src="js/net.js?v=3.0.20"></script>
+    <script src="js/tutorial.js?v=3.0.20"></script>
+    <script src="js/story.js?v=3.0.20"></script>
+    <script src="js/main.js?v=3.0.20"></script>
 </body>
 
 </html>

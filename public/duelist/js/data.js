@@ -394,7 +394,8 @@ const MODES = {
     solo:     { id: "solo",     name: "Gegen Bot",     sub: "Freies Duell gegen die KI" },
     local:    { id: "local",    name: "Lokales Duell", sub: "2 Spieler · Tastatur, Gamepad oder Handy" },
     survival: { id: "survival", name: "Survival",      sub: "Ein Leben · endlose Gegner" },
-    training: { id: "training", name: "Training",      sub: "Kombos üben ohne Druck" }
+    training: { id: "training", name: "Training",      sub: "Kombos üben ohne Druck" },
+    story:    { id: "story",    name: "Story",         sub: "Die Geschichte deines Champions" }
 }
 
 const DIFFICULTIES = {
@@ -444,6 +445,32 @@ const KEYMAPS = {
         up: ["KeyI", "ArrowUp"], down: ["KeyK", "ArrowDown"], left: ["KeyJ", "ArrowLeft"], right: ["KeyL", "ArrowRight"],
         light: ["KeyO", "Numpad1"], heavy: ["KeyP", "Numpad2"], dash: ["KeyU", "Numpad3"], ability: ["KeyH", "Numpad0"]
     }
+}
+
+// Eigene Tastenbelegung (Optionen → Tastenbelegung): ersetzt die erste Taste einer Aktion
+const KEY_ACTIONS = [["up", "Hoch"], ["down", "Runter"], ["left", "Links"], ["right", "Rechts"], ["light", "Leicht"], ["heavy", "Schwer"], ["dash", "Dash"], ["ability", "Fähigkeit"]]
+
+function keymap(name) {
+    const custom = readStorage("duelist.keys", {})[name] || {}
+    const taken = new Set(Object.values(custom))
+    const map = {}
+    for (const [a] of KEY_ACTIONS) {
+        const base = KEYMAPS[name][a]
+        const list = custom[a] ? [custom[a], ...base.slice(1)] : [...base]
+        // eine Taste, die einer anderen Aktion zugewiesen wurde, hier nicht mehr benutzen
+        map[a] = list.filter(c => c === custom[a] || !taken.has(c))
+    }
+    return map
+}
+
+function keyLabel(code) {
+    if (!code) return "–"
+    const names = { ArrowUp: "↑", ArrowDown: "↓", ArrowLeft: "←", ArrowRight: "→", Space: "Leertaste", ShiftLeft: "Shift", ShiftRight: "Shift R", ControlLeft: "Strg", ControlRight: "Strg R", AltLeft: "Alt", Enter: "Enter", Backspace: "⌫", Tab: "Tab" }
+    if (names[code]) return names[code]
+    if (code.startsWith("Key")) return code.slice(3)
+    if (code.startsWith("Digit")) return code.slice(5)
+    if (code.startsWith("Numpad")) return "Num" + code.slice(6)
+    return code
 }
 
 const DEFAULT_SETTINGS = {
