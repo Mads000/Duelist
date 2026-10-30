@@ -1,6 +1,6 @@
 // Service Worker – macht DUELIST nach dem ersten Laden komplett offline spielbar
 // (automatisch erzeugt von tools/make_sw.js)
-const CACHE = "duelist-v3.0.7"
+const CACHE = "duelist-v3.0.8"
 const PRECACHE = [
     "./",
     "index.html",
@@ -93,7 +93,8 @@ const PRECACHE = [
 ]
 
 self.addEventListener("install", e => {
-    e.waitUntil(caches.open(CACHE).then(c => c.addAll(PRECACHE.map(u => encodeURI(u)))).then(() => self.skipWaiting()))
+    // cache: "reload" = am Browser-Cache vorbei, damit nie alte und neue Dateien gemischt werden
+    e.waitUntil(caches.open(CACHE).then(c => c.addAll(PRECACHE.map(u => new Request(encodeURI(u), { cache: "reload" })))).then(() => self.skipWaiting()))
 })
 
 self.addEventListener("activate", e => {
@@ -113,7 +114,7 @@ self.addEventListener("fetch", e => {
     e.respondWith(
         caches.open(CACHE).then(async cache => {
             const cached = await cache.match(e.request, { ignoreSearch: true })
-            const network = fetch(e.request)
+            const network = fetch(e.request, sameOrigin ? { cache: "no-cache" } : undefined)
                 .then(res => {
                     if (res && (res.ok || res.type === "opaque")) cache.put(e.request, res.clone())
                     return res

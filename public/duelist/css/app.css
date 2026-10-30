@@ -2607,6 +2607,166 @@ body:not(.is-touch) #pauseBtn:hover {
 }
 
 /* ============================================================
+   Glass-Look – ein gemeinsamer Stil für alle Bildschirme
+   (Milchglas mit Blur, blaue Kante, Lichtkante oben)
+   ============================================================ */
+:root {
+    --glass-fill: linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.24));
+    --glass-fill-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.46));
+    --glass-blur: blur(10px) saturate(140%);
+    --glass-shine: inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+    --glass-shadow: 0 8px 28px rgba(9, 31, 91, 0.18);
+    --glass-blue: linear-gradient(135deg, rgba(43, 67, 116, 0.82), rgba(9, 31, 91, 0.68));
+    --glass-red: linear-gradient(135deg, rgba(232, 74, 74, 0.82), rgba(143, 28, 28, 0.7));
+}
+
+.glass,
+.btn,
+.back-btn,
+.ability-box,
+.seg,
+.champ-card,
+.ladder-step,
+.hud-keys {
+    background: var(--glass-fill);
+    border: 3px solid var(--line);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-shine), var(--glass-shadow);
+}
+
+.modal-box {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.5));
+}
+
+.btn {
+    color: var(--btn-bottom);
+    transition: transform 0.12s, background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.btn:hover,
+.btn:focus-visible,
+.back-btn:hover,
+.back-btn:focus-visible,
+.champ-card:hover,
+.champ-card:focus-visible {
+    background: var(--glass-fill-hover);
+    border-color: #fff;
+    box-shadow: var(--glass-shine), 0 0 0 1px rgba(255, 255, 255, 0.6), 0 6px 24px rgba(255, 255, 255, 0.45);
+    outline: none;
+}
+
+.btn:active {
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.btn.start {
+    color: #fff;
+    background: var(--glass-red);
+    border-color: rgba(255, 210, 210, 0.85);
+}
+
+.btn.start:hover,
+.btn.start:focus-visible {
+    background: linear-gradient(135deg, rgba(245, 96, 96, 0.92), rgba(165, 36, 36, 0.82));
+    border-color: #fff;
+}
+
+.btn:disabled,
+.btn:disabled:hover {
+    opacity: 0.5;
+    filter: grayscale(0.4);
+    transform: none;
+    box-shadow: var(--glass-shine);
+}
+
+/* Gewählte Optionen, Tasten, Hinweise: blaues Glas */
+.seg button.on,
+.opt-group button.on,
+.step-pill,
+kbd,
+.progress-fill,
+.menu-stats {
+    background: var(--glass-blue);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.seg {
+    background: rgba(255, 255, 255, 0.35);
+    box-shadow: none;
+}
+
+.opt-group button:not(.on):hover,
+.seg button:not(.on):hover {
+    background: rgba(255, 255, 255, 0.55);
+}
+
+.menu-stats {
+    border: 3px solid rgba(170, 200, 255, 0.6);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+}
+
+/* Spieler-Boards: getöntes Glas in Blau/Rot */
+.board,
+.step-pill.p1,
+.step-pill.p2,
+.pad-chip.p1,
+.pad-chip.p2 {
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.board.p1,
+.step-pill.p1,
+.pad-chip.p1 {
+    background: linear-gradient(160deg, rgba(30, 60, 143, 0.68), rgba(75, 121, 230, 0.4));
+    border: 3px solid rgba(170, 200, 255, 0.8);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), var(--glass-shadow);
+}
+
+.board.p2,
+.step-pill.p2,
+.pad-chip.p2 {
+    background: linear-gradient(160deg, rgba(143, 28, 28, 0.68), rgba(255, 90, 90, 0.4));
+    border: 3px solid rgba(255, 190, 190, 0.8);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), var(--glass-shadow);
+}
+
+.step-pill.ready {
+    background: var(--glass-red);
+}
+
+.sel-side.active {
+    border-color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 0 3px rgba(255, 255, 255, 0.35), 0 0 30px rgba(255, 255, 255, 0.4);
+}
+
+/* Champion-Karten & Arcade-Leiter: helles Glas statt grau */
+.champ-card,
+.ladder-step {
+    border-color: var(--line);
+}
+
+.champ-card:hover,
+.champ-card:focus-visible {
+    transform: translateY(-3px);
+}
+
+.cc-name {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--btn-bottom);
+}
+
+.lore-card {
+    border-radius: 0;
+}
+
+.toggle.glass {
+    box-shadow: var(--glass-shine);
+}
+
+/* ============================================================
    Responsive
    ============================================================ */
 @media (max-width: 900px) {
