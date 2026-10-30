@@ -44,7 +44,6 @@ const UI = {
             btn.addEventListener("focus", () => explain(btn))
         }
         explain($(".menu-arcade"))
-        this.initMenuHeroes()
 
         this.buildLore()
         this.buildSettings()
@@ -91,33 +90,6 @@ const UI = {
         t.classList.add("show")
         clearTimeout(this.toastTimer)
         this.toastTimer = setTimeout(() => t.classList.remove("show"), ms)
-    },
-
-    // ---------------- Hauptmenü: zwei Champions stehen sich gegenüber ----------------
-    initMenuHeroes() {
-        const own = App.config && isUnlocked(App.config.champs[0]) ? App.config.champs[0] : "vanguard"
-        const left = new SpritePreview($("#heroL"), own, "idle", { zoom: 1.15 })
-        const right = new SpritePreview($("#heroR"), pickRandomChamp([own]), "idle", { zoom: 1.15, flip: true })
-        const label = () => {
-            $("#heroLName").textContent = CHAMPIONS[left.champId].name
-            $("#heroRName").textContent = CHAMPIONS[right.champId].name
-        }
-        label()
-        // kurzer Schlagabtausch, dann kommt ein neuer Rivale
-        let beat = 0
-        setInterval(() => {
-            if (document.body.dataset.screen !== "menu") return
-            beat++
-            if (beat % 4 === 1) right.set(right.champId, "heavy")
-            if (beat % 4 === 2) left.set(left.champId, "light0"), right.set(right.champId, "idle")
-            if (beat % 4 === 3) left.set(left.champId, "idle")
-            if (beat % 4 === 0) {
-                const mine = App.config && isUnlocked(App.config.champs[0]) ? App.config.champs[0] : left.champId
-                left.set(mine, "idle")
-                right.set(pickRandomChamp([mine, right.champId]), "idle")
-                label()
-            }
-        }, 1300)
     },
 
     // ---------------- Hauptmenü: Bilanz ----------------

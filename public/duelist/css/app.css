@@ -118,29 +118,20 @@ button {
     to { transform: rotate(360deg); }
 }
 
-/* Die Arena als schwebende Insel unter dem Menü */
-.sky-island {
+/* Weiche Vordergrund-Wolken, die langsam durchziehen (Tiefe) */
+.sky-clouds {
     position: absolute;
-    left: 50%;
-    bottom: 5vh;
-    width: min(820px, 64vw);
-    aspect-ratio: 1024 / 602;
-    background: url("../../assets/ui/Arena-Insel.png") center / contain no-repeat;
-    image-rendering: pixelated;
-    opacity: 0.9;
-    filter: drop-shadow(0 30px 40px rgba(9, 31, 91, 0.35)) saturate(1.05);
-    transform: translateX(-50%);
-    animation: islandFloat 9s ease-in-out infinite;
+    inset: 0;
+    background: url("../../assets/ui/StartBackground.png") 0 100% / auto 140% repeat-x;
+    opacity: 0.45;
+    filter: blur(1.5px) brightness(1.08);
+    mask-image: linear-gradient(to top, #000 0%, #000 25%, transparent 65%);
+    -webkit-mask-image: linear-gradient(to top, #000 0%, #000 25%, transparent 65%);
+    animation: cloudsDrift 160s linear infinite;
 }
 
-@keyframes islandFloat {
-    50% { transform: translateX(-50%) translateY(-14px); }
-}
-
-/* Auf Unterseiten tritt die Insel zurück, damit Text lesbar bleibt */
-body:not([data-screen="menu"]) .sky-island {
-    opacity: 0.35;
-    filter: blur(2px);
+@keyframes cloudsDrift {
+    to { background-position: -300vw 100%; }
 }
 
 @keyframes skyDrift {
@@ -531,11 +522,9 @@ body.crt #crt {
 }
 
 .menu-wrap {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 600px) minmax(0, 1fr);
-    align-items: end;
-    gap: 2vw;
-    width: min(1500px, 100%);
+    display: flex;
+    justify-content: center;
+    width: min(620px, 100%);
     margin: auto;
 }
 
@@ -544,7 +533,46 @@ body.crt #crt {
     flex-direction: column;
     align-items: center;
     gap: 12px;
+    width: 100%;
     min-width: 0;
+}
+
+.logo-menu.chrome {
+    animation: fadeUp 0.5s both, float 6s ease-in-out 0.5s infinite;
+}
+
+/* Glanzstreifen, der regelmäßig über den Arcade-Button läuft */
+.menu-arcade {
+    overflow: hidden;
+}
+
+.menu-arcade::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -40%;
+    width: 30%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transform: skewX(-20deg);
+    animation: arcadeShine 4.5s ease-in-out 1s infinite;
+    pointer-events: none;
+}
+
+@keyframes arcadeShine {
+    0%, 70% { left: -40%; }
+    100% { left: 130%; }
+}
+
+/* Modi: farbige Kante beim Drüberfahren */
+.btn.mode {
+    border-left-width: 6px;
+}
+
+.btn.mode:hover,
+.btn.mode:focus-visible {
+    border-left-color: var(--start-top);
+    transform: translateX(3px);
 }
 
 .menu-tag {
@@ -557,84 +585,9 @@ body.crt #crt {
     animation: fadeUp 0.5s 0.05s both;
 }
 
-/* Champions links und rechts vom Menü */
-.menu-hero {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding-bottom: 6vh;
-    animation: fadeUp 0.6s 0.15s both;
-}
-
-.menu-hero canvas {
-    width: clamp(170px, 17vw, 300px);
-    aspect-ratio: 1;
-    margin-bottom: calc(clamp(170px, 17vw, 300px) * -0.2);
-    image-rendering: pixelated;
-}
-
-/* Schatten unter der Figur */
-.menu-hero::before {
-    content: "";
-    order: 1;
-    width: clamp(90px, 9vw, 150px);
-    height: 16px;
-    margin-top: -14px;
-    border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(9, 31, 91, 0.35), transparent 70%);
-}
-
-.hero-tag {
-    order: 2;
-    position: relative;
-    z-index: 1;
-}
-
-.menu-hero.left canvas {
-    filter: drop-shadow(0 0 18px rgba(80, 140, 255, 0.7)) drop-shadow(0 8px 0 rgba(9, 31, 91, 0.25));
-}
-
-.menu-hero.right canvas {
-    filter: drop-shadow(0 0 18px rgba(255, 90, 90, 0.7)) drop-shadow(0 8px 0 rgba(9, 31, 91, 0.25));
-}
-
-.hero-tag {
-    padding: 4px 18px;
-    font-family: var(--font-display);
-    font-size: clamp(18px, 1.6vw, 26px);
-    letter-spacing: 0.08em;
-    color: #fff;
-}
-
-.hero-tag.p1 {
-    background: linear-gradient(160deg, rgba(30, 60, 143, 0.75), rgba(75, 121, 230, 0.5));
-    border: 3px solid rgba(170, 200, 255, 0.85);
-}
-
-.hero-tag.p2 {
-    background: linear-gradient(160deg, rgba(143, 28, 28, 0.75), rgba(255, 90, 90, 0.5));
-    border: 3px solid rgba(255, 190, 190, 0.85);
-}
-
-@media (max-width: 1000px) {
-    .menu-wrap {
-        grid-template-columns: minmax(0, 1fr);
-        justify-items: center;
-    }
-
-    .menu-hero {
-        display: none;
-    }
-
-    .menu-center {
-        width: min(720px, 100%);
-    }
-}
 
 .logo-menu.chrome {
     font-size: clamp(56px, 9vw, 104px);
-    animation: fadeUp 0.5s both;
 }
 
 .menu-panel {
@@ -3271,19 +3224,11 @@ kbd,
         gap: 8px;
     }
 
-    .sky-island {
-        width: 58vw;
-        bottom: -34vh;
-    }
+
 }
 
 /* Hochformat (Menüs auf dem Handy) */
 @media (orientation: portrait) and (max-width: 700px) {
-    .sky-island {
-        width: 120vw;
-        bottom: -4vh;
-    }
-
     #screen-select {
         overflow-y: auto;
     }
