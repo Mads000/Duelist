@@ -486,22 +486,22 @@ function resolveChampion(name) {
 // ---------------- Maps ----------------
 const MAPS = {
     sky: {
-        id: "sky", name: "Himmelsarena", img: "ui/Arena2.png",
+        id: "sky", cliff: ["#8a5a32", "#6b4528", "#3a2416"], name: "Himmelsarena", img: "ui/Arena2.png",
         text: "Die Original-Arena über den Wolken – Windstöße schieben euch über den Platz.",
         ambient: "clouds", grip: 1, hazard: "wind", bg: ["#3f7bd9", "#9ccaf5"]
     },
     classic: {
-        id: "classic", name: "Wolkenhof", img: "ui/Map-Wolkenhof.png",
+        id: "classic", cliff: ["#c8c2d4", "#8e889e", "#4e4862"], name: "Wolkenhof", img: "ui/Map-Wolkenhof.png",
         text: "Ein Marmorhof im Abendrot – wer zuerst auf eine Heilblüte tritt, bekommt Leben zurück.",
         ambient: "petals", grip: 1, hazard: "bloom", dust: "rgba(236,230,242,0.6)", bg: ["#7080d6", "#ffb496"], tint: ["#ff9a8a", 0.35]
     },
     volcano: {
-        id: "volcano", name: "Vulkanschmiede", img: "ui/Map-Vulkan.png",
+        id: "volcano", cliff: ["#5a4246", "#33262a", "#160e10"], name: "Vulkanschmiede", img: "ui/Map-Vulkan.png",
         text: "Glut steigt auf – und manchmal bricht der Boden auf. Achte auf Feuerfontänen!",
         ambient: "embers", grip: 1, hazard: "geyser", bg: ["#1c0a0e", "#7a1a0a"], tint: ["#3a0806", 0.72]
     },
     frost: {
-        id: "frost", name: "Frostgipfel", img: "ui/Map-Frost.png",
+        id: "frost", cliff: ["#cfe8fb", "#7aa8d8", "#3a5c90"], name: "Frostgipfel", img: "ui/Map-Frost.png",
         text: "Spiegelglattes Eis: Wer getroffen wird, rutscht weit.",
         ambient: "snow", grip: 0.32, bg: ["#16204a", "#4a6496"], tint: ["#16204a", 0.6]
     }

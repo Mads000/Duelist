@@ -1326,7 +1326,8 @@ class Match {
             ctx.globalCompositeOperation = "lighter"
             ctx.globalAlpha = 0.06 + Math.sin(this.time * 1.7) * 0.03
             ctx.fillStyle = "#ff5a1f"
-            ctx.fillRect(0, 0, WORLD.width, WORLD.height)
+            // nur auf der Insel glühen, nicht über den Wolken
+            ctx.fillRect(ARENA.x0 - 40, ARENA.y0 - 30, ARENA.x1 - ARENA.x0 + 80, ARENA.y1 - ARENA.y0 + 60)
             ctx.restore()
         }
 
@@ -1443,9 +1444,9 @@ class Match {
             if (Math.abs(i) % 2 === 1) {
                 ctx.translate(x + tw, y)
                 ctx.scale(-1, 1)
-                ctx.drawImage(img, 0, 0, tw, th)
+                ctx.drawImage(img, -1, 0, tw + 2, th)
             } else {
-                ctx.drawImage(img, x, y, tw, th)
+                ctx.drawImage(img, x - 1, y, tw + 2, th)
             }
             ctx.restore()
         }
@@ -1462,7 +1463,8 @@ class Match {
 
     // Map-Bild mit weich ausgeblendeten Rändern (einmal pro Map erzeugt)
     featheredMap() {
-        const key = "feather:" + this.map.id
+        // mit Ring-Out: die Arena ist eine schwebende Insel ohne Mauern (man sieht, dass man runterfallen kann)
+        const key = "feather:" + this.map.id + (this.ringOuts ? ":island" : "")
         if (IMAGES[key]) return IMAGES[key]
         const src = IMAGES["map:" + this.map.id]
         const c = document.createElement("canvas")
@@ -1485,8 +1487,76 @@ class Match {
             g.fillStyle = gr
             g.fillRect(rx, ry, rw, rh)
         }
+        if (this.ringOuts) this.cutIsland(g)
         IMAGES[key] = c
         return c
+    }
+
+    // Alles außerhalb der Bodenfläche wegschneiden, Abbruchkanten und eine Felswand darunter zeichnen
+    cutIsland(g) {
+        const W = WORLD.width
+        const H = WORLD.height
+        const [soil, rock, deep] = this.map.cliff || ["#8a5a32", "#6b4528", "#3a2416"]
+        const jag = v => Math.round(Math.sin(v * 0.09) * 5 + Math.sin(v * 0.31) * 3)
+        const top = ARENA.y0 - 22
+        const bot = ARENA.y1 + 22
+        const side = y => {
+            const [l, r] = ARENA.span(Math.max(ARENA.y0, Math.min(ARENA.y1, y)))
+            return [l - 30 + jag(y), r + 30 - jag(y + 50)]
+        }
+        const [l0, r0] = side(top)
+        const [lb, rb] = side(bot)
+
+        // 1) wegschneiden
+        g.globalCompositeOperation = "destination-out"
+        g.fillStyle = "#000"
+        for (let x = 0; x < W; x += 3) {
+            const yt = top + jag(x)
+            const yb = bot + jag(x + 20)
+            g.fillRect(x, 0, 3, yt)
+            g.fillRect(x, yb, 3, H - yb)
+        }
+        for (let y = top - 12; y <= bot + 12; y += 3) {
+            const [l, r] = side(y)
+            g.fillRect(0, y, l, 3)
+            g.fillRect(r, y, W - r, 3)
+        }
+
+        // 2) Felswand unter der vorderen Kante (Unterseite der Insel)
+        g.globalCompositeOperation = "source-over"
+        for (let x = lb + 6; x < rb - 6; x += 3) {
+            const yb = bot + jag(x + 20)
+            const edgeK = Math.min(1, (x - lb) / 120, (rb - x) / 120)
+            const depth = (40 + jag(x * 2) * 3 + 30 * edgeK) * edgeK + 8
+            g.fillStyle = soil
+            g.fillRect(x, yb, 3, 10)
+            g.fillStyle = rock
+            g.fillRect(x, yb + 10, 3, depth)
+            g.fillStyle = deep
+            g.fillRect(x, yb + 10 + depth * 0.6, 3, depth * 0.4)
+            if ((x / 3) % 7 === 0) {
+                g.fillStyle = deep
+                g.fillRect(x, yb + 14, 3, depth * 0.5)
+            }
+        }
+
+        // 3) Abbruchkanten an den Seiten und hinten
+        for (let y = top; y <= bot; y += 3) {
+            const [l, r] = side(y)
+            g.fillStyle = rock
+            g.fillRect(l, y, 8, 3)
+            g.fillRect(r - 8, y, 8, 3)
+            g.fillStyle = deep
+            g.fillRect(l, y, 3, 3)
+            g.fillRect(r - 3, y, 3, 3)
+        }
+        for (let x = l0; x < r0; x += 3) {
+            const yt = top + jag(x)
+            g.fillStyle = deep
+            g.fillRect(x, yt, 3, 3)
+            g.fillStyle = rock
+            g.fillRect(x, yt + 3, 3, 4)
+        }
     }
 
     drawTelegraphs(ctx) {
