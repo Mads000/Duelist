@@ -33,6 +33,13 @@ class BotController {
         this.lastSeen = { x: op.x, y: op.y }
     }
 
+    // 2 gegen 2: neues Ziel (nächster Gegner)
+    retarget(op) {
+        if (!op || op === this.op) return
+        this.op = op
+        this.lastSeen = { x: op.x, y: op.y }
+    }
+
     rand(a, b) {
         return a + Math.random() * (b - a)
     }

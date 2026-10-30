@@ -6,10 +6,11 @@ const SIDE_COLORS = ["#2f6bff", "#e33a3a"]
 const NO_INPUT = emptyInput()
 
 class Fighter {
-    constructor(champId, side, match, { hp = null } = {}) {
+    constructor(champId, side, match, { hp = null, slot = side } = {}) {
         this.champ = CHAMPIONS[champId]
         this.champId = champId
         this.side = side
+        this.slot = slot
         this.match = match
         this.controller = null
         this.isHuman = false
@@ -26,7 +27,7 @@ class Fighter {
         }
 
         this.stats = { damage: 0, taken: 0, hits: 0, maxCombo: 0, abilities: 0, dodges: 0, blocked: 0, perfect: 0, counters: 0 }
-        this.reset(ARENA.spawn[side])
+        this.reset(match.spawnFor ? match.spawnFor(this) : ARENA.spawn[side])
     }
 
     reset(spawn, keepHp = false) {

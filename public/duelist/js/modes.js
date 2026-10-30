@@ -35,6 +35,16 @@ const Modes = {
             return
         }
         const s = GameSettings.get()
+        if (mode === "team") {
+            // Partner und Gegner zufällig, alle unterschiedlich
+            const pool = shuffle(playableChampions().filter(id => !CHAMPIONS[id].boss && id !== c.champs[0]))
+            App.startMatch({
+                rules: { mode, map, rounds: s.rounds, roundTime: Math.max(s.roundTime, 60) + 15, chaos: !!c.chaos, vs: true },
+                champs: [c.champs[0], pool[0], pool[1], pool[2]],
+                opponent: { difficulty: c.difficulty }
+            })
+            return
+        }
         App.startMatch({
             rules: { mode, map, rounds: s.rounds, roundTime: s.roundTime, chaos: !!c.chaos, vs: true },
             champs: [...c.champs],

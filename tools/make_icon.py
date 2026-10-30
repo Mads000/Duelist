@@ -1,5 +1,5 @@
 # Erzeugt das App-Icon als Pixel-Art (64x64, ohne Glättung hochskaliert):
-# Gloop, der Wolkenschleim, mit Krone auf dem Wolkenteppich vor dem Himmel.
+# dunkles Emblem – Gloop mit grimmigem Blick vor seiner Sense, leuchtende Kante, Blau/Rot-Lichtschein.
 # Aufruf: python tools/make_icon.py
 import math
 import os
@@ -10,7 +10,7 @@ ROOT = os.path.join(os.path.dirname(__file__), "..", "public")
 OUT_DIR = os.path.join(ROOT, "duelist", "icons")
 SLIME = os.path.join(ROOT, "assets", "characters-hd", "Slime")
 N = 64
-OUTLINE = (14, 18, 46)
+OUTLINE = (6, 8, 20)
 
 
 def lerp(a, b, t):
@@ -20,92 +20,74 @@ def lerp(a, b, t):
 img = Image.new("RGBA", (N, N))
 px = img.load()
 
-# Himmel: oben tiefblau, unten hell, mit Sonnenschein oben rechts und Pixel-Dithering
+# Hintergrund: fast schwarz, links blaues, rechts rotes Gegenlicht, Vignette
 for y in range(N):
     for x in range(N):
-        c = lerp((40, 92, 214), (150, 205, 255), y / (N - 1))
-        sun = max(0, 1 - math.hypot(x - 50, y - 12) / 26)
-        c = lerp(c, (255, 246, 210), sun * 0.75)
-        if sun > 0.15 and (x + y) % 2 == 0:
-            c = lerp(c, (255, 255, 255), 0.12)
+        d = math.hypot(x - 31.5, y - 34) / 44
+        c = lerp((22, 30, 64), (5, 6, 16), min(1, d))
+        blue = max(0, 1 - math.hypot(x - 6, y - 40) / 34)
+        red = max(0, 1 - math.hypot(x - 58, y - 40) / 34)
+        c = lerp(c, (40, 90, 220), blue * 0.55)
+        c = lerp(c, (200, 40, 50), red * 0.55)
         px[x, y] = c + (255,)
 
 d = ImageDraw.Draw(img)
 
+# Sense diagonal hinter Gloop: Stiel von unten links nach oben rechts, Klinge oben
+for i in range(46):
+    x, y = 10 + i, 58 - i
+    d.point((x, y), fill=(120, 84, 52, 255))
+    d.point((x + 1, y), fill=(78, 52, 32, 255))
+    d.point((x - 1, y), fill=OUTLINE + (255,))
+    d.point((x + 2, y), fill=OUTLINE + (255,))
+# Klinge: setzt oben am Stiel an und biegt sich nach links unten
+blade = [(56, 13), (53, 9), (49, 7), (44, 6), (39, 6), (34, 7), (30, 9), (27, 12), (25, 15)]
+for i in range(len(blade) - 1):
+    w = max(1, 4 - i // 2)
+    (x0, y0), (x1, y1) = blade[i], blade[i + 1]
+    d.line([(x0, y0 - 1), (x1, y1 - 1)], fill=OUTLINE + (255,), width=w + 2)
+for i in range(len(blade) - 1):
+    w = max(1, 4 - i // 2)
+    (x0, y0), (x1, y1) = blade[i], blade[i + 1]
+    d.line([(x0, y0), (x1, y1)], fill=(170, 184, 206, 255), width=w)
+    d.line([(x0, y0 - (w // 2)), (x1, y1 - (w // 2))], fill=(240, 246, 255, 255), width=1)
 
-def cloud(cx, cy, w, shade=(214, 230, 250)):
-    # Pixel-Wolke aus Kreisen, unten flach, mit Schattenkante
-    for r, dx, dy in ((w * 0.32, -w * 0.25, 0), (w * 0.42, 0, -w * 0.12), (w * 0.3, w * 0.28, 0.02 * w)):
-        d.ellipse([cx + dx - r, cy + dy - r, cx + dx + r, cy + dy + r], fill=(255, 255, 255, 255))
-    d.rectangle([cx - w * 0.55, cy, cx + w * 0.55, cy + w * 0.22], fill=(255, 255, 255, 255))
-    d.rectangle([cx - w * 0.55, cy + w * 0.16, cx + w * 0.55, cy + w * 0.22], fill=shade + (255,))
-
-
-cloud(10, 18, 14)
-cloud(58, 34, 12)
-# Wolkenteppich unten, auf dem Gloop sitzt
-for x in range(N):
-    h = 50 + int(2.5 * math.sin(x * 0.45) + 1.5 * math.sin(x * 1.3))
-    d.line([(x, h), (x, N)], fill=(255, 255, 255, 255))
-    d.line([(x, h + 6), (x, N)], fill=(206, 224, 248, 255))
-    d.point((x, h + 11), fill=(176, 200, 236, 255))
-
-# Gloop, doppelt so groß
+# Gloop, doppelt so groß, mit leuchtend blauer Kante statt weißem Sticker-Rand
 frame = Image.open(os.path.join(SLIME, "Slime-Idle.png")).convert("RGBA").crop((0, 0, 100, 100))
 frame = frame.crop(frame.getbbox())
-k = 2
-gloop = frame.resize((frame.width * k, frame.height * k), Image.NEAREST)
-# Weißer Umriss (2 Pixel) für Sticker-Look
+gloop = frame.resize((frame.width * 2, frame.height * 2), Image.NEAREST)
 alpha = gloop.split()[3]
-mask = Image.new("L", gloop.size, 0)
+glow = Image.new("L", gloop.size, 0)
 for dx in range(-2, 3):
     for dy in range(-2, 3):
-        if abs(dx) + abs(dy) <= 2:
-            mask.paste(255, (0, 0), alpha.transform(alpha.size, Image.AFFINE, (1, 0, -dx, 0, 1, -dy)))
-sticker = Image.new("RGBA", (gloop.width + 4, gloop.height + 4), (0, 0, 0, 0))
-outline_layer = Image.new("RGBA", gloop.size, (255, 255, 255, 255))
-sticker.paste(outline_layer, (2, 2), mask)
-sticker.alpha_composite(gloop, (2, 2))
-gx = (N - sticker.width) // 2
-gy = 54 - sticker.height + 2
-img.alpha_composite(sticker, (gx, gy))
+        if 0 < abs(dx) + abs(dy) <= 2:
+            glow.paste(255, (0, 0), alpha.transform(alpha.size, Image.AFFINE, (1, 0, -dx, 0, 1, -dy)))
+layer = Image.new("RGBA", (gloop.width + 4, gloop.height + 4), (0, 0, 0, 0))
+layer.paste(Image.new("RGBA", gloop.size, (90, 210, 255, 255)), (2, 2), glow)
+layer.alpha_composite(gloop, (2, 2))
+gx = (N - layer.width) // 2
+gy = 58 - layer.height
+img.alpha_composite(layer, (gx, gy))
 
-# Augen – damit Gloop auch als kleines Icon ein Gesicht hat
+# Grimmiger Blick: schmale, leuchtende Augen mit schrägen Brauen
 top = gy + 2
-mid = N // 2
-for ex in (mid - 8, mid + 5):
-    d.rectangle([ex - 1, top + 9, ex + 5, top + 17], fill=OUTLINE + (255,))
-    d.rectangle([ex, top + 10, ex + 4, top + 16], fill=(255, 255, 255, 255))
-    d.rectangle([ex + 1, top + 12, ex + 3, top + 16], fill=(20, 30, 70, 255))
-    px[ex + 1, top + 12] = (255, 255, 255, 255)
+mid = N // 2 + 1
+for side in (-1, 1):
+    ex = mid + side * 7 - (3 if side < 0 else 0)
+    ey = top + 13
+    d.rectangle([ex - 1, ey - 1, ex + 4, ey + 3], fill=OUTLINE + (255,))
+    d.rectangle([ex, ey, ex + 3, ey + 2], fill=(255, 240, 150, 255))
+    d.rectangle([ex + (2 if side < 0 else 0), ey + 1, ex + (3 if side < 0 else 1), ey + 2], fill=(255, 150, 40, 255))
+    # Braue fällt zur Mitte hin ab
+    for k in range(6):
+        bx = ex - 1 + k
+        by = ey - 3 + (k // 2 if side < 0 else (5 - k) // 2)
+        d.point((bx, by), fill=OUTLINE + (255,))
+        d.point((bx, by - 1), fill=OUTLINE + (255,))
 
-# Goldene Krone (doppelt so groß) auf dem Kopf
-crown = [
-    "Y...Y...Y",
-    "YY.YYY.YY",
-    "YYYYYYYYY",
-    "YRYYBYYRY",
-    "YYYYYYYYY",
-]
-cols = {"Y": (255, 214, 72), "R": (230, 60, 70), "B": (90, 170, 255)}
-cw = len(crown[0]) * 2
-cx, cy = mid - cw // 2 + 2, top - 9
-cells = {(x, y) for y, row in enumerate(crown) for x, ch in enumerate(row) if ch != "."}
-for (x, y) in cells:
-    for ox in range(-1, 2):
-        for oy in range(-1, 2):
-            if (x + ox, y + oy) not in cells:
-                d.rectangle([cx + (x + ox) * 2, cy + (y + oy) * 2, cx + (x + ox) * 2 + 1, cy + (y + oy) * 2 + 1], fill=OUTLINE + (255,))
-for (x, y) in cells:
-    c = cols[crown[y][x]]
-    if crown[y][x] == "Y" and y == 2:
-        c = (255, 240, 160)
-    d.rectangle([cx + x * 2, cy + y * 2, cx + x * 2 + 1, cy + y * 2 + 1], fill=c + (255,))
-
-# Funkeln
-for sx, sy in ((50, 8), (8, 34), (42, 22)):
-    for ox, oy in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)):
-        px[sx + ox, sy + oy] = (255, 255, 255, 255)
+# Bodenschatten und feiner Rahmen
+d.ellipse([gx + 4, 56, gx + layer.width - 4, 61], fill=(0, 0, 0, 120))
+d.rectangle([0, 0, N - 1, N - 1], outline=(70, 90, 140, 255))
 
 img = img.convert("RGB")
 img.resize((512, 512), Image.NEAREST).save(os.path.join(OUT_DIR, "icon-512.png"), optimize=True)

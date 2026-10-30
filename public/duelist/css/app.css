@@ -3632,9 +3632,9 @@ canvas {
 /* Versus-Auswahl */
 .versus-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
-    width: min(960px, 100%);
+    width: min(780px, 100%);
     margin: auto;
 }
 

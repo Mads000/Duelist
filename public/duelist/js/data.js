@@ -514,6 +514,7 @@ const MODES = {
     solo:     { id: "solo",     name: "Gegen Bot",     sub: "Freies Duell gegen die KI" },
     local:    { id: "local",    name: "Lokales Duell", sub: "2 Spieler · Tastatur, Gamepad oder Handy" },
     training: { id: "training", name: "Training",      sub: "Kombos üben ohne Druck" },
+    team:     { id: "team",     name: "2 gegen 2",     sub: "Du + Bot-Partner gegen zwei Bots" },
     story:    { id: "story",    name: "Story",         sub: "Die Geschichte deines Champions" }
 }
 

@@ -24,15 +24,16 @@ class Match {
         this.map = { ...MAPS[rules.map || "sky"], dust: MAP_DUST[rules.map || "sky"] }
         this.fx = new Effects()
         const hp = rules.hp || [null, null]
-        this.fighters = [
-            new Fighter(champs[0], 0, this, { hp: hp[0] }),
-            new Fighter(champs[1], 1, this, { hp: hp[1] })
-        ]
+        // 2 gegen 2: Kämpfer 0+1 = Team Blau, 2+3 = Team Rot ("side" ist immer das Team)
+        this.team2 = champs.length === 4
+        this.fighters = champs.map((id, i) => new Fighter(id, this.team2 ? (i < 2 ? 0 : 1) : i, this, { hp: hp[i] ?? null, slot: i }))
+        // Anführer je Team (HUD, VS, Ergebnis)
+        this.leads = [this.fighters.find(f => f.side === 0), this.fighters.find(f => f.side === 1)]
         this.humanCount = humans.filter(Boolean).length
         this.fighters.forEach((f, i) => {
             f.controller = controllers[i]
-            f.isHuman = humans[i]
-            if (f.controller && f.controller.attach) f.controller.attach(f, this.fighters[1 - i], this)
+            f.isHuman = !!humans[i]
+            if (f.controller && f.controller.attach) f.controller.attach(f, this.targetFor(f), this)
             if (rules.infiniteEnergy && f.isHuman) f.energy = f.maxEnergy
         })
         this.bombs = []
@@ -122,14 +123,18 @@ class Match {
         this.updatePhase()
 
         const fighting = this.phase === "fight"
-        const [a, b] = this.fighters
-        const ia = this.readInput(a, fighting)
-        const ib = this.readInput(b, fighting)
-        if ((ia.pause || ib.pause) && !this.demo) this.emit("pauseRequest")
+        // jeder kämpft gegen den nächsten lebenden Gegner
+        for (const f of this.fighters) {
+            f.target = this.targetFor(f)
+            if (f.controller && f.controller.retarget) f.controller.retarget(f.target)
+        }
+        const inputs = this.fighters.map(f => this.readInput(f, fighting))
+        if (inputs.some(i => i.pause) && !this.demo) this.emit("pauseRequest")
 
-        a.update(sdt, b, ia)
-        b.update(sdt, a, ib)
-        this.separate(a, b)
+        this.fighters.forEach((f, i) => f.update(sdt, f.target, inputs[i]))
+        for (let i = 0; i < this.fighters.length; i++) {
+            for (let j = i + 1; j < this.fighters.length; j++) this.separate(this.fighters[i], this.fighters[j])
+        }
         this.updateBombs(sdt)
         this.updateProjectiles(sdt)
         this.updateZones(sdt)
@@ -400,6 +405,29 @@ class Match {
         return true
     }
 
+    // ---------------- Teams ----------------
+    enemiesOf(f) {
+        return this.fighters.filter(o => o.side !== f.side)
+    }
+
+    // nächster lebender Gegner (sonst irgendein Gegner)
+    targetFor(f) {
+        const foes = this.enemiesOf(f)
+        const alive = foes.filter(o => o.state !== "dead" && o.state !== "fall")
+        const pool = alive.length ? alive : foes
+        return pool.reduce((best, o) => Math.hypot(o.x - f.x, o.y - f.y) < Math.hypot(best.x - f.x, best.y - f.y) ? o : best, pool[0])
+    }
+
+    teamAlive(side) {
+        return this.fighters.some(o => o.side === side && o.state !== "dead" && o.hp > 0)
+    }
+
+    spawnFor(f) {
+        const base = ARENA.spawn[f.side]
+        if (!this.team2) return base
+        return { x: base.x, y: base.y + (f.slot % 2 ? 95 : -95) }
+    }
+
     // Spieler sollen nicht ineinander stehen
     separate(a, b) {
         if (a.state === "dead" || b.state === "dead") return
@@ -499,7 +527,7 @@ class Match {
                 p.y += p.vy * dt
                 p.dist += Math.hypot(p.vx, p.vy) * dt
                 if (Math.random() < dt * 30) this.fx.sparks(p.x, p.y - p.h, -Math.sign(p.vx) || -p.owner.facing, { count: 1, speed: 80, size: 5, color: "#ffd08a", color2: "#ff7a2a" })
-                const def = this.fighters[1 - p.owner.side]
+                const def = this.enemiesOf(p.owner).find(e => e.state !== "dead" && Math.abs(e.x - p.x) < 34 && Math.abs(e.y - p.y) < COMBAT.depthReach) || this.targetFor(p.owner)
                 const touching = Math.abs(def.x - p.x) < 34 && Math.abs(def.y - p.y) < COMBAT.depthReach
                 let boom = false
                 if (touching && def.state !== "dead") {
@@ -581,9 +609,10 @@ class Match {
             z.t += dt
             if (!z.done && z.t >= z.hitAt) {
                 z.done = true
-                const def = this.fighters[1 - z.owner.side]
-                const inside = Math.hypot((def.x - z.x) / z.radius, (def.y - z.y) / (z.radius * 0.5)) <= 1
-                if (inside) this.tryHit(z.owner, def, z.move, 0, { x: z.x, y: z.y - 1 })
+                for (const def of this.enemiesOf(z.owner)) {
+                    const inside = Math.hypot((def.x - z.x) / z.radius, (def.y - z.y) / (z.radius * 0.5)) <= 1
+                    if (inside) this.tryHit(z.owner, def, z.move, 0, { x: z.x, y: z.y - 1 })
+                }
                 for (const pr of this.props) if (pr.hp > 0 && Math.hypot((pr.x - z.x) / z.radius, (pr.y - z.y) / (z.radius * 0.5)) <= 1) this.damageProp(pr, z.owner)
             }
             if (z.t > z.hitAt + 0.4) this.zones.splice(i, 1)
@@ -647,7 +676,7 @@ class Match {
         this.vibrate(70)
         if (this.phase !== "fight") return
         for (const def of this.fighters) {
-            if (b.owner && def === b.owner) continue
+            if (b.owner && (def === b.owner || def.side === b.owner.side)) continue
             const inside = Math.hypot((def.x - b.tx) / b.radius, (def.y - b.ty) / (b.radius * 0.5)) <= 1
             if (!inside || def.state === "dead") continue
             if (def.invulnerable) {
@@ -671,7 +700,7 @@ class Match {
             this.fx.text(def.x, def.y - 120, String(dmg), { color: "#ff9a3c", size: 72 })
             if (def.hp <= 0) {
                 this.lastHit = { bomb: true }
-                this.knockout(b.owner || this.fighters[1 - def.side], def)
+                this.knockout(b.owner || this.targetFor(def), def)
             }
         }
     }
@@ -687,7 +716,7 @@ class Match {
             this.hazardT -= dt
             if (this.hazardT <= 0) {
                 this.hazardT = 5 + Math.random() * 4
-                const near = this.fighters[Math.floor(Math.random() * 2)]
+                const near = this.fighters[Math.floor(Math.random() * this.fighters.length)]
                 const [x, y] = ARENA.clamp(near.x + (Math.random() - 0.5) * 220, near.y + (Math.random() - 0.5) * 120, 40)
                 this.geysers.push({ x, y, t: 0, warn: 1.1, radius: 90 })
                 this.sound("geyserWarn")
@@ -712,7 +741,7 @@ class Match {
                 this.fx.text(f.x, f.y - 120, "10", { color: "#ff9a3c", size: 56 })
                 if (f.hp <= 0) {
                     this.lastHit = { hazard: true }
-                    this.knockout(this.fighters[1 - f.side], f)
+                    this.knockout(this.targetFor(f), f)
                 }
             }
         }
@@ -721,7 +750,7 @@ class Match {
             this.chaosT -= dt
             if (this.chaosT <= 0) {
                 this.chaosT = 1.8 + Math.random() * 2
-                const t = this.fighters[Math.floor(Math.random() * 2)]
+                const t = this.fighters[Math.floor(Math.random() * this.fighters.length)]
                 const [x, y] = ARENA.clamp(t.x + (Math.random() - 0.5) * 400, t.y + (Math.random() - 0.5) * 200, 30)
                 this.dropBomb(x, y)
             }
@@ -868,7 +897,7 @@ class Match {
             const pd = this.puddles[i]
             pd.t += dt
             pd.tick += dt
-            const victim = this.fighters[1 - pd.owner.side]
+            const victim = this.enemiesOf(pd.owner).find(e => Math.hypot((e.x - pd.x) / 95, (e.y - pd.y) / 42) <= 1 && e.state !== "dead") || this.targetFor(pd.owner)
             const inside = Math.hypot((victim.x - pd.x) / 95, (victim.y - pd.y) / 42) <= 1
             if (inside && victim.state !== "dead") {
                 victim.slowT = 0.2
@@ -917,7 +946,7 @@ class Match {
 
     // Ring-Out: Schaden, dann zurück auf die Arena (oder K.O.)
     ringOut(f) {
-        const opp = this.fighters[1 - f.side]
+        const opp = this.targetFor(f)
         let dmg = RING_OUT_DMG
         if ((this.training || this.netRole === "guest") && f.hp - dmg < 1) dmg = Math.max(0, Math.ceil(f.hp - 1))
         f.hp = Math.max(0, f.hp - dmg)
@@ -1067,7 +1096,7 @@ class Match {
         while (r.i < this.rec.length - 1 && this.rec[r.i + 1].t <= r.t) r.i++
         if (!r.boom && r.i >= r.koIdx) {
             r.boom = true
-            const loser = this.rec[r.i].f[1 - this.roundWinner]
+            const loser = this.rec[r.i].f[this.koIndex]
             this.fx.sparks(loser.x, loser.y - 60, 1, { count: 40, speed: 900, spread: 3, size: 9 })
             this.fx.ring(loser.x, loser.y, { radius: 260, color: "rgba(255,255,255,0.95)", life: 0.7, width: 16 })
             this.sound("hit", { heavy: true })
@@ -1106,6 +1135,17 @@ class Match {
     // ---------------- Rundenende ----------------
     knockout(winner, loser) {
         if (this.phase !== "fight") return
+        if (this.team2 && this.teamAlive(loser.side)) {
+            this.fx.text(loser.x, loser.y - 130, "K.O.!", { color: "#ff6a6a", size: 40, life: 1.2 })
+            this.fx.ring(loser.x, loser.y, { radius: 160, color: "rgba(255,255,255,0.9)", life: 0.5, width: 10 })
+            this.sound("ko")
+            this.addShake(18)
+            this.hitstop = 0.12
+            this.lastHit = null
+            this.emit("teamKo", { winner, loser })
+            return
+        }
+        this.koIndex = this.fighters.indexOf(loser)
         this.setPhase("ko")
         this.roundResolved = false
         this.roundWinner = winner.side
@@ -1158,11 +1198,15 @@ class Match {
 
     endRound() {
         if (this.phase !== "fight") return
-        const [a, b] = this.fighters
         this.setPhase("timeup")
         this.roundResolved = false
-        const ra = a.hp / a.maxHp
-        const rb = b.hp / b.maxHp
+        // Zeit abgelaufen: Team mit mehr Leben (anteilig) gewinnt
+        const share = side => {
+            const team = this.fighters.filter(f => f.side === side)
+            return team.reduce((s, f) => s + Math.max(0, f.hp) / f.maxHp, 0) / team.length
+        }
+        const ra = share(0)
+        const rb = share(1)
         this.roundWinner = Math.abs(ra - rb) < 0.001 ? -1 : ra > rb ? 0 : 1
         this.emit("timeUp")
         this.emit("banner", { text: "TIME!", kind: "ko", time: 1.2 })
@@ -1177,7 +1221,7 @@ class Match {
             return
         }
         this.wins[w]++
-        const f = this.fighters[w]
+        const f = this.leads[w]
         const perfect = f.hp >= f.maxHp
         this.emit("roundWin", { side: w, perfect, hp: f.hp, maxHp: f.maxHp, timeLeft: this.timer })
         this.emit("banner", {
@@ -1191,8 +1235,9 @@ class Match {
 
     winnerName(side) {
         if (this.demo) return this.fighters[side].champ.name.toUpperCase()
+        if (this.team2) return side === 0 ? "TEAM BLAU" : "TEAM ROT"
         if (this.localSide !== undefined) return side === this.localSide ? "DU" : "GEGNER"
-        if (this.humanCount === 1) return side === 0 ? "DU" : this.fighters[1].champ.name.toUpperCase()
+        if (this.humanCount === 1) return side === 0 ? "DU" : this.leads[1].champ.name.toUpperCase()
         return side === 0 ? "SPIELER 1" : "SPIELER 2"
     }
 
@@ -1224,7 +1269,7 @@ class Match {
         this.rec.length = 0
         this.koTime = undefined
         this.fx.clear()
-        this.fighters.forEach((f, i) => f.reset(ARENA.spawn[i]))
+        this.fighters.forEach(f => f.reset(this.spawnFor(f)))
         this.koTarget = null
         this.introStep = -1
         this.setPhase("intro")
@@ -1246,7 +1291,7 @@ class Match {
         const me = this.localSide !== undefined ? this.fighters[this.localSide] : this.humanCount === 1 ? this.fighters.find(f => f.isHuman) : null
         let cx, cy, needW, needH
         if (me) {
-            const op = this.fighters[1 - me.side]
+            const op = this.targetFor(me)
             cx = me.x
             cy = me.y - 70
             needW = Math.abs(op.x - me.x) * 2 + 460
@@ -1261,7 +1306,7 @@ class Match {
         zoom = Math.max(cover * (me ? 0.8 : 1), Math.min(cover * 1.45, zoom))
 
         if (this.phase === "replay") {
-            const snap = this.rec[this.replay.i].f[1 - this.roundWinner]
+            const snap = this.rec[this.replay.i].f[this.koIndex]
             cx = snap.x
             cy = snap.y - 60
             zoom = cover * 1.6
@@ -1361,6 +1406,7 @@ class Match {
         // Effekte darüber in Pixel-Auflösung: Funken, Ringe, Rauch, Fähigkeiten, Zahlen
         const top = this.pixel.begin(w, h, cam, sx, sy, px)
         if (this.phase !== "replay") for (const f of drawables) f.drawFx(top)
+        if (this.team2 && this.phase !== "replay") this.drawTeamBars(top)
         this.fx.draw(top)
         this.fx.drawTexts(top)
         this.pixel.end(ctx)
@@ -1415,6 +1461,24 @@ class Match {
             g.addColorStop(1, `rgba(200,0,20,${pulse})`)
             ctx.fillStyle = g
             ctx.fillRect(0, 0, w, h)
+        }
+    }
+
+    drawTeamBars(ctx) {
+        for (const f of this.fighters) {
+            if (f.state === "dead" || f.state === "fall") continue
+            const x = f.x - 34
+            const y = f.y - 112
+            ctx.fillStyle = "rgba(10,10,30,0.75)"
+            ctx.fillRect(x - 3, y - 3, 74, 13)
+            ctx.fillStyle = SIDE_COLORS[f.side]
+            ctx.fillRect(x, y, 68 * Math.max(0, f.hp) / f.maxHp, 7)
+            if (f.isHuman) {
+                // Pfeil über dem eigenen Kämpfer
+                ctx.fillStyle = "#ffffff"
+                ctx.fillRect(f.x - 9, y - 18, 18, 6)
+                ctx.fillRect(f.x - 3, y - 12, 6, 6)
+            }
         }
     }
 
@@ -1636,7 +1700,7 @@ class Match {
         const r = this.rec[this.replay.i]
         const order = [...r.f].sort((a, b) => a.y - b.y)
         for (const s of order) {
-            const f = this.fighters.find(ff => ff.champId === s.champId && r.f.indexOf(s) === ff.side)
+            const f = this.fighters[r.f.indexOf(s)]
             const img = champImage(s.champId, s.anim.file)
             if (!f || !img) continue
             const g = f.geom

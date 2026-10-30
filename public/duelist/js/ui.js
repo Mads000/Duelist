@@ -6,7 +6,7 @@ const $ = (sel, root = document) => root.querySelector(sel)
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel))
 
 const STAT_LABELS = { tempo: "Tempo", kraft: "Kraft", reichweite: "Reichweite" }
-const SINGLE_PICK_MODES = ["arcade", "training", "story", "online"]
+const SINGLE_PICK_MODES = ["arcade", "training", "story", "online", "team"]
 
 const UI = {
     current: null,
@@ -373,7 +373,7 @@ const UI = {
     renderSelect(resetSides = true) {
         const st = this.select
         const m = st.mode
-        const vsBot = m === "solo"
+        const vsBot = m === "solo" || m === "team"
         const pill = $("#selStep")
         pill.textContent = st.step === 0 ? (vsBot || st.single ? "Wähle deinen Champion" : "Spieler 1 wählt")
             : st.step === 1 ? (vsBot ? "Wähle den Gegner" : "Spieler 2 wählt") : "Bereit?"
@@ -388,9 +388,9 @@ const UI = {
         $(".sel-stage").style.gridTemplateColumns = st.single ? "minmax(0,1fr) minmax(0,2.1fr)" : ""
 
         $("#difficulty").hidden = !vsBot
-        $("#mapPick").hidden = !(["solo", "local", "training"].includes(m) || (m === "online" && Net.role === "host"))
+        $("#mapPick").hidden = !(["solo", "local", "training", "team"].includes(m) || (m === "online" && Net.role === "host"))
         $("#dummyPick").hidden = m !== "training"
-        $("#chaosToggle").hidden = !["solo", "local"].includes(m)
+        $("#chaosToggle").hidden = !["solo", "local", "team"].includes(m)
         for (const b of $$("#difficulty button")) b.classList.toggle("on", b.dataset.diff === App.config.difficulty)
         for (const b of $$("#mapPick button")) b.classList.toggle("on", b.dataset.map === (App.config.map || "sky"))
         for (const b of $$("#dummyPick button")) b.classList.toggle("on", b.dataset.dummy === (App.config.dummy || "stand"))
@@ -461,10 +461,14 @@ const UI = {
     buildHud(match) {
         this.hudCache = { hp: [-1, -1], lag: [-1, -1], energy: [-1, -1], guard: [-1, -1], wins: [-1, -1], sp: [null, null], timer: -1, ready: [null, null] }
         this.hudPreviews = this.hudPreviews || []
-        for (const f of match.fighters) {
+        for (const f of match.leads) {
             const el = $(`.hud-player[data-side="${f.side}"]`)
             let name = f.champ.name
-            if (match.humanCount === 1 && f.side === 1) name += match.training ? " <small>Training</small>" : ` <small>BOT · ${DIFFICULTIES[match.fighters[1].controller.diff ? match.fighters[1].controller.diff.id : "normal"].name}</small>`
+            if (match.humanCount === 1 && f.side === 1) name += match.training ? " <small>Training</small>" : ` <small>BOT · ${DIFFICULTIES[match.leads[1].controller.diff ? match.leads[1].controller.diff.id : "normal"].name}</small>`
+            if (match.team2) {
+                const mate = match.fighters.find(m => m.side === f.side && m !== f)
+                name = `${f.champ.name} <small>& ${mate.champ.name}</small>`
+            }
             $(".hud-name", el).innerHTML = name
             $(".hp-text", el).textContent = match.localSide !== undefined ? (f.side === match.localSide ? "Du" : "Gegner (online)")
                 : match.humanCount === 2 ? `Player ${f.side + 1}` : f.side === 0 ? "Player 1" : (match.training ? "Dummy" : "CPU")
@@ -499,7 +503,7 @@ const UI = {
         for (const side of [0, 1]) {
             const el = $(`.hud-keys[data-side="${side}"]`)
             const keys = layouts[side]
-            const show = keys && !isTouchDevice() && !Link.padFor(side) && match.fighters[side].isHuman
+            const show = keys && !isTouchDevice() && !Link.padFor(side) && match.leads[side].isHuman
             el.hidden = !show
             if (show) el.innerHTML = `<b>${match.humanCount === 2 && match.localSide === undefined ? "P" + (side + 1) : "Steuerung"}</b>${keys.join("")}<small>Zum Gegner + Schwer = Spezialangriff · Hoch/Runter + Angriff = nach oben/unten</small>`
         }
@@ -508,7 +512,7 @@ const UI = {
     updateHud(match) {
         const c = this.hudCache
         if (!c) return
-        for (const f of match.fighters) {
+        for (const f of match.leads) {
             const el = $(`.hud-player[data-side="${f.side}"]`)
             const hp = Math.ceil(f.hp)
             if (c.hp[f.side] !== hp) {
@@ -622,7 +626,7 @@ const UI = {
     showVs(match) {
         const vs = $("#vs")
         this.vsPreviews = this.vsPreviews || []
-        match.fighters.forEach((f, i) => {
+        match.leads.forEach((f, i) => {
             const side = $(`.vs-side.p${i + 1}`, vs)
             $(".vs-name", side).textContent = f.champ.name
             $(".vs-sub", side).textContent = match.humanCount === 2 ? `Player ${i + 1}` : i === 0 ? "Du" : (match.training ? "Trainingspuppe" : "CPU · " + (f.controller.diff ? f.controller.diff.name : ""))
@@ -785,14 +789,14 @@ const UI = {
         const t = $("#resTitle")
         t.textContent = title || (solo ? (won ? "YOU WIN!" : "YOU LOSE") : `PLAYER ${winner + 1} WINS`)
         t.className = "res-title " + (solo ? (won ? "win" : "lose") : "p" + (winner + 1))
-        const opp = match.fighters[online ? 1 - match.localSide : 1]
+        const opp = match.leads[online ? 1 - match.localSide : 1]
         $("#resSub").textContent = sub || (solo
             ? `gegen ${opp.champ.name} · ${match.map.name}`
-            : `${match.fighters[winner].champ.name} beherrscht die Arena`)
+            : `${match.team2 ? (winner === 0 ? "Team Blau" : "Team Rot") : match.leads[winner].champ.name} beherrscht die Arena`)
         $("#resScore").innerHTML = `<span class="p1">${match.wins[0]}</span><i>:</i><span class="p2">${match.wins[1]}</span>`
 
         this.resPreviews = this.resPreviews || []
-        for (const f of match.fighters) {
+        for (const f of match.leads) {
             const el = $(`.res-fighter[data-side="${f.side}"]`)
             el.classList.toggle("winner", f.side === winner)
             $(".res-name", el).textContent = solo ? (f.side === 0 ? "Du · " : "CPU · ") + f.champ.name : `P${f.side + 1} · ${f.champ.name}`
@@ -805,7 +809,7 @@ const UI = {
             ["Schaden", "damage"], ["Treffer", "hits"], ["Beste Kombo", "maxCombo"], ["Konter", "counters"],
             ["Geblockt", "blocked"], ["Perfekt geblockt", "perfect"], ["Ausgewichen", "dodges"], ["Fähigkeiten", "abilities"]
         ]
-        const [a, b] = match.fighters
+        const [a, b] = match.leads
         $("#resStats").innerHTML = rows.map(([label, key]) => {
             const va = Math.round(a.stats[key])
             const vb = Math.round(b.stats[key])

@@ -230,6 +230,14 @@ const App = {
             this.controllers = net === "host" ? [local, remote] : [remote, local]
             return this.controllers
         }
+        if (mode === "team") {
+            const diff = (opponent && opponent.difficulty) || "normal"
+            this.controllers = [
+                new Controller([new KeyboardSource(keymap("solo")), new GamepadSource("any"), new PhoneSource(0), new PhoneSource(1), ...touch]),
+                new BotController(diff), new BotController(diff), new BotController(diff)
+            ]
+            return this.controllers
+        }
         if (mode === "local") {
             p1 = new Controller([new KeyboardSource(keymap("p1")), new GamepadSource(0), new PhoneSource(0), ...touch])
             p2 = new Controller([new KeyboardSource(keymap("p2")), new GamepadSource(1), new PhoneSource(1)])
@@ -258,7 +266,7 @@ const App = {
             rules: { ...rules, net },
             champs,
             controllers: this.buildControllers(rules.mode, opponent, net),
-            humans: [true, two],
+            humans: rules.mode === "team" ? [true, false, false, false] : [true, two],
             settings: { ...GameSettings.get() },
             onEvent: (type, data, m) => this.onMatchEvent(type, data, m)
         })
