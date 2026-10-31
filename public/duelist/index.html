@@ -19,7 +19,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/app.css?v=3.0.43">
+    <link rel="stylesheet" href="css/app.css?v=3.0.46">
 </head>
 
 <body>
@@ -92,6 +92,22 @@
                 </div>
             </div>
         </div>
+    </section>
+
+    <!-- ================= PROFILE ================= -->
+    <section id="screen-profiles" class="screen scroll">
+        <header class="screen-head">
+            <button class="back-btn" data-back aria-label="Zurück">‹</button>
+            <h2>Wer spielt?</h2>
+        </header>
+        <div class="profile-grid" id="profileGrid"></div>
+        <div class="profile-actions">
+            <button class="btn" id="pfNew">+ Neues Profil</button>
+            <button class="btn" id="pfManage">Aktives Profil verwalten</button>
+            <button class="btn" id="pfReceive">📱 Profil empfangen</button>
+        </div>
+        <div class="profile-panel glass" id="profilePanel" hidden></div>
+        <p class="shop-hint">Jedes Profil hat eigenes Gold, eigene Skins, Level und Rang. Alles bleibt auf diesem Gerät – zum Mitnehmen aufs Handy: „Auf anderes Gerät übertragen“.</p>
     </section>
 
     <!-- ================= TRAINING ================= -->
@@ -433,6 +449,7 @@
                 <label class="toggle"><input type="checkbox" data-setting="vibration"><span></span>Vibration (Handy)</label>
                 <label class="toggle"><input type="checkbox" data-setting="fullscreen"><span></span>Vollbild beim Kampf (Handy)</label>
                 <label class="toggle"><input type="checkbox" data-setting="showFps"><span></span>FPS anzeigen</label>
+                <label class="toggle"><input type="checkbox" data-setting="autoFight"><span></span>🤖 Cheat: Auto-Kampf (F8)</label>
                 <button class="btn small" id="resetRecord">Bilanz zurücksetzen</button>
             </div>
             <div class="glass panel keys-panel">
@@ -557,26 +574,27 @@
     <div id="toast"></div>
     <div id="wipe"></div>
 
-    <script src="js/arena_shape.js?v=3.0.43"></script>
-    <script src="js/data.js?v=3.0.43"></script>
-    <script src="js/audio.js?v=3.0.43"></script>
-    <script src="js/settings.js?v=3.0.43"></script>
-    <script src="js/assets.js?v=3.0.43"></script>
-    <script src="js/input.js?v=3.0.43"></script>
-    <script src="js/link.js?v=3.0.43"></script>
-    <script src="js/pad.js?v=3.0.43"></script>
-    <script src="js/fx.js?v=3.0.43"></script>
-    <script src="js/arena.js?v=3.0.43"></script>
-    <script src="js/fighter.js?v=3.0.43"></script>
-    <script src="js/ai.js?v=3.0.43"></script>
-    <script src="js/match.js?v=3.0.43"></script>
-    <script src="js/ui.js?v=3.0.43"></script>
-    <script src="js/modes.js?v=3.0.43"></script>
-    <script src="js/progress.js?v=3.0.43"></script>
-    <script src="js/shop.js?v=3.0.43"></script>
-    <script src="js/net.js?v=3.0.43"></script>
-    <script src="js/tutorial.js?v=3.0.43"></script>
-    <script src="js/main.js?v=3.0.43"></script>
+    <script src="js/arena_shape.js?v=3.0.46"></script>
+    <script src="js/data.js?v=3.0.46"></script>
+    <script src="js/audio.js?v=3.0.46"></script>
+    <script src="js/settings.js?v=3.0.46"></script>
+    <script src="js/assets.js?v=3.0.46"></script>
+    <script src="js/input.js?v=3.0.46"></script>
+    <script src="js/link.js?v=3.0.46"></script>
+    <script src="js/pad.js?v=3.0.46"></script>
+    <script src="js/fx.js?v=3.0.46"></script>
+    <script src="js/arena.js?v=3.0.46"></script>
+    <script src="js/fighter.js?v=3.0.46"></script>
+    <script src="js/ai.js?v=3.0.46"></script>
+    <script src="js/match.js?v=3.0.46"></script>
+    <script src="js/ui.js?v=3.0.46"></script>
+    <script src="js/modes.js?v=3.0.46"></script>
+    <script src="js/progress.js?v=3.0.46"></script>
+    <script src="js/shop.js?v=3.0.46"></script>
+    <script src="js/profiles.js?v=3.0.46"></script>
+    <script src="js/net.js?v=3.0.46"></script>
+    <script src="js/tutorial.js?v=3.0.46"></script>
+    <script src="js/main.js?v=3.0.46"></script>
 </body>
 
 </html>

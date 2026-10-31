@@ -154,6 +154,7 @@ const Progress = {
         const need = this.need(d.level)
         return `<input class="pc-name" id="playerName" maxlength="14" placeholder="Dein Name ✎" spellcheck="false" autocomplete="off" aria-label="Dein Name">
             <button class="gold-pill" title="Shop">${Shop.goldHtml()}</button>
+            <button class="btn small mp-switch" id="profileSwitch" title="Profil wechseln">⇄ Profil</button>
             <div class="pc-level"><b>LEVEL ${d.level}</b><div class="xp-bar"><i style="transform:scaleX(${d.xp / need})"></i></div><span>${d.xp} / ${need} XP</span></div>`
     },
 

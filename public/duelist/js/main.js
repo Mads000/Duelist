@@ -78,6 +78,11 @@ const App = {
             if (params.get("map")) this.config.map = params.get("map")
             Modes.begin(auto)
             if (this.state === "ladder") Modes.ladderGo()
+        } else if (params.has("profile")) {
+            // QR-Code zum Übertragen eines Profils gescannt
+            history.replaceState(null, "", location.pathname)
+            this.setState("menu")
+            ProfileUI.open({ mode: "receive", code: (params.get("profile") || "").toUpperCase(), auto: true })
         } else {
             this.setState("title")
             UI.show("title")
@@ -87,7 +92,9 @@ const App = {
                 Sound.play("coin")
                 Music.play("menu")
                 this.setState("menu")
-                UI.show("menu")
+                // mehrere Profile auf dem Gerät: erst fragen, wer spielt
+                if (Profiles.data.list.length > 1) UI.show("profiles")
+                else UI.show("menu")
             }
             document.getElementById("screen-title").addEventListener("pointerup", start)
             Keyboard.listeners.add(code => { if (code !== "Escape") start() })
@@ -208,12 +215,17 @@ const App = {
         }
         if (["ladder", "continue", "entry", "pad"].includes(cur)) return
         if (cur === "lessons") return UI.show("trainhub")
+        if (cur === "profiles") ProfileSync.close()
         this.setState("menu")
         UI.show("menu")
     },
 
     bindGlobalKeys() {
         Keyboard.listeners.add(code => {
+            if (code === "F8") {
+                if (this.match && !this.match.netRole) Cheats.toggle(this.match)
+                return
+            }
             if (code === "Escape") {
                 if (this.state === "game") this.pause()
                 else if (this.state === "paused" && UI.current === "pause") this.resume()
@@ -221,7 +233,7 @@ const App = {
                 return
             }
             // Pfeiltasten im Menü (Auswahl + Optionen)
-            if (this.state !== "game" && UI.current !== "entry" && UI.current !== "title" && !document.activeElement?.matches("input[type=range]")) {
+            if (this.state !== "game" && UI.current !== "entry" && UI.current !== "title" && !document.activeElement?.matches("input:not([type=checkbox]), textarea")) {
                 const dirs = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" }
                 if (dirs[code]) Nav.move(dirs[code])
             }
@@ -281,6 +293,7 @@ const App = {
             onEvent: (type, data, m) => this.onMatchEvent(type, data, m)
         })
         Shop.applySkins(this.match)
+        Cheats.apply(this.match)
         this.match.setView(this.w, this.h)
         UI.buildHud(this.match)
         UI.hideBanner()
@@ -313,6 +326,7 @@ const App = {
 
     resume() {
         if (this.state !== "paused" || !this.match) return
+        Cheats.apply(this.match) // falls in den Optionen umgeschaltet
         this.match.paused = false
         this.last = performance.now()
         this.setState("game")

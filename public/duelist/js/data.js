@@ -607,5 +607,6 @@ const DEFAULT_SETTINGS = {
     showFps: false,
     fullscreen: true,
     replay: true,
+    autoFight: false,   // Cheat: KI kämpft, man läuft nur (F8)
     name: ""            // eigener Spielername (Menü, HUD, Highscore)
 }

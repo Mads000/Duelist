@@ -1349,16 +1349,17 @@ class Match {
             const op = this.targetFor(me)
             cx = me.x
             cy = me.y - 70
-            needW = Math.abs(op.x - me.x) * 2 + 460
-            needH = Math.abs(op.y - me.y) * 2 + 400
+            needW = Math.abs(op.x - me.x) * 2 + 820
+            needH = Math.abs(op.y - me.y) * 2 + 640
         } else {
             cx = (a.x + b.x) / 2
             cy = (a.y + b.y) / 2 - 70
-            needW = Math.abs(a.x - b.x) + 560
-            needH = Math.abs(a.y - b.y) + 440
+            needW = Math.abs(a.x - b.x) + 860
+            needH = Math.abs(a.y - b.y) + 660
         }
         let zoom = Math.min(w / needW, h / needH)
-        zoom = Math.max(cover * (me ? 0.8 : 1), Math.min(cover * 1.45, zoom))
+        // etwas weiter weg, damit man mehr von der Arena sieht
+        zoom = Math.max(cover * (me ? 0.8 : 1), Math.min(cover * 1.12, zoom))
 
         if (this.phase === "replay") {
             const snap = this.rec[this.replay.i].f[this.koIndex]

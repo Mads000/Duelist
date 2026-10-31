@@ -328,3 +328,71 @@ class BotController {
         return false
     }
 }
+
+// ============================================================
+//  Cheat "Auto-Kampf": Du läufst, die Legenden-KI kämpft.
+//  Ohne eigene Bewegung übernimmt sie auch das Laufen.
+// ============================================================
+class AutoFightController {
+    constructor(inner) {
+        this.inner = inner
+        this.bot = new BotController("nightmare")
+    }
+
+    attach(me, op, match) {
+        if (this.inner.attach) this.inner.attach(me, op, match)
+        this.bot.attach(me, op, match)
+    }
+
+    retarget(op) {
+        if (this.inner.retarget) this.inner.retarget(op)
+        this.bot.retarget(op)
+    }
+
+    read() {
+        const inp = this.inner.read()
+        const out = this.bot.read()
+        out.pause = inp.pause
+        const walking = Math.hypot(inp.mx, inp.my) > 0.2
+        // Beim Ausweichen gibt die KI die Richtung vor, sonst läufst du
+        if (walking && !out.dash) {
+            // KI will blocken (= rückwärts halten) – mit eigener Laufrichtung per Block-Taste
+            const match = this.bot.match
+            if (match && match.time < this.bot.blockUntil) out.block = true
+            out.mx = inp.mx
+            out.my = inp.my
+        }
+        return out
+    }
+
+    destroy() {
+        if (this.inner.destroy) this.inner.destroy()
+    }
+}
+
+const Cheats = {
+    on() {
+        return !!GameSettings.get().autoFight
+    },
+
+    // Nur der eigene Kämpfer (Spieler 1), nie online
+    apply(match) {
+        if (!match || match.demo || match.netRole) return
+        const f = match.fighters[0]
+        if (!f || !f.isHuman || !f.controller) return
+        const auto = f.controller instanceof AutoFightController
+        if (this.on() && !auto) {
+            f.controller = new AutoFightController(f.controller)
+            f.controller.attach(f, match.targetFor(f), match)
+        } else if (!this.on() && auto) {
+            f.controller = f.controller.inner
+        }
+    },
+
+    toggle(match) {
+        GameSettings.set("autoFight", !this.on())
+        this.apply(match)
+        UI.toast(this.on() ? "🤖 AUTO-KAMPF AN – du läufst, die KI kämpft" : "AUTO-KAMPF AUS")
+        Sound.play(this.on() ? "energy" : "uiBack")
+    }
+}

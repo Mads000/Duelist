@@ -34,9 +34,10 @@ const GameSettings = {
     }
 }
 
-// Eigener Name des Spielers (leer = noch keiner vergeben)
+// Name des aktiven Profils
 function playerName() {
-    return String(GameSettings.get().name || "").trim()
+    const p = Profiles.current()
+    return p ? p.name : ""
 }
 
 const emptyRecord = () => ({
@@ -45,11 +46,116 @@ const emptyRecord = () => ({
     highscores: { arcade: [] }
 })
 
-const PlayerRecord = {
-    data: readStorage("duelist.record", emptyRecord()),
+// PIN nur als Schloss gegen Geschwister – ohne Server gibt es keine echte Sicherheit
+function pinHash(pin) {
+    let h = 0x811c9dc5
+    for (const c of "duelist:" + pin) h = Math.imul(h ^ c.charCodeAt(0), 0x01000193) >>> 0
+    return h.toString(16)
+}
+
+// ---------------- Profile: mehrere Spieler auf einem Gerät ----------------
+// Jedes Profil hat einen eigenen Spielstand (Gold, Skins, Level, Rang, Highscores)
+const Profiles = {
+    data: readStorage("duelist.profiles", { list: [], current: null }),
 
     save() {
-        writeStorage("duelist.record", this.data)
+        writeStorage("duelist.profiles", this.data)
+    },
+
+    key(id) {
+        return "duelist.record." + id
+    },
+
+    get(id) {
+        return this.data.list.find(p => p.id === id)
+    },
+
+    current() {
+        return this.get(this.data.current)
+    },
+
+    init() {
+        if (!this.data.list.length) {
+            // erster Start mit Profilen: der bisherige Spielstand wird zum ersten Profil
+            const p = this.create(String(GameSettings.get().name || "").trim() || "Spieler 1")
+            try {
+                const old = localStorage.getItem("duelist.record")
+                if (old) localStorage.setItem(this.key(p.id), old)
+            } catch (e) {}
+        }
+        if (!this.current()) this.data.current = this.data.list[0].id
+        this.save()
+    },
+
+    uniqueName(name, exceptId = null) {
+        const base = String(name || "").replace(/[<>"&]/g, "").trim().slice(0, 14) || "Spieler"
+        const taken = n => this.data.list.some(p => p.id !== exceptId && p.name.toLowerCase() === n.toLowerCase())
+        let n = base
+        for (let i = 2; taken(n); i++) n = `${base.slice(0, 11)} ${i}`
+        return n
+    },
+
+    // pin: Klartext (neues Profil) oder fertiger Hash (übertragenes Profil)
+    create(name, { pin = "", pinIsHash = false, record = null } = {}) {
+        const p = {
+            id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+            name: this.uniqueName(name),
+            pin: pin ? (pinIsHash ? pin : pinHash(pin)) : ""
+        }
+        this.data.list.push(p)
+        if (record) writeStorage(this.key(p.id), record)
+        if (!this.data.current) this.data.current = p.id
+        this.save()
+        return p
+    },
+
+    switchTo(id) {
+        if (!this.get(id)) return
+        this.data.current = id
+        this.save()
+        PlayerRecord.data = readStorage(this.key(id), emptyRecord())
+    },
+
+    rename(id, name) {
+        const p = this.get(id)
+        if (!p || !String(name).trim()) return
+        p.name = this.uniqueName(name, id)
+        this.save()
+    },
+
+    setPin(id, pin) {
+        const p = this.get(id)
+        if (!p) return
+        p.pin = pin ? pinHash(pin) : ""
+        this.save()
+    },
+
+    checkPin(id, pin) {
+        const p = this.get(id)
+        return !!p && (!p.pin || p.pin === pinHash(pin))
+    },
+
+    remove(id) {
+        this.data.list = this.data.list.filter(p => p.id !== id)
+        try { localStorage.removeItem(this.key(id)) } catch (e) {}
+        if (!this.data.list.length) this.create("Spieler 1")
+        if (this.data.current === id || !this.current()) this.switchTo(this.data.list[0].id)
+        this.save()
+    },
+
+    // Kurzinfo für die Profilkarten, ohne das Profil zu laden
+    summary(id) {
+        const r = id === this.data.current ? PlayerRecord.data : readStorage(this.key(id), emptyRecord())
+        return { level: r.level || 1, gold: r.gold || 0, rp: r.rp || 0, wins: r.wins || 0 }
+    }
+}
+Profiles.init()
+
+const PlayerRecord = {
+    data: readStorage(Profiles.key(Profiles.data.current), emptyRecord()),
+
+    save() {
+        writeStorage(Profiles.key(Profiles.data.current), this.data)
     },
 
     addSoloResult(won, difficulty, champId) {

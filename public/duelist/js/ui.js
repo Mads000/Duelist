@@ -68,6 +68,9 @@ const UI = {
         this.renderRecord()
 
         $("#fightBtn").addEventListener("click", () => this.confirmSelection())
+        $("#pfNew").addEventListener("click", () => { ProfileUI.panel = { mode: "new" }; ProfileUI.renderPanel() })
+        $("#pfManage").addEventListener("click", () => { ProfileUI.panel = { mode: "manage" }; ProfileUI.renderPanel() })
+        $("#pfReceive").addEventListener("click", () => { ProfileUI.panel = { mode: "receive" }; ProfileUI.renderPanel() })
         $("#resumeBtn").addEventListener("click", () => App.resume())
         $("#restartBtn").addEventListener("click", () => App.restart())
         $("#quitBtn").addEventListener("click", () => App.quitToMenu())
@@ -105,6 +108,7 @@ const UI = {
         if (id === "lore") this.buildLore()
         if (id === "shop") Shop.render()
         if (id === "lessons") this.renderLessons()
+        if (id === "profiles") ProfileUI.render()
         if (id === "trainhub") {
             const n = (PlayerRecord.data.lessons || []).filter(isUnlocked).length
             $("#lessonCount").textContent = `Kombo, Spezialangriff und Fähigkeit jedes Champions – ${n}/${playableChampions().length} gelernt.`
@@ -127,9 +131,14 @@ const UI = {
         this.renderShopTile()
         const field = $("#playerName")
         field.value = playerName()
-        field.addEventListener("input", () => GameSettings.set("name", field.value.replace(/[<>]/g, "")))
+        // Name des Profils ändern (leer lassen = alter Name bleibt)
+        field.addEventListener("change", () => {
+            Profiles.rename(Profiles.data.current, field.value)
+            field.value = playerName()
+        })
         field.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === "Escape") field.blur() })
         $("#menuProfile .gold-pill").addEventListener("click", () => App.go("shop"))
+        $("#profileSwitch").addEventListener("click", () => App.go("profiles"))
         this.renderQuickChamp()
     },
 
