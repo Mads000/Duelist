@@ -233,6 +233,7 @@ class RemoteSource {
         })
         this.seen = [...c]
         if (st.b & 1) out.lightHeld = true
+        if (st.b & 32) out.block = true
     }
 
     destroy() {}
@@ -262,7 +263,7 @@ class NetTapController {
                 changed = true
             }
         })
-        const b = inp.lightHeld ? 1 : 0
+        const b = (inp.lightHeld ? 1 : 0) | (inp.block ? 32 : 0)
         if (b !== s.b) changed = true
         s.b = b
         const now = performance.now()

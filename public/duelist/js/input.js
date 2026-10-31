@@ -7,7 +7,7 @@
 const ACTIONS = ["light", "heavy", "dash", "ability"]
 
 function emptyInput() {
-    return { mx: 0, my: 0, light: false, heavy: false, dash: false, ability: false, lightHeld: false, pause: false }
+    return { mx: 0, my: 0, light: false, heavy: false, dash: false, ability: false, lightHeld: false, block: false, pause: false }
 }
 
 const Keyboard = {
@@ -61,6 +61,7 @@ class KeyboardSource {
             this.latch[a] = false
         }
         if (Keyboard.isDown(m.light)) out.lightHeld = true
+        if (Keyboard.isDown(m.block)) out.block = true
     }
 
     destroy() {
@@ -68,7 +69,7 @@ class KeyboardSource {
     }
 }
 
-// Standard-Belegung: A = leicht, X/RT = schwer, B/LB/LT = Ausweichen, Y/RB = Fähigkeit
+// Standard-Belegung: A = leicht, X/RT = schwer, B/LT = Ausweichen, Y/RB = Fähigkeit, LB = Blocken (halten)
 function readPadButtons(pad) {
     const b = i => !!(pad.buttons[i] && pad.buttons[i].pressed)
     let x = pad.axes[0] || 0
@@ -81,8 +82,9 @@ function readPadButtons(pad) {
         x, y,
         light: b(0),
         heavy: b(2) || b(7),
-        dash: b(1) || b(4) || b(6),
+        dash: b(1) || b(6),
         ability: b(3) || b(5),
+        block: b(4),
         pause: b(9)
     }
 }
@@ -111,11 +113,25 @@ class GamepadSource {
             for (const a of ACTIONS) if (st[a] && !prev[a]) out[a] = true
             if (st.pause && !prev.pause) out.pause = true
             if (st.light) out.lightHeld = true
+            if (st.block) out.block = true
             this.prev[pad.index] = st
         }
     }
 
     destroy() {}
+}
+
+// Rumpeln an den Gamepads eines Controllers (falls der Browser es kann)
+function rumblePads(controller, ms, strength) {
+    const ctrl = controller && controller.inner ? controller.inner : controller
+    if (!ctrl || !ctrl.sources) return
+    for (const s of ctrl.sources) {
+        if (!(s instanceof GamepadSource)) continue
+        for (const pad of s.pads()) {
+            const act = pad.vibrationActuator
+            if (act && act.playEffect) act.playEffect("dual-rumble", { duration: ms, strongMagnitude: strength, weakMagnitude: Math.min(1, strength + 0.2) }).catch(() => {})
+        }
+    }
 }
 
 // ---------------- Touch: schwebender Joystick + Buttons ----------------
@@ -129,7 +145,7 @@ class TouchSource {
         this.stickId = null
         this.center = { x: 0, y: 0 }
         this.latch = {}
-        this.held = { light: false }
+        this.held = { light: false, block: false }
         this.radius = 56
 
         this.zone.addEventListener("pointerdown", e => {
@@ -160,12 +176,12 @@ class TouchSource {
             btn.addEventListener("pointerdown", e => {
                 e.preventDefault()
                 this.latch[act] = true
-                if (act === "light") this.held.light = true
+                if (act in this.held) this.held[act] = true
                 btn.classList.add("pressed")
                 if (act !== "pause" && GameSettings.get().vibration && navigator.vibrate) navigator.vibrate(8)
             })
             const release = () => {
-                if (act === "light") this.held.light = false
+                if (act in this.held) this.held[act] = false
                 btn.classList.remove("pressed")
             }
             btn.addEventListener("pointerup", release)
@@ -214,12 +230,13 @@ class TouchSource {
         if (this.latch.pause) out.pause = true
         this.latch = {}
         if (this.held.light) out.lightHeld = true
+        if (this.held.block) out.block = true
     }
 
     reset() {
         this.release()
         this.latch = {}
-        this.held.light = false
+        this.held = { light: false, block: false }
     }
 
     destroy() {}

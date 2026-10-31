@@ -14,6 +14,7 @@ class Fighter {
         this.match = match
         this.controller = null
         this.isHuman = false
+        this.skin = "base"
         this.maxHp = this.champ.hp
         this.startHp = hp
         this.maxEnergy = this.champ.ability.maxEnergy || COMBAT.energyMax
@@ -183,7 +184,7 @@ class Fighter {
                 if (inp.dash && this.dashCd <= 0) this.startDash(inp, opp)
                 else if (this.stateT >= this.stun) this.toIdle()
                 // ab der Hälfte: Richtung gedrückt = sofort wieder laufen bzw. blocken
-                else if (this.stateT >= this.stun * 0.5 && Math.hypot(inp.mx, inp.my) > 0.3) {
+                else if (this.stateT >= this.stun * 0.5 && (inp.block || Math.hypot(inp.mx, inp.my) > 0.3)) {
                     this.toIdle()
                     this.updateFree(dt, opp, inp)
                 }
@@ -229,13 +230,13 @@ class Fighter {
         const toOpp = Math.sign(opp.x - this.x) || this.facing
         const oppVisible = opp.stealthT <= 0 && opp.state !== "dead"
 
-        // Vom Gegner weg drücken = Blocken – in jede Richtung (auch wenn er schräg, über oder unter dir steht)
+        // Block-Taste halten oder vom Gegner weg drücken = Blocken – in jede Richtung (auch wenn er schräg, über oder unter dir steht)
         const ox = opp.x - this.x
         const oy = opp.y - this.y
         const away = (inp.mx * ox + inp.my * oy) / (Math.hypot(ox, oy) || 1)
         const holdingBack = Math.hypot(inp.mx, inp.my) > 0.3 && (away < -0.35 || inp.mx * toOpp < -0.3)
         const near = dist < 700 && oppVisible
-        if (holdingBack && near) {
+        if (holdingBack && near || inp.block) {
             if (!this.wasGuarding) this.guardSince = this.match.time
             this.guarding = true
         }
@@ -251,7 +252,7 @@ class Fighter {
         this.mvy += (ty - this.mvy) * k
 
         // Blickrichtung: zum Gegner, wenn er nah ist oder man blockt – sonst in Laufrichtung
-        if (near && (dist < 420 || this.guarding)) this.facing = toOpp
+        if (oppVisible && (near && dist < 420 || this.guarding)) this.facing = toOpp
         else if (Math.abs(inp.mx) > 0.15) this.facing = Math.sign(inp.mx)
 
         this.moving = Math.hypot(this.mvx, this.mvy) > 40
@@ -806,7 +807,7 @@ class Fighter {
     }
 
     draw(ctx) {
-        const img = champImage(this.champId, this.anim.file)
+        const img = skinImage(this.champId, this.anim.file, this.skin)
         if (!img || !img.complete) return
         const g = this.geom
         const frame = this.frame

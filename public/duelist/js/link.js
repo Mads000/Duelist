@@ -101,7 +101,7 @@ const Link = {
                 setTimeout(() => conn.close(), 300)
                 return
             }
-            const pad = { conn, slot, state: { x: 0, y: 0, b: 0, c: [0, 0, 0, 0, 0] }, nav: { dir: null, c: [0, 0, 0, 0, 0] } }
+            const pad = { conn, slot, state: { x: 0, y: 0, b: 0, c: [0, 0, 0, 0, 0, 0] }, nav: { dir: null, c: [0, 0, 0, 0, 0, 0] } }
             this.pads.push(pad)
             this.send(pad, { t: "hi", slot })
             Sound.play("coin")
@@ -219,6 +219,7 @@ class PhoneSource {
         })
         this.seen = [...c]
         if (st.b & 1) out.lightHeld = true
+        if (st.b & 32) out.block = true
         pad.nav.c = [...c] // im Kampf nicht doppelt als Menü-Eingabe werten
     }
 

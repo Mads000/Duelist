@@ -83,8 +83,18 @@ class Match {
     vibrate(ms, fighter = null) {
         if (this.demo) return
         this.emit("vibrate", { ms, side: fighter ? fighter.side : null })
-        if (!this.settings.vibration || !navigator.vibrate) return
-        if (this.fighters.some(f => f.isHuman)) navigator.vibrate(ms)
+        if (!this.settings.vibration) return
+        // Gamepads rumpeln – wer getroffen wird, spürt es stärker
+        for (const f of this.fighters) if (f.isHuman) rumblePads(f.controller, ms, !fighter || f === fighter ? 0.9 : 0.35)
+        if (navigator.vibrate && this.fighters.some(f => f.isHuman)) navigator.vibrate(ms)
+    }
+
+    // Aufprall-Bild: Farbblitz + Speedlines vom Rand zur Mitte (Konter, Guard Break, Perfekt, Finisher)
+    impactFx(color, strength = 1) {
+        if (this.demo) return
+        this.impact = { t: 0, life: 0.22 * strength, color, seed: Math.floor(Math.random() * 1000) }
+        this.flash = Math.max(this.flash, 0.3 * strength)
+        this.flashColor = color
     }
 
     callout(fighter, text, color) {
@@ -102,6 +112,8 @@ class Match {
         const dt = realDt * (this.settings.gameSpeed || 1)
 
         this.flash = Math.max(0, this.flash - realDt * 3)
+        if (this.flash <= 0) this.flashColor = null
+        if (this.impact) this.impact.t += realDt
         this.shake = Math.max(0, this.shake - realDt * 60)
 
         if (this.hitstop > 0) {
@@ -288,6 +300,7 @@ class Match {
                 def.stats.taken += dmg
                 this.fx.sparks(hitX, hitY, dir, { count: 26, color: "#fff6a8", color2: "#ff8a3c", speed: 700 })
                 this.fx.text(def.x, def.y - 125, "GUARD BREAK!", { color: "#ffd84a", size: 46, life: 1.1 })
+                this.impactFx("255,216,74", 1.2)
                 this.sound("guardBreak")
                 this.hitstop = 0.12
                 this.addShake(18)
@@ -306,7 +319,7 @@ class Match {
                 this.sound("perfect")
                 this.hitstop = 0.1
                 this.slowmoT = Math.max(this.slowmoT, 0.14)
-                this.flash = Math.max(this.flash, 0.25)
+                this.impactFx("190,225,255", 0.8)
                 def.state = "block"
                 def.stateT = 0
                 def.stun = 0.08
@@ -335,6 +348,7 @@ class Match {
             if (def.guard <= 0) {
                 def.guardBreak()
                 this.fx.text(def.x, def.y - 125, "GUARD BREAK!", { color: "#ffd84a", size: 46, life: 1.1 })
+                this.impactFx("255,216,74", 1.2)
                 this.sound("guardBreak")
             }
             return true
@@ -354,6 +368,7 @@ class Match {
             att.stats.counters++
             this.fx.text(def.x, def.y - 150, "KONTER!", { color: "#ff7a5a", size: 40, life: 0.9 })
             this.sound("counter")
+            this.impactFx("255,122,90")
             this.emit("counter", { att })
         }
         if (att.powerT > 0) dmg *= 1.3
@@ -391,7 +406,9 @@ class Match {
         // Juice!
         this.fx.sparks(hitX, hitY, dir, { count: heavy ? 22 : 12, speed: heavy ? 700 : 480 })
         if (melee) this.fx.slash(hitX - att.facing * 20, hitY, att.facing, heavy ? "rgba(255,240,200,0.95)" : "rgba(255,255,255,0.85)", heavy)
-        this.fx.text(def.x, def.y - 110, String(dmg), { color: counter ? "#ff7a5a" : heavy ? "#ffd84a" : "#ffffff", size: heavy ? 46 : 34 })
+        // Zahlen wachsen mit der Kombo
+        const comboSize = Math.min(18, Math.max(0, att.comboCount - 2) * 3)
+        this.fx.text(def.x, def.y - 110, String(dmg), { color: counter ? "#ff7a5a" : heavy ? "#ffd84a" : "#ffffff", size: (heavy ? 46 : 34) + comboSize })
         this.sound("hit", { heavy })
         this.hitstop = heavy ? 0.085 : counter ? 0.065 : 0.035
         this.addShake(heavy ? 15 : 5)
@@ -1158,6 +1175,7 @@ class Match {
         this.slowmoT = fin.big ? 1.6 : 1.1
         this.hitstop = fin.big ? 0.28 : 0.15
         this.flash = 0.8
+        this.impactFx("255,255,255", fin.big ? 1.8 : 1.4)
         this.addShake(fin.big ? 40 : 30)
         this.sound("ko")
         if (fin.big) this.sound("guardBreak")
@@ -1280,6 +1298,43 @@ class Match {
     setView(w, h) {
         this.view.w = w
         this.view.h = h
+    }
+
+    // Speedlines: schmale Keile vom Bildrand Richtung Mitte
+    drawImpact(ctx, w, h) {
+        const im = this.impact
+        if (!im || im.t >= im.life) return
+        const k = 1 - im.t / im.life
+        const R = Math.hypot(w, h) / 2
+        let seed = im.seed
+        const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280
+        ctx.save()
+        ctx.translate(w / 2, h / 2)
+        ctx.fillStyle = `rgba(${im.color},${0.6 * k})`
+        ctx.beginPath()
+        for (let i = 0; i < 40; i++) {
+            const a = i / 40 * Math.PI * 2 + rnd() * 0.12
+            const spread = 0.01 + rnd() * 0.025
+            const inner = R * (0.42 + rnd() * 0.3 + (1 - k) * 0.2)
+            ctx.moveTo(Math.cos(a - spread) * R * 1.1, Math.sin(a - spread) * R * 1.1)
+            ctx.lineTo(Math.cos(a) * inner, Math.sin(a) * inner)
+            ctx.lineTo(Math.cos(a + spread) * R * 1.1, Math.sin(a + spread) * R * 1.1)
+        }
+        ctx.fill()
+        ctx.restore()
+    }
+
+    // Wenig Leben: roter Rand pulsiert wie ein Herzschlag
+    drawDanger(ctx, w, h) {
+        if (this.phase !== "fight") return
+        const me = this.localSide !== undefined ? this.fighters[this.localSide] : this.humanCount === 1 ? this.fighters.find(f => f.isHuman) : null
+        if (!me || me.hp <= 0 || me.hp / me.maxHp >= 0.25) return
+        const beat = Math.pow(Math.max(0, Math.sin(this.time * 7)), 6)
+        const g = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.hypot(w, h) / 2)
+        g.addColorStop(0, "rgba(200,0,0,0)")
+        g.addColorStop(1, `rgba(200,0,0,${0.28 + beat * 0.25})`)
+        ctx.fillStyle = g
+        ctx.fillRect(0, 0, w, h)
     }
 
     updateCamera(dt) {
@@ -1420,9 +1475,11 @@ class Match {
 
         // Bildschirm-Effekte
         if (this.flash > 0) {
-            ctx.fillStyle = `rgba(255,250,235,${Math.min(0.75, this.flash)})`
+            ctx.fillStyle = `rgba(${this.flashColor || "255,250,235"},${Math.min(0.75, this.flash)})`
             ctx.fillRect(0, 0, w, h)
         }
+        this.drawImpact(ctx, w, h)
+        this.drawDanger(ctx, w, h)
         if (this.phase === "ko" && this.phaseT < 1.6) {
             ctx.fillStyle = `rgba(10,5,20,${Math.min(0.35, this.phaseT * 0.5)})`
             ctx.fillRect(0, 0, w, h)
@@ -1751,7 +1808,7 @@ class Match {
         const order = [...r.f].sort((a, b) => a.y - b.y)
         for (const s of order) {
             const f = this.fighters[r.f.indexOf(s)]
-            const img = champImage(s.champId, s.anim.file)
+            const img = skinImage(s.champId, s.anim.file, f && f.skin)
             if (!f || !img) continue
             const g = f.geom
             ctx.save()

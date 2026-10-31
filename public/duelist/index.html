@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>DUELIST</title>
-    <meta name="description" content="DUELIST – Pixel-Duelle in der Arena über den Wolken. Schnelle Matches, Arcade, Story, gegen den Bot, zu zweit oder online.">
+    <meta name="description" content="DUELIST – Pixel-Duelle in der Arena über den Wolken. Schnelle Matches, Arcade, gegen den Bot, zu zweit oder online.">
     <meta name="theme-color" content="#091f5b">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,7 +19,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/app.css?v=3.0.38">
+    <link rel="stylesheet" href="css/app.css?v=3.0.43">
 </head>
 
 <body>
@@ -36,6 +36,7 @@
             <h1 class="logo chrome">DUELIST</h1>
             <div class="progress"><div class="progress-fill" id="loadFill"></div></div>
             <p class="dark" id="loadText">Lade Arena …</p>
+            <p class="load-tip" id="loadTip"></p>
         </div>
     </section>
 
@@ -51,33 +52,69 @@
 
     <!-- ================= HAUPTMENÜ ================= -->
     <section id="screen-menu" class="screen">
-        <div class="menu-wrap">
-            <div class="menu-center">
-            <h1 class="logo logo-menu chrome">DUELIST</h1>
-            <p class="menu-tag">Die Arena über den Wolken</p>
-            <nav class="menu-panel glass">
-                <div class="quick-row">
-                    <button class="btn start menu-arcade" data-go="quick" data-info="Schnelles Match: Sofort los – dein gewählter Champion gegen einen zufälligen Gegner, kurze 45-Sekunden-Runden. Perfekt für zwischendurch."><b>Schnelles Match</b><small>Sofort kämpfen · kurze Runden</small></button>
-                    <button class="btn quick-champ" data-go="quickpick" data-info="Champion wechseln: Wähle, mit wem du ins Schnelle Match gehst. Die Wahl bleibt gespeichert."><canvas id="quickPortrait" width="56" height="56"></canvas><span><small>Dein Champion</small><b id="quickName">Vanguard</b><em>Wechseln</em></span></button>
+        <div class="menu-layout">
+            <header class="menu-top">
+                <div class="menu-brand">
+                    <h1 class="logo logo-menu chrome">DUELIST</h1>
+                    <p class="menu-tag">Die Arena über den Wolken</p>
                 </div>
-                <div class="mode-grid">
+                <div class="menu-profile">
+                    <div class="mp-info glass" id="menuProfile"></div>
+                    <div class="mp-icons">
+                        <button class="btn icon-btn" data-go="lore" aria-label="Champions" data-info="Champions: Geschichte, Werte, Fähigkeit und Spezialangriff jedes Kämpfers."><svg viewBox="0 0 24 24"><path d="M5 3h14v4l-3 3v4l3 3v4H5v-4l3-3v-4L5 7z" /><path d="M9 21v-3h6v3" /></svg><span>Champions</span></button>
+                        <button class="btn icon-btn" data-go="scores" aria-label="Highscores" data-info="Highscores &amp; Profil: deine besten Arcade-Läufe und deine Statistik."><svg viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0z" /><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v4M8 20h8" /></svg><span>Highscores</span></button>
+                        <button class="btn icon-btn" data-go="controls" aria-label="Steuerung" data-info="Steuerung: Alle Tasten und Tipps zum Kampfsystem."><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="4" /><path d="M7 10v5M4.5 12.5h5M15 11h.01M18 14h.01" /></svg><span>Steuerung</span></button>
+                        <button class="btn icon-btn" data-go="controller" aria-label="Controller" data-info="Controller: Mach dein Handy zum Gamepad – QR-Code scannen oder Code eingeben."><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2" /><path d="M11 18h2" /></svg><span>Handy</span></button>
+                        <button class="btn icon-btn" data-go="settings" aria-label="Optionen" data-info="Optionen: Lautstärke, Runden, Tastenbelegung und mehr."><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" /></svg><span>Optionen</span></button>
+                    </div>
+                </div>
+            </header>
+            <div class="menu-body">
+                <nav class="menu-panel menu-list glass">
+                    <button class="btn start menu-arcade" data-go="quick" data-info="Schnelles Match: Sofort los – dein gewählter Champion gegen einen zufälligen Gegner, kurze 45-Sekunden-Runden. Perfekt für zwischendurch."><b>Schnelles Match</b><small>Sofort kämpfen · kurze Runden</small></button>
                     <button class="btn mode" data-go="arcade" data-info="Arcade: Kämpf dich durch 5 Gegner bis zum Endboss. Punkte für Treffer, Konter und Finisher – ab in die Highscores!"><b>Arcade</b><small>5 Gegner · Endboss</small></button>
                     <button class="btn mode" data-go="versus" data-info="Versus: Gegen den Bot, zu zweit an einem Gerät, online gegen einen Freund oder 2 gegen 2."><b>Versus</b><small>Bot · Lokal · Online · 2v2</small></button>
-                    <button class="btn mode" data-go="story" data-info="Story: Die Geschichte deines Champions – drei Rivalen, der Knochenkönig und ein eigenes Ende."><b>Story</b><small>Kapitel &amp; Ende</small></button>
-                    <button class="btn mode" data-go="training" data-info="Training: Übe Kombos, Würfe und Blocken gegen einen Dummy. Das Tutorial findest du unter „Steuerung“."><b>Training</b><small>Üben ohne Druck</small></button>
+                    <button class="btn mode" data-go="trainhub" data-info="Training: Freies Training gegen den Dummy, das Tutorial und „Champions kennenlernen“."><b>Training</b><small>Üben · Tutorial · Champions kennenlernen</small></button>
+                    <button class="btn mode menu-shop" data-go="shop" data-info="Shop: Kauf mit deinem Gold neue Skins für deine Champions – Gold gibt es für jedes Match und jede Aufgabe."><b>Shop</b><small>Skins für deine Champions</small><span class="gold-coin"></span></button>
+                    <p class="menu-info" id="menuInfo" aria-live="polite"></p>
+                </nav>
+                <div class="menu-tiles">
+                    <button class="tile glass tile-champ" data-go="quickpick" data-info="Champion wechseln: Wähle, mit wem du ins Schnelle Match gehst. Die Wahl bleibt gespeichert.">
+                        <canvas id="quickPortrait" width="200" height="200"></canvas>
+                        <span class="tile-text"><small>Dein Champion</small><b id="quickName">Vanguard</b><em>Wechseln</em></span>
+                    </button>
+                    <div class="tile glass tile-missions" id="tileMissions"></div>
+                    <button class="tile glass tile-shop" data-go="shop" id="tileShop" data-info="Shop: Kauf mit deinem Gold neue Skins für deine Champions.">
+                        <canvas width="140" height="140"></canvas>
+                        <span class="tile-text"></span>
+                    </button>
+                    <button class="tile glass tile-rank" data-go="scores" id="tileRank" data-info="Rang: Siege gegen Bots und online bringen Rangpunkte – stärkere Gegner bringen mehr."></button>
                 </div>
-                <p class="menu-info" id="menuInfo" aria-live="polite"></p>
-                <div class="menu-links">
-                    <button class="btn link" data-go="lore" data-info="Champions: Geschichte, Werte, Fähigkeit und Spezialangriff jedes Kämpfers.">Champions</button>
-                    <button class="btn link" data-go="scores" data-info="Highscores &amp; Profil: deine besten Arcade-Läufe und deine Statistik.">Highscores</button>
-                    <button class="btn link" data-go="controls" data-info="Steuerung: Alle Tasten und Tipps zum Kampfsystem – plus das Tutorial.">Steuerung</button>
-                    <button class="btn link" data-go="settings" data-info="Optionen: Lautstärke, Runden, Tastenbelegung und mehr.">Optionen</button>
-                    <button class="btn link" data-go="controller" data-info="Controller: Mach dein Handy zum Gamepad – QR-Code scannen oder Code eingeben.">Controller</button>
-                </div>
-            </nav>
-            <div class="menu-progress glass" id="recordCard"></div>
             </div>
         </div>
+    </section>
+
+    <!-- ================= TRAINING ================= -->
+    <section id="screen-trainhub" class="screen scroll">
+        <header class="screen-head">
+            <button class="back-btn" data-back aria-label="Zurück">‹</button>
+            <h2>Training</h2>
+        </header>
+        <div class="hub-grid">
+            <button class="btn mode hub-card" data-go="training"><b>Freies Training</b><small>Kombos, Würfe und Blocken gegen einen Dummy üben – ohne Druck.</small></button>
+            <button class="btn mode hub-card" data-go="tutorial"><b>Tutorial</b><small>Alle Grundlagen Schritt für Schritt: Laufen, Angriffe, Dash, Blocken, Fähigkeit.</small></button>
+            <button class="btn mode hub-card" data-go="lessons"><b>Champions kennenlernen</b><small id="lessonCount">Jeder Champion spielt sich anders – lerne Kombo, Spezialangriff und Fähigkeit.</small></button>
+        </div>
+    </section>
+
+    <!-- ================= CHAMPIONS KENNENLERNEN ================= -->
+    <section id="screen-lessons" class="screen scroll">
+        <header class="screen-head">
+            <button class="back-btn" data-back aria-label="Zurück">‹</button>
+            <h2>Champions kennenlernen</h2>
+        </header>
+        <p class="lore-intro glass">Wähle einen Champion: Du lernst seine Kombo, seinen Spezialangriff und seine Fähigkeit – und probierst alles gleich gegen den Dummy aus. Für jeden neuen Champion gibt es einmalig <b>100 Gold</b>.</p>
+        <div class="shop-grid" id="lessonGrid"></div>
     </section>
 
     <!-- ================= CHAMPION-AUSWAHL ================= -->
@@ -270,6 +307,7 @@
             <div class="pad-btns">
                 <button class="pb pb-ability" data-btn="3"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" /></svg><span>Fähigk.</span></button>
                 <button class="pb pb-dash" data-btn="2">Dash</button>
+                <button class="pb pb-block" data-btn="5">Block</button>
                 <button class="pb pb-light" data-btn="0">Leicht</button>
                 <button class="pb pb-heavy" data-btn="1">Schwer</button>
             </div>
@@ -292,6 +330,18 @@
         <div class="lore-grid" id="loreGrid"></div>
     </section>
 
+    <!-- ================= SHOP ================= -->
+    <section id="screen-shop" class="screen scroll">
+        <header class="screen-head">
+            <button class="back-btn" data-back aria-label="Zurück">‹</button>
+            <h2>Shop</h2>
+            <div class="gold-pill big" id="shopGold"></div>
+        </header>
+        <div class="seg shop-tabs" id="shopTabs"></div>
+        <div class="shop-grid" id="shopGrid"></div>
+        <p class="shop-hint">Gold gibt es für jedes Match, Rundensiege, den ersten Sieg des Tages und erledigte Aufgaben.</p>
+    </section>
+
     <!-- ================= STEUERUNG ================= -->
     <section id="screen-controls" class="screen scroll">
         <header class="screen-head">
@@ -306,8 +356,9 @@
                     <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>Pfeile</kbd></dt><dd>Bewegen · Hoch/Runter + Angriff = nach oben/unten schlagen</dd>
                     <dt><kbd>J</kbd> / <kbd>E</kbd></dt><dd>Leichter Angriff</dd>
                     <dt><kbd>K</kbd> / <kbd>F</kbd></dt><dd>Schwerer Angriff</dd>
-                    <dt><kbd>L</kbd> / <kbd>Leertaste</kbd></dt><dd>Ausweichen (Dash)</dd>
+                    <dt><kbd>Leertaste</kbd> / <kbd>Shift</kbd></dt><dd>Ausweichen (Dash)</dd>
                     <dt><kbd>I</kbd> / <kbd>R</kbd></dt><dd>Fähigkeit</dd>
+                    <dt><kbd>L</kbd> / <kbd>Q</kbd></dt><dd>Blocken (halten)</dd>
                     <dt><kbd>Esc</kbd></dt><dd>Pause</dd>
                 </dl>
             </div>
@@ -316,11 +367,11 @@
                 <dl class="keys">
                     <dt class="p1t">Spieler 1</dt><dd></dd>
                     <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>Bewegen</dd>
-                    <dt><kbd>E</kbd> <kbd>F</kbd> <kbd>Q</kbd> <kbd>R</kbd></dt><dd>Leicht · Schwer · Dash · Fähigkeit</dd>
+                    <dt><kbd>E</kbd> <kbd>F</kbd> <kbd>Q</kbd> <kbd>R</kbd> <kbd>C</kbd></dt><dd>Leicht · Schwer · Dash · Fähigkeit · Block</dd>
                     <dt class="p2t">Spieler 2</dt><dd></dd>
                     <dt><kbd>Pfeile</kbd> / <kbd>I</kbd><kbd>J</kbd><kbd>K</kbd><kbd>L</kbd></dt><dd>Bewegen</dd>
-                    <dt><kbd>Num1</kbd> <kbd>Num2</kbd> <kbd>Num3</kbd> <kbd>Num0</kbd></dt><dd>Leicht · Schwer · Dash · Fähigkeit</dd>
-                    <dt><kbd>O</kbd> <kbd>P</kbd> <kbd>U</kbd> <kbd>H</kbd></dt><dd>(alternativ)</dd>
+                    <dt><kbd>Num1</kbd> <kbd>Num2</kbd> <kbd>Num3</kbd> <kbd>Num0</kbd> <kbd>Num4</kbd></dt><dd>Leicht · Schwer · Dash · Fähigkeit · Block</dd>
+                    <dt><kbd>O</kbd> <kbd>P</kbd> <kbd>U</kbd> <kbd>H</kbd> <kbd>N</kbd></dt><dd>(alternativ)</dd>
                 </dl>
             </div>
             <div class="glass panel">
@@ -328,8 +379,9 @@
                 <dl class="keys">
                     <dt><kbd>Stick</kbd></dt><dd>Bewegen</dd>
                     <dt><kbd>A</kbd> · <kbd>X</kbd>/<kbd>RT</kbd></dt><dd>Leicht · Schwer</dd>
-                    <dt><kbd>B</kbd>/<kbd>LB</kbd> · <kbd>Y</kbd>/<kbd>RB</kbd></dt><dd>Dash · Fähigkeit</dd>
-                    <dt>Touch</dt><dd>Linke Hälfte = Joystick, rechts vier Knöpfe.</dd>
+                    <dt><kbd>B</kbd>/<kbd>LT</kbd> · <kbd>Y</kbd>/<kbd>RB</kbd></dt><dd>Dash · Fähigkeit</dd>
+                    <dt><kbd>LB</kbd></dt><dd>Blocken (halten)</dd>
+                    <dt>Touch</dt><dd>Linke Hälfte = Joystick, rechts fünf Knöpfe (inkl. BLOCK).</dd>
                     <dt>Handy</dt><dd>Im Menü „Handy als Controller“ koppeln.</dd>
                 </dl>
             </div>
@@ -341,7 +393,7 @@
                     <li><b>Wurf:</b> <b>Leicht + Schwer</b> gleichzeitig, nah am Gegner – geht durch jede Deckung. Gleichzeitig ebenfalls Leicht + Schwer drücken = befreien.</li>
                     <li><b>Spezialangriff:</b> Zum Gegner drücken + <b>Schwer</b> – jeder Champion hat einen eigenen (z. B. Schildsturm, Feuersalve). Bricht die Deckung, danach 4 Sekunden Abklingzeit (SP im HUD).</li>
                     <li><b>Oben &amp; unten:</b> Halte hoch oder runter beim Angriff – oder steh einfach über/unter dem Gegner. Dann schlägst du in diese Richtung.</li>
-                    <li><b>Blocken:</b> Vom Gegner <b>weg</b> drücken. Kurz vor dem Treffer = <b>PERFEKT</b>: kein Schaden, der Gegner taumelt.</li>
+                    <li><b>Blocken:</b> <b>Block-Taste</b> halten oder vom Gegner <b>weg</b> drücken. Kurz vor dem Treffer = <b>PERFEKT</b>: kein Schaden, der Gegner taumelt.</li>
                     <li><b>Schwere Angriffe</b> leeren die Deckung schnell – ist sie leer: GUARD BREAK. Spezialangriffe brechen sie sofort.</li>
                     <li><b>Konter:</b> Triff den Gegner, während er zu einem schweren Angriff oder einer Fähigkeit ausholt – 40 % mehr Schaden.</li>
                     <li><b>Dash</b> macht kurz unverwundbar – perfekt gegen Bomben und Feuerbälle.</li>
@@ -436,6 +488,7 @@
     <div id="vs">
         <div class="vs-side p1"><canvas width="240" height="240"></canvas><div class="vs-name"></div><div class="vs-sub"></div></div>
         <div class="vs-mid"><div class="vs-text">VS</div><div class="vs-map"></div></div>
+        <div class="vs-tip"></div>
         <div class="vs-side p2"><canvas width="240" height="240"></canvas><div class="vs-name"></div><div class="vs-sub"></div></div>
     </div>
 
@@ -451,6 +504,7 @@
                 <img alt="">
             </button>
             <button class="t-btn t-dash" data-act="dash" aria-label="Ausweichen">DASH</button>
+            <button class="t-btn t-block" data-act="block" aria-label="Blocken">BLOCK</button>
             <button class="t-btn t-heavy" data-act="heavy" aria-label="Schwerer Angriff">SCHWER</button>
             <button class="t-btn t-light" data-act="light" aria-label="Leichter Angriff">LEICHT</button>
         </div>
@@ -469,17 +523,24 @@
 
     <!-- ================= ERGEBNIS ================= -->
     <section id="screen-results" class="screen">
+        <div class="res-rays"></div>
+        <div class="res-confetti" id="resConfetti"></div>
         <div class="results-box">
             <div class="res-title" id="resTitle">SIEG!</div>
             <div class="res-sub" id="resSub"></div>
             <div class="res-main">
-                <div class="res-fighter board p1" data-side="0"><canvas width="200" height="200"></canvas><div class="res-name"></div></div>
-                <div class="res-score" id="resScore">2 : 1</div>
-                <div class="res-fighter board p2" data-side="1"><canvas width="200" height="200"></canvas><div class="res-name"></div></div>
+                <div class="res-fighter p1" data-side="0"><div class="res-crown">SIEGER</div><canvas width="240" height="240"></canvas><div class="res-name"></div></div>
+                <div class="res-mid">
+                    <div class="res-score" id="resScore">2 : 1</div>
+                    <div class="res-grade" id="resGrade"><small>Wertung</small><b>A</b></div>
+                </div>
+                <div class="res-fighter p2" data-side="1"><div class="res-crown">SIEGER</div><canvas width="240" height="240"></canvas><div class="res-name"></div></div>
             </div>
-            <div class="res-stats glass" id="resStats"></div>
             <div class="res-note" id="resNote"></div>
-            <div class="res-progress glass" id="resProgress" hidden></div>
+            <div class="res-cols">
+                <div class="res-stats glass" id="resStats"></div>
+                <div class="res-progress glass" id="resProgress" hidden></div>
+            </div>
             <div class="res-actions">
                 <button class="btn start" id="rematchBtn">Revanche</button>
                 <button class="btn" id="changeBtn">Champion wechseln</button>
@@ -494,27 +555,28 @@
     </div>
     <div id="fps" hidden></div>
     <div id="toast"></div>
+    <div id="wipe"></div>
 
-    <script src="js/arena_shape.js?v=3.0.38"></script>
-    <script src="js/data.js?v=3.0.38"></script>
-    <script src="js/audio.js?v=3.0.38"></script>
-    <script src="js/settings.js?v=3.0.38"></script>
-    <script src="js/assets.js?v=3.0.38"></script>
-    <script src="js/input.js?v=3.0.38"></script>
-    <script src="js/link.js?v=3.0.38"></script>
-    <script src="js/pad.js?v=3.0.38"></script>
-    <script src="js/fx.js?v=3.0.38"></script>
-    <script src="js/arena.js?v=3.0.38"></script>
-    <script src="js/fighter.js?v=3.0.38"></script>
-    <script src="js/ai.js?v=3.0.38"></script>
-    <script src="js/match.js?v=3.0.38"></script>
-    <script src="js/ui.js?v=3.0.38"></script>
-    <script src="js/modes.js?v=3.0.38"></script>
-    <script src="js/progress.js?v=3.0.38"></script>
-    <script src="js/net.js?v=3.0.38"></script>
-    <script src="js/tutorial.js?v=3.0.38"></script>
-    <script src="js/story.js?v=3.0.38"></script>
-    <script src="js/main.js?v=3.0.38"></script>
+    <script src="js/arena_shape.js?v=3.0.43"></script>
+    <script src="js/data.js?v=3.0.43"></script>
+    <script src="js/audio.js?v=3.0.43"></script>
+    <script src="js/settings.js?v=3.0.43"></script>
+    <script src="js/assets.js?v=3.0.43"></script>
+    <script src="js/input.js?v=3.0.43"></script>
+    <script src="js/link.js?v=3.0.43"></script>
+    <script src="js/pad.js?v=3.0.43"></script>
+    <script src="js/fx.js?v=3.0.43"></script>
+    <script src="js/arena.js?v=3.0.43"></script>
+    <script src="js/fighter.js?v=3.0.43"></script>
+    <script src="js/ai.js?v=3.0.43"></script>
+    <script src="js/match.js?v=3.0.43"></script>
+    <script src="js/ui.js?v=3.0.43"></script>
+    <script src="js/modes.js?v=3.0.43"></script>
+    <script src="js/progress.js?v=3.0.43"></script>
+    <script src="js/shop.js?v=3.0.43"></script>
+    <script src="js/net.js?v=3.0.43"></script>
+    <script src="js/tutorial.js?v=3.0.43"></script>
+    <script src="js/main.js?v=3.0.43"></script>
 </body>
 
 </html>

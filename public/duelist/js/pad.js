@@ -7,7 +7,7 @@ const PadMode = {
     peer: null,
     conn: null,
     code: "",
-    state: { x: 0, y: 0, b: 0, c: [0, 0, 0, 0, 0] },
+    state: { x: 0, y: 0, b: 0, c: [0, 0, 0, 0, 0, 0] },
     lastSent: "",
     bound: false,
     active: false,

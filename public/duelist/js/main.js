@@ -52,9 +52,13 @@ const App = {
             return
         }
 
+        const tip = document.getElementById("loadTip")
+        tip.textContent = "Tipp: " + randomTip()
+        const tipTimer = setInterval(() => { tip.textContent = "Tipp: " + randomTip() }, 3500)
         await loadAllAssets(p => {
             document.getElementById("loadFill").style.transform = `scaleX(${p})`
         })
+        clearInterval(tipTimer)
         document.getElementById("loadText").textContent = "Bereit!"
 
         this.startDemo()
@@ -203,6 +207,7 @@ const App = {
             return
         }
         if (["ladder", "continue", "entry", "pad"].includes(cur)) return
+        if (cur === "lessons") return UI.show("trainhub")
         this.setState("menu")
         UI.show("menu")
     },
@@ -275,10 +280,12 @@ const App = {
             settings: { ...GameSettings.get() },
             onEvent: (type, data, m) => this.onMatchEvent(type, data, m)
         })
+        Shop.applySkins(this.match)
         this.match.setView(this.w, this.h)
         UI.buildHud(this.match)
         UI.hideBanner()
         if (rules.vs) UI.showVs(this.match)
+        else UI.wipe()
         this.setState("game")
         UI.show("none")
         Music.play("battle")
@@ -291,7 +298,7 @@ const App = {
             return Net.rematch()
         }
         this.match = null
-        if (Tutorial.active) return Tutorial.begin()
+        if (Tutorial.active) return Tutorial.begin(Tutorial.lesson)
         Modes.restart()
     },
 
@@ -394,6 +401,7 @@ const App = {
                 if (type === "matchEnd" && this.demo === demo) setTimeout(() => { if (this.demo === demo) this.startDemo() }, 1500)
             }
         })
+        Shop.applySkins(demo, true)
         demo.setView(this.w, this.h)
         this.demo = demo
     },

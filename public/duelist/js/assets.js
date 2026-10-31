@@ -108,9 +108,11 @@ class SpritePreview {
         SpritePreview.all.add(this)
     }
 
-    set(champId, animName = "idle") {
+    // skin bleibt beim selben Champion erhalten, bei einem anderen gilt der Standard
+    set(champId, animName = "idle", skin = champId === this.champId ? this.skin : "base") {
         this.champId = champId
         this.animName = animName
+        this.skin = skin
         this.time = 0
     }
 
@@ -129,7 +131,7 @@ class SpritePreview {
         const champ = CHAMPIONS[this.champId]
         if (!champ) return
         const anim = champAnim(champ, this.animName)
-        const img = champImage(this.champId, anim.file)
+        const img = skinImage(this.champId, anim.file, this.skin)
         if (!img || !img.complete) return
 
         // Angriffe einmal abspielen, danach zurück in die Ruhehaltung

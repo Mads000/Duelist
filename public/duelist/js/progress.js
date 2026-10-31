@@ -1,5 +1,5 @@
 // ============================================================
-//  Fortschritt – Level & Erfahrungspunkte, drei tägliche Aufgaben.
+//  Fortschritt – Level & Erfahrungspunkte, Gold, Rang, drei tägliche Aufgaben.
 //  Kleine Ziele, damit sich auch eine kurze Runde zwischendurch lohnt.
 // ============================================================
 
@@ -67,7 +67,7 @@ const Progress = {
             if (m.progress >= def.goal) {
                 m.done = true
                 this.pending.push(def)
-                UI.toast(`✔ Aufgabe geschafft: ${def.text} (+${XP_MISSION} XP)`)
+                UI.toast(`✔ Aufgabe geschafft: ${def.text} (+${XP_MISSION} XP · +${GOLD.mission} Gold)`)
                 Sound.play("coin")
             }
             PlayerRecord.save()
@@ -96,16 +96,20 @@ const Progress = {
         if (type === "finisher") this.finisher = data.winner.side === me && data.name !== "K.O."
     },
 
-    // nach dem Match: XP vergeben – Zusammenfassung für den Ergebnis-Bildschirm
+    // nach dem Match: XP, Gold und Rangpunkte vergeben – Zusammenfassung für den Ergebnis-Bildschirm
     onMatchEnd(match, winner) {
         if (!this.counts(match)) return null
         const me = this.mySide(match)
         const won = winner === me
+        // zu zweit an einem Gerät: Gold für beide gleich, kein Rang
+        const local = match.humanCount === 2 && match.localSide === undefined
         const d = this.data
+        const wallet = Shop.data
         const daily = this.daily()
         const lines = []
         let xp = (won ? 100 : 40) + match.wins[me] * 20
-        lines.push(won ? `Sieg +${xp}` : `Kampf +${xp}`)
+        let gold = local ? GOLD.local : (won ? GOLD.win : GOLD.loss) + match.wins[me] * GOLD.round
+        lines.push(`${won ? "Sieg" : "Kampf"} +${xp} XP · +${gold} Gold`)
         if (won) {
             this.bump("win")
             if (this.finisher) this.bump("finisher")
@@ -114,33 +118,55 @@ const Progress = {
         if (won && !daily.firstWin) {
             daily.firstWin = true
             xp += XP_FIRST_WIN
-            lines.push(`Erster Sieg des Tages +${XP_FIRST_WIN}`)
+            gold += GOLD.firstWin
+            lines.push(`Erster Sieg des Tages +${XP_FIRST_WIN} XP · +${GOLD.firstWin} Gold`)
         }
         for (const m of this.pending) {
             xp += XP_MISSION
-            lines.push(`${m.text} +${XP_MISSION}`)
+            gold += GOLD.mission
+            lines.push(`${m.text} +${XP_MISSION} XP · +${GOLD.mission} Gold`)
         }
         this.pending = []
-        const before = d.level
+
+        let rank = null
+        if (!local) {
+            const opp = match.leads[1 - me]
+            const diff = opp.controller && opp.controller.diff ? opp.controller.diff.id : "hard"
+            const before = wallet.rp
+            wallet.rp = Math.max(0, before + (won ? RANK_WIN[diff] || 20 : -RANK_LOSS))
+            rank = { before, after: wallet.rp }
+        }
+        wallet.gold += gold
+
+        const start = { level: d.level, xp: d.xp }
         d.xp += xp
         while (d.xp >= this.need(d.level)) {
             d.xp -= this.need(d.level)
             d.level++
         }
         PlayerRecord.save()
-        return { xp, lines, levelUp: d.level > before ? d.level : 0 }
+        return { xp, gold, rank, start, lines, levelUp: d.level > start.level ? d.level : 0 }
     },
 
-    // Level-Balken + Aufgaben (Hauptmenü)
-    html() {
+    // Profil oben rechts: Name, Level, Gold
+    profileHtml() {
         const d = this.data
         const need = this.need(d.level)
-        const missions = this.daily().missions.map(m => {
+        return `<input class="pc-name" id="playerName" maxlength="14" placeholder="Dein Name ✎" spellcheck="false" autocomplete="off" aria-label="Dein Name">
+            <button class="gold-pill" title="Shop">${Shop.goldHtml()}</button>
+            <div class="pc-level"><b>LEVEL ${d.level}</b><div class="xp-bar"><i style="transform:scaleX(${d.xp / need})"></i></div><span>${d.xp} / ${need} XP</span></div>`
+    },
+
+    // Kachel: heutige Aufgaben
+    missionsHtml() {
+        const daily = this.daily()
+        const missions = daily.missions.map(m => {
             const def = this.mission(m.id)
             return `<div class="mis${m.done ? " done" : ""}"><span>${m.done ? "✔" : "◆"} ${def.text}</span><b>${m.progress}/${def.goal}</b></div>`
         }).join("")
-        return `
-            <div class="pc-level"><input class="pc-name" id="playerName" maxlength="14" placeholder="Dein Name ✎" spellcheck="false" autocomplete="off" aria-label="Dein Name"><b>LEVEL ${d.level}</b><div class="xp-bar"><i style="transform:scaleX(${d.xp / need})"></i></div><span>${d.xp} / ${need} XP</span></div>
-            <div class="pc-missions"><div class="pc-title">Heutige Aufgaben${this.daily().firstWin ? "" : " · Erster Sieg: +150 XP"}</div>${missions}</div>`
+        const done = daily.missions.filter(m => m.done).length
+        return `<div class="tile-head"><small>Heute</small><b>Aufgaben</b><span>${done}/${daily.missions.length}</span></div>
+            <div class="tile-missions-list">${missions}</div>
+            <div class="tile-foot">${daily.firstWin ? "✔ Erster Sieg des Tages geschafft" : `Erster Sieg des Tages: +${XP_FIRST_WIN} XP · +${GOLD.firstWin} Gold`}<br>Jede Aufgabe: +${XP_MISSION} XP · +${GOLD.mission} Gold</div>`
     }
 }

@@ -1,5 +1,5 @@
 // ============================================================
-//  Spielmodi – Schnelles Match, Arcade (Leiter + Endboss), Story, Training,
+//  Spielmodi – Schnelles Match, Arcade (Leiter + Endboss), Training,
 //  freies Duell gegen Bot und lokales Duell
 // ============================================================
 
@@ -16,12 +16,11 @@ function shuffle(list) {
 }
 
 const Modes = {
-    run: null,   // laufender Arcade- oder Story-Durchgang
+    run: null,   // laufender Arcade-Durchgang
 
     begin(mode) {
         App.config.mode = mode
         if (mode === "arcade") return this.startArcade()
-        if (mode === "story") return this.startStory()
         if (mode === "quick") return this.quick()
         this.run = null
         const c = App.config
@@ -63,7 +62,7 @@ const Modes = {
     },
 
     showsScore() {
-        return !!this.run && this.run.mode !== "story"
+        return !!this.run
     },
 
     score() {
@@ -131,28 +130,6 @@ const Modes = {
         })
     },
 
-    // ---------------- Story ----------------
-    startStory() {
-        const champ = App.config.champs[0]
-        const story = STORY[champ] || STORY.vanguard
-        const chapters = story.chapters.map(c => ({ champ: c.opp, diff: c.diff, map: c.map, title: c.title, text: c.text }))
-        if (story.boss) chapters.push({ champ: "gravelord", diff: "nightmare", map: "volcano", title: "Der Knochenkönig", text: story.boss, boss: true })
-        this.run = { mode: "story", champ, ladder: chapters, stage: 0, score: 0, stageStartScore: 0, over: false, story }
-        this.showStoryChapter()
-    },
-
-    showStoryChapter() {
-        const r = this.run
-        const s = r.ladder[r.stage]
-        UI.showLadder({
-            title: s.boss ? "FINALE" : `KAPITEL ${r.stage + 1}`,
-            steps: r.ladder,
-            current: r.stage,
-            info: `<b>${s.title}</b> · gegen ${CHAMPIONS[s.champ].name}<br><span class="story-text">${s.text}</span>`
-        })
-        App.setState("ladder")
-    },
-
     // ---------------- Gemeinsam ----------------
     ladderGo() {
         if (!this.run) return
@@ -162,15 +139,6 @@ const Modes = {
 
     startStage() {
         const r = this.run
-        if (r.mode === "story") {
-            const s = r.ladder[r.stage]
-            App.startMatch({
-                rules: { mode: "story", map: s.map, rounds: 3, roundTime: 60, vs: true, stage: s.boss ? "FINALE" : `KAPITEL ${r.stage + 1}` },
-                champs: [r.champ, s.champ],
-                opponent: { difficulty: s.diff }
-            })
-            return
-        }
         if (r.mode === "arcade") {
             const s = r.ladder[r.stage]
             App.startMatch({
@@ -189,29 +157,6 @@ const Modes = {
         const r = this.run
         if (!r) return false
         const won = winner === 0
-
-        if (r.mode === "story") {
-            if (won) {
-                r.stage++
-                if (r.stage >= r.ladder.length) {
-                    r.over = true
-                    PlayerRecord.data.storyClears = [...new Set([...(PlayerRecord.data.storyClears || []), r.champ])]
-                    PlayerRecord.save()
-                    App.setState("results")
-                    UI.showResults(match, winner, { title: "ENDE", sub: r.story.ending, note: `Story von ${CHAMPIONS[r.champ].name} abgeschlossen`, rematch: "Nochmal" })
-                } else {
-                    this.showStoryChapter()
-                }
-            } else {
-                UI.showContinue(() => this.showStoryChapter(), () => {
-                    r.over = true
-                    App.setState("results")
-                    UI.showResults(match, winner, { title: "NIEDERLAGE", sub: `Kapitel ${r.stage + 1}: ${r.ladder[r.stage].title}`, rematch: "Kapitel wiederholen" })
-                })
-                App.setState("continue")
-            }
-            return true
-        }
 
         if (r.mode === "arcade") {
             if (won) {

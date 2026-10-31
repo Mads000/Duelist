@@ -514,8 +514,7 @@ const MODES = {
     solo:     { id: "solo",     name: "Gegen Bot",     sub: "Freies Duell gegen die KI" },
     local:    { id: "local",    name: "Lokales Duell", sub: "2 Spieler · Tastatur, Gamepad oder Handy" },
     training: { id: "training", name: "Training",      sub: "Kombos üben ohne Druck" },
-    team:     { id: "team",     name: "2 gegen 2",     sub: "Du + Bot-Partner gegen zwei Bots" },
-    story:    { id: "story",    name: "Story",         sub: "Die Geschichte deines Champions" }
+    team:     { id: "team",     name: "2 gegen 2",     sub: "Du + Bot-Partner gegen zwei Bots" }
 }
 
 const DIFFICULTIES = {
@@ -556,20 +555,21 @@ const KEYMAPS = {
     solo: {
         up: ["KeyW", "ArrowUp"], down: ["KeyS", "ArrowDown"], left: ["KeyA", "ArrowLeft"], right: ["KeyD", "ArrowRight"],
         light: ["KeyJ", "KeyE", "Numpad1"], heavy: ["KeyK", "KeyF", "Numpad2"],
-        dash: ["KeyL", "Space", "ShiftLeft", "Numpad3"], ability: ["KeyI", "KeyR", "Numpad0"]
+        dash: ["Space", "ShiftLeft", "Numpad3"], ability: ["KeyI", "KeyR", "Numpad0"],
+        block: ["KeyL", "KeyQ", "Numpad4"]
     },
     p1: {
         up: ["KeyW"], down: ["KeyS"], left: ["KeyA"], right: ["KeyD"],
-        light: ["KeyE"], heavy: ["KeyF"], dash: ["KeyQ"], ability: ["KeyR"]
+        light: ["KeyE"], heavy: ["KeyF"], dash: ["KeyQ"], ability: ["KeyR"], block: ["KeyC"]
     },
     p2: {
         up: ["KeyI", "ArrowUp"], down: ["KeyK", "ArrowDown"], left: ["KeyJ", "ArrowLeft"], right: ["KeyL", "ArrowRight"],
-        light: ["KeyO", "Numpad1"], heavy: ["KeyP", "Numpad2"], dash: ["KeyU", "Numpad3"], ability: ["KeyH", "Numpad0"]
+        light: ["KeyO", "Numpad1"], heavy: ["KeyP", "Numpad2"], dash: ["KeyU", "Numpad3"], ability: ["KeyH", "Numpad0"], block: ["KeyN", "Numpad4"]
     }
 }
 
 // Eigene Tastenbelegung (Optionen → Tastenbelegung): ersetzt die erste Taste einer Aktion
-const KEY_ACTIONS = [["up", "Hoch"], ["down", "Runter"], ["left", "Links"], ["right", "Rechts"], ["light", "Leicht"], ["heavy", "Schwer"], ["dash", "Dash"], ["ability", "Fähigkeit"]]
+const KEY_ACTIONS = [["up", "Hoch"], ["down", "Runter"], ["left", "Links"], ["right", "Rechts"], ["light", "Leicht"], ["heavy", "Schwer"], ["dash", "Dash"], ["ability", "Fähigkeit"], ["block", "Blocken"]]
 
 function keymap(name) {
     const custom = readStorage("duelist.keys", {})[name] || {}
