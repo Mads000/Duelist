@@ -9,21 +9,21 @@
     --ink-soft: rgba(255, 255, 255, 0.78);
     /* Klares, farbneutrales Glas (Liquid Glass) mit Vista-Glanz:
        obere Hälfte heller, scharfe Kante in der Mitte, helle Lichtkanten rundherum */
-    --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.03) 45%, rgba(255, 255, 255, 0) 70%, rgba(255, 255, 255, 0.1));
-    --gloss-big: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.02) 110px, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0.08));
-    --glass-base: rgba(255, 255, 255, 0.07);
+    --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 35%);
+    --gloss-big: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 70px);
+    --glass-base: transparent;
     --pane: var(--gloss), var(--glass-base);
-    --pane-strong: var(--gloss), rgba(255, 255, 255, 0.1);
+    --pane-strong: var(--gloss), rgba(255, 255, 255, 0.04);
     --pane-hover: linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.16) 55%, rgba(255, 255, 255, 0.1) 75%, rgba(255, 255, 255, 0.24)), rgba(255, 255, 255, 0.12);
     --edge: rgba(255, 255, 255, 0.6);
     --edge-strong: rgba(255, 255, 255, 0.9);
-    --frost: blur(20px) saturate(1.2) brightness(1.04);
+    --frost: blur(20px) saturate(1.15);
     --soft-shadow:
         inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
         inset 0 -1px 0 rgba(255, 255, 255, 0.45),
         inset 1px 0 0 rgba(255, 255, 255, 0.35),
         inset -1px 0 0 rgba(255, 255, 255, 0.25),
-        inset 0 0 22px rgba(255, 255, 255, 0.2),
+        inset 0 0 18px rgba(255, 255, 255, 0.12),
         0 10px 30px rgba(0, 10, 40, 0.16);
     --text-lift: 0 1px 2px rgba(0, 12, 45, 0.45);
     --blue: #6f9bff;
@@ -507,7 +507,7 @@ body.show-arena #sky {
     width: 120%;
     aspect-ratio: 1;
     transform: translate(-50%, -50%);
-    background: radial-gradient(circle, rgba(var(--champ, 120, 170, 255), 0.45), rgba(var(--champ, 120, 170, 255), 0) 62%);
+    background: radial-gradient(circle, transparent, transparent 62%);
     pointer-events: none;
 }
 
@@ -703,7 +703,7 @@ body.vs-on #pauseBtn {
     text-align: center;
     text-shadow: var(--text-lift);
     background:
-        radial-gradient(circle at 50% 40%, rgba(var(--champ), 0.35), rgba(var(--champ), 0) 62%),
+        radial-gradient(circle at 50% 40%, transparent, transparent 62%),
         var(--pane);
     border: 1px solid var(--edge);
     border-radius: 20px;
@@ -1455,7 +1455,7 @@ body.vs-on #pauseBtn {
 
 #screen-select .champ-card {
     background:
-        radial-gradient(circle at 50% 42%, rgba(var(--champ, 255, 255, 255), 0.3), rgba(var(--champ, 255, 255, 255), 0) 70%),
+        radial-gradient(circle at 50% 42%, transparent, transparent 70%),
         rgba(255, 255, 255, 0.06);
     border-radius: 14px;
     box-shadow: none;
@@ -1464,7 +1464,7 @@ body.vs-on #pauseBtn {
 #screen-select .champ-card:hover,
 #screen-select .champ-card:focus-visible {
     background:
-        radial-gradient(circle at 50% 42%, rgba(var(--champ, 255, 255, 255), 0.55), rgba(var(--champ, 255, 255, 255), 0.08) 78%),
+        radial-gradient(circle at 50% 42%, transparent, transparent 78%),
         rgba(255, 255, 255, 0.1);
     box-shadow: 0 0 0 1px rgb(var(--champ, 255, 255, 255));
 }
@@ -1539,7 +1539,7 @@ body.vs-on #pauseBtn {
 #screen-select .sel-side,
 .in-side {
     background-image:
-        radial-gradient(circle at 50% 40%, rgba(var(--champ, 150, 190, 255), 0.3), rgba(var(--champ, 150, 190, 255), 0) 62%),
+        radial-gradient(circle at 50% 40%, transparent, transparent 62%),
         var(--gloss-big);
 }
 
@@ -1619,7 +1619,7 @@ body.vs-on #pauseBtn {
 
 #screen-select .sel-side.board {
     background-image:
-        radial-gradient(circle at 50% 40%, rgba(var(--champ, 150, 190, 255), 0.3), rgba(var(--champ, 150, 190, 255), 0) 62%),
+        radial-gradient(circle at 50% 40%, transparent, transparent 62%),
         var(--gloss-big);
 }
 
@@ -2263,4 +2263,54 @@ body {
     background:
         radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 60%),
         linear-gradient(180deg, rgba(var(--tint), 0.55), rgba(var(--tint), 0.78)) !important;
+}
+
+/* Keine Champion-/Kartenfarbe mehr hinter dem Glas – nur klares Glas */
+#screen-select .sel-side,
+#screen-select .sel-side.active,
+.sel-side,
+.sel-sprite-wrap,
+.mm-champ,
+.in-side,
+.rs-fighter {
+    background: var(--pane) !important;
+}
+
+.sel-sprite-wrap,
+.mm-champ {
+    background: none !important;
+}
+
+#screen-select .champ-card,
+.champ-card {
+    background: var(--pane) !important;
+}
+
+#screen-select .champ-card:hover,
+#screen-select .champ-card:focus-visible,
+.champ-card:hover {
+    background: var(--pane-hover) !important;
+}
+
+.hud-portrait {
+    background: transparent !important;
+}
+
+/* Menüs: keine Grundfüllung – nur Rand, Lichtkante und Unschärfe dahinter */
+.step-pill,
+.step-pill.p1,
+.step-pill.p2,
+.step-pill.ready,
+#selAbility,
+.sel-ability,
+.seg button:not(.on),
+.opt-group button:not(.on),
+.key-btn:not(.waiting),
+.t-edit-bar,
+#toast {
+    background: var(--pane) !important;
+}
+
+.step-pill.ready {
+    border-color: rgba(255, 130, 140, 0.95) !important;
 }

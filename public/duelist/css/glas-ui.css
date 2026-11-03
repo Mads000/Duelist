@@ -162,7 +162,7 @@
 .tile-champ,
 .tile-shop {
     background:
-        radial-gradient(circle at 62% 46%, rgba(var(--champ, 150, 190, 255), 0.52), rgba(var(--champ, 150, 190, 255), 0) 62%),
+        radial-gradient(circle at 62% 46%, transparent, transparent 62%),
         var(--g-tint);
 }
 
@@ -178,7 +178,7 @@
     color: #fff;
     background:
         linear-gradient(125deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 40%),
-        radial-gradient(circle at 50% 42%, rgba(var(--champ, 110, 150, 255), 0.5), rgba(var(--champ, 110, 150, 255), 0) 66%),
+        radial-gradient(circle at 50% 42%, transparent, transparent 66%),
         linear-gradient(160deg, rgba(50, 96, 230, 0.1), rgba(20, 40, 130, 0.12));
     border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 28px;
@@ -191,18 +191,18 @@
 .vs-side.p2 {
     background:
         linear-gradient(235deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 40%),
-        radial-gradient(circle at 50% 42%, rgba(var(--champ, 255, 110, 120), 0.5), rgba(var(--champ, 255, 110, 120), 0) 66%),
+        radial-gradient(circle at 50% 42%, transparent, transparent 66%),
         linear-gradient(200deg, rgba(220, 54, 70, 0.1), rgba(120, 20, 44, 0.12));
 }
 
 .sel-side.active {
     border-color: rgb(var(--champ, 255, 255, 255));
-    box-shadow: var(--g-shine), 0 0 34px rgba(var(--champ, 130, 175, 255), 0.6);
+    box-shadow: var(--g-shine), 0 0 34px transparent;
 }
 
 .champ-card {
     background:
-        radial-gradient(circle at 50% 42%, rgba(var(--champ, 255, 255, 255), 0.34), rgba(var(--champ, 255, 255, 255), 0) 72%),
+        radial-gradient(circle at 50% 42%, transparent, transparent 72%),
         rgba(255, 255, 255, 0.07);
     border: 1px solid rgba(255, 255, 255, 0.26);
     border-radius: 18px;
@@ -212,10 +212,10 @@
 .champ-card:hover,
 .champ-card:focus-visible {
     background:
-        radial-gradient(circle at 50% 42%, rgba(var(--champ, 255, 255, 255), 0.6), rgba(var(--champ, 255, 255, 255), 0.1) 78%),
+        radial-gradient(circle at 50% 42%, transparent, transparent 78%),
         rgba(255, 255, 255, 0.12);
     border-color: rgb(var(--champ, 255, 255, 255));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 22px rgba(var(--champ, 130, 175, 255), 0.75);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 22px transparent;
     outline: none;
 }
 
@@ -439,7 +439,7 @@
 .vs-side.p1 {
     background:
         linear-gradient(125deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 40%),
-        radial-gradient(circle at 50% 42%, rgba(var(--champ, 110, 150, 255), 0.5), rgba(var(--champ, 110, 150, 255), 0) 66%),
+        radial-gradient(circle at 50% 42%, transparent, transparent 66%),
         linear-gradient(160deg, rgba(50, 96, 230, 0.1), rgba(20, 40, 130, 0.12));
 }
 
