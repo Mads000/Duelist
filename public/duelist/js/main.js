@@ -11,7 +11,7 @@ const App = {
     h: 0,
     dpr: 1,
     match: null,
-    demo: null,
+    loaded: false,
     lastStart: null,
     controllers: [],
     touch: null,
@@ -42,6 +42,7 @@ const App = {
 
         UI.init()
         this.touch = new TouchSource(document.getElementById("touch"))
+        TouchLayout.init()
         Link.onChange = () => { if (UI.current === "controller") UI.renderController() }
         Net.onChange = () => { if (UI.current === "online") UI.renderOnline() }
         this.bindGlobalKeys()
@@ -61,7 +62,7 @@ const App = {
         clearInterval(tipTimer)
         document.getElementById("loadText").textContent = "Bereit!"
 
-        this.startDemo()
+        this.loaded = true
         this.last = performance.now()
         requestAnimationFrame(t => this.loop(t))
 
@@ -157,7 +158,7 @@ const App = {
         if (!inGame) {
             document.body.classList.remove("replaying")
             Link.menuState()
-            document.getElementById("vs").className = ""
+            document.getElementById("intro").className = ""
         }
     },
 
@@ -281,7 +282,7 @@ const App = {
         Sound.unlock()
         this.lastStart = { rules, champs, opponent }
         writeStorage("duelist.lastConfig", this.config)
-        this.demo = null
+        this.menuSky = null
         if (rules.mode !== "tutorial") Tutorial.stop()
         const two = rules.mode === "local" || !!net
         this.match = new Match({
@@ -339,7 +340,6 @@ const App = {
         this.match = null
         Modes.run = null
         UI.hideBanner()
-        this.startDemo()
         this.setState("menu")
         UI.show("menu")
         Music.play("menu")
@@ -400,26 +400,6 @@ const App = {
         Sound.play(match.humanCount === 1 && winner !== 0 ? "defeat" : "victory")
     },
 
-    // Demo-Kampf (Bot gegen Bot) als Attract-Modus auf dem Titelbildschirm
-    startDemo() {
-        const pool = CHAMPION_ORDER.filter(id => !CHAMPIONS[id].boss)
-        const a = pool[Math.floor(Math.random() * pool.length)]
-        let b = pool[Math.floor(Math.random() * pool.length)]
-        if (a === b) b = pool[(pool.indexOf(a) + 1) % pool.length]
-        const demo = new Match({
-            rules: { mode: "demo", map: MAP_ORDER[Math.floor(Math.random() * MAP_ORDER.length)], rounds: 3, roundTime: 60 },
-            champs: [a, b],
-            controllers: [new BotController("hard"), new BotController("hard")],
-            settings: { ...DEFAULT_SETTINGS, shake: false, vibration: false },
-            onEvent: type => {
-                if (type === "matchEnd" && this.demo === demo) setTimeout(() => { if (this.demo === demo) this.startDemo() }, 1500)
-            }
-        })
-        Shop.applySkins(demo, true)
-        demo.setView(this.w, this.h)
-        this.demo = demo
-    },
-
     requestFullscreen() {
         if (!isTouchDevice() || !GameSettings.get().fullscreen) return
         const el = document.documentElement
@@ -436,9 +416,23 @@ const App = {
         this.canvas.width = Math.round(this.w * this.dpr)
         this.canvas.height = Math.round(this.h * this.dpr)
         if (this.match) this.match.setView(this.w, this.h)
-        if (this.demo) this.demo.setView(this.w, this.h)
         // Im Hochformat auf dem Handy automatisch pausieren
         if (this.state === "game" && isTouchDevice() && this.h > this.w) this.pause()
+    },
+
+    // Menü-Hintergrund: der Himmel einer Karte (Farben, ziehende Wolken), ohne Insel und ohne Kampf.
+    // Bei jeder Rückkehr ins Menü kommt eine andere Karte dran.
+    drawMenuSky(dt) {
+        if (!this.menuSky) {
+            const last = this.lastMenuMap
+            const pool = MAP_ORDER.filter(id => id !== last)
+            const map = MAPS[pool[Math.floor(Math.random() * pool.length)]]
+            this.lastMenuMap = map.id
+            this.menuSky = { map, time: 0, camera: { x: WORLD.width / 2, y: WORLD.height / 2, zoom: 1 } }
+            document.documentElement.style.setProperty("--map", (GLASS[map.id] || GLASS.sky).rgb)
+        }
+        this.menuSky.time += dt
+        Match.prototype.drawBackdrop.call(this.menuSky, this.ctx, this.w, this.h)
     },
 
     // ---------------- Hauptschleife ----------------
@@ -446,9 +440,17 @@ const App = {
         const dt = Math.min(0.05, Math.max(0, (now - this.last) / 1000))
         this.last = now
 
-        // Im Kampf das Match, in Titel und Menüs läuft die Demo als Hintergrund
-        if (!this.match && !this.demo && UI.current !== "loading" && UI.current !== "pad") this.startDemo()
-        const active = this.match || (UI.current === "pad" ? null : this.demo)
+        // Im Kampf (und auf Pause/Ergebnis) die Arena, in allen Menüs nur der Wolkenhimmel einer Karte
+        const active = this.match
+        const sky = !active && this.loaded && UI.current !== "pad"
+        if (this.showsArena !== (!!active || sky)) {
+            this.showsArena = !!active || sky
+            document.body.classList.toggle("show-arena", this.showsArena)
+        }
+        if (sky) {
+            this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
+            this.drawMenuSky(dt)
+        }
         if (active) {
             // Variable Teilschritte (max. 1/120 s) – flüssig bei 60, 120 und 144 Hz
             const steps = Math.max(1, Math.ceil(dt / (1 / 120)))

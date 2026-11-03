@@ -1,6 +1,6 @@
 // Service Worker – macht DUELIST nach dem ersten Laden komplett offline spielbar
 // (automatisch erzeugt von tools/make_sw.js)
-const CACHE = "duelist-v3.0.46"
+const CACHE = "duelist-v3.0.71"
 const PRECACHE = [
     "./",
     "index.html",
@@ -17,6 +17,7 @@ const PRECACHE = [
     "js/data.js",
     "js/fighter.js",
     "js/fx.js",
+    "js/icons.js",
     "js/input.js",
     "js/link.js",
     "js/main.js",
@@ -24,12 +25,18 @@ const PRECACHE = [
     "js/modes.js",
     "js/net.js",
     "js/pad.js",
-    "js/progress.js",
-    "js/shop.js",
+    "js/polish.js",
     "js/profiles.js",
+    "js/progress.js",
     "js/settings.js",
+    "js/shop.js",
+    "js/touch-layout.js",
     "js/tutorial.js",
     "js/ui.js",
+    "css/glas-ui.css",
+    "css/hud-glas.css",
+    "css/look.css",
+    "css/polish.css",
     "../assets/ui/Knight Templar.png",
     "../assets/ui/Elite Orc.png",
     "../assets/ui/Armored Skeleton.png",
@@ -42,7 +49,7 @@ const PRECACHE = [
     "../assets/Überschriften/SelctionText.PNG",
     "../assets/Überschriften/end.PNG",
     "../assets/Faehigkeiten/bombe2.png",
-    "../assets/ui/Arena2.png",
+    "../assets/ui/Map-Himmel.png",
     "../assets/ui/Map-Wolkenhof.png",
     "../assets/ui/Map-Vulkan.png",
     "../assets/ui/Map-Frost.png",

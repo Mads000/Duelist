@@ -21,7 +21,7 @@
     --dark: #1a1a1a;
     --gold: #ffd84a;
     --font-display: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
-    --font-body: "Quantico", system-ui, sans-serif;
+    --font-body: "Inter", system-ui, sans-serif;
     --safe-t: env(safe-area-inset-top, 0px);
     --safe-r: env(safe-area-inset-right, 0px);
     --safe-b: env(safe-area-inset-bottom, 0px);

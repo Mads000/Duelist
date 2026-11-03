@@ -1,0 +1,471 @@
+/* DUELIST Liquid Glass: getöntes Glas, runde Formen, weiße Schrift.
+   Gilt für alle Menüs und passt zum Kampf-HUD. */
+:root {
+    --dark: #f2f6ff;
+    --map: 120, 190, 255;
+    --g-tint:
+        linear-gradient(125deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 40%),
+        linear-gradient(150deg, rgba(var(--map), 0.08), rgba(20, 34, 104, 0.1));
+    --g-line: rgba(255, 255, 255, 0.42);
+    --g-shine: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    --g-drop: 0 18px 44px rgba(6, 10, 40, 0.36);
+    --g-blur: blur(7px) saturate(1.2);
+}
+
+/* Tafeln */
+.glass,
+.tile,
+.menu-panel,
+.modal-box,
+.sel-middle,
+.results-box .glass,
+.ability-box,
+.mp-info {
+    color: #f2f6ff;
+    background: var(--g-tint);
+    border: 1px solid var(--g-line);
+    border-radius: 24px;
+    box-shadow: var(--g-shine), var(--g-drop);
+    backdrop-filter: var(--g-blur);
+    -webkit-backdrop-filter: var(--g-blur);
+}
+
+.ability-box,
+.menu-info,
+.tile-missions .mis {
+    border-radius: 16px;
+}
+
+.ability-box {
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+.menu-info {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+    border: 0;
+}
+
+.modal-box h2,
+.panel h3,
+.glass h3,
+.panel-head,
+.mp-info,
+.menu-stats,
+.menu-progress,
+.tile,
+.tile b,
+.tile small,
+.tile-head small,
+.tile-foot,
+.tile em,
+.shop-name,
+.lesson-card,
+.pc-name,
+.profile-card,
+.profile-panel,
+.res-progress,
+.rw-num,
+.rw-rp,
+.load-tip,
+.vs-sub,
+.vs-tip,
+.vs-map,
+.ladder-step {
+    color: #f2f6ff;
+}
+
+.tile-missions .mis {
+    color: #f2f6ff;
+    background: rgba(255, 255, 255, 0.05);
+    border: 0;
+}
+
+.tile em,
+.tile-champ em {
+    color: var(--gold);
+}
+
+/* Knöpfe */
+.btn,
+.btn.mode,
+.back-btn,
+.step-pill,
+.opt-group button,
+.seg button {
+    color: #fff;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.07));
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    transition: background 0.14s, box-shadow 0.14s, transform 0.14s;
+}
+
+.btn:hover,
+.btn:focus-visible,
+.btn.mode:hover,
+.btn.mode:focus-visible,
+.opt-group button:hover,
+.seg button:hover {
+    color: #fff;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.14));
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 22px rgba(130, 175, 255, 0.5);
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.btn.start,
+.btn.start:hover,
+.btn.start:focus-visible {
+    color: #fff;
+    background: linear-gradient(180deg, #ff8a80 0, #f0494f 46%, #c9202f 100%);
+    border-color: rgba(255, 255, 255, 0.55);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 10px 26px rgba(200, 30, 50, 0.42);
+}
+
+.btn.start:hover,
+.btn.start:focus-visible {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 12px 32px rgba(240, 60, 70, 0.62);
+}
+
+.btn small {
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+}
+
+.btn.icon-btn {
+    border-radius: 18px;
+}
+
+.btn.icon-btn svg {
+    stroke: #fff;
+}
+
+.back-btn {
+    border-radius: 50%;
+}
+
+.step-pill {
+    border-radius: 99px;
+}
+
+/* Champion-Bühne im Menü: Figur steht in weichem Licht statt riesig im Bild */
+.tile-champ,
+.tile-shop {
+    background:
+        radial-gradient(circle at 62% 46%, rgba(var(--champ, 150, 190, 255), 0.52), rgba(var(--champ, 150, 190, 255), 0) 62%),
+        var(--g-tint);
+}
+
+.tile-shop {
+    background:
+        radial-gradient(circle at 56% 42%, rgba(255, 120, 130, 0.36), rgba(255, 120, 130, 0) 58%),
+        var(--g-tint);
+}
+
+/* Champion-Auswahl */
+.sel-side,
+.vs-side {
+    color: #fff;
+    background:
+        linear-gradient(125deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 40%),
+        radial-gradient(circle at 50% 42%, rgba(var(--champ, 110, 150, 255), 0.5), rgba(var(--champ, 110, 150, 255), 0) 66%),
+        linear-gradient(160deg, rgba(50, 96, 230, 0.1), rgba(20, 40, 130, 0.12));
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 28px;
+    box-shadow: var(--g-shine), var(--g-drop);
+    backdrop-filter: var(--g-blur);
+    -webkit-backdrop-filter: var(--g-blur);
+}
+
+.sel-side.p2,
+.vs-side.p2 {
+    background:
+        linear-gradient(235deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 40%),
+        radial-gradient(circle at 50% 42%, rgba(var(--champ, 255, 110, 120), 0.5), rgba(var(--champ, 255, 110, 120), 0) 66%),
+        linear-gradient(200deg, rgba(220, 54, 70, 0.1), rgba(120, 20, 44, 0.12));
+}
+
+.sel-side.active {
+    border-color: rgb(var(--champ, 255, 255, 255));
+    box-shadow: var(--g-shine), 0 0 34px rgba(var(--champ, 130, 175, 255), 0.6);
+}
+
+.champ-card {
+    background:
+        radial-gradient(circle at 50% 42%, rgba(var(--champ, 255, 255, 255), 0.34), rgba(var(--champ, 255, 255, 255), 0) 72%),
+        rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.26);
+    border-radius: 18px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
+.champ-card:hover,
+.champ-card:focus-visible {
+    background:
+        radial-gradient(circle at 50% 42%, rgba(var(--champ, 255, 255, 255), 0.6), rgba(var(--champ, 255, 255, 255), 0.1) 78%),
+        rgba(255, 255, 255, 0.12);
+    border-color: rgb(var(--champ, 255, 255, 255));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 22px rgba(var(--champ, 130, 175, 255), 0.75);
+    outline: none;
+}
+
+.cc-name {
+    color: #fff;
+    background: none;
+}
+
+/* Rundenansagen in einer Glaskapsel */
+#banner[data-kind="round"] .banner-text,
+#banner[data-kind="fight"] .banner-text,
+#banner[data-kind="ko"] .banner-text,
+#banner[data-kind="win"] .banner-text,
+#banner[data-kind="info"] .banner-text {
+    padding: 16px 44px 12px;
+    color: #fff;
+    -webkit-text-stroke: 0;
+    text-shadow: 0 2px 12px rgba(0, 0, 30, 0.55);
+    background:
+        linear-gradient(125deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0) 44%),
+        rgba(16, 30, 96, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 34px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 18px 44px rgba(6, 10, 40, 0.4);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+}
+
+#banner[data-kind="ko"] .banner-text {
+    background:
+        linear-gradient(125deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0) 44%),
+        rgba(176, 28, 44, 0.24);
+}
+
+#banner[data-kind="count"] .banner-text {
+    -webkit-text-stroke: 0;
+    text-shadow: 0 3px 16px rgba(0, 0, 40, 0.6);
+}
+
+/* Steuerungs-Hinweis */
+.hud-keys {
+    color: #fff;
+    background: rgba(14, 26, 84, 0.24);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 18px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+}
+
+.hud-keys kbd {
+    color: #10205e;
+    background: rgba(255, 255, 255, 0.86);
+    border: 0;
+    border-radius: 6px;
+}
+
+/* Figuren im Menü kleiner und frei stehend, damit die Pixel sauber wirken */
+.tile-champ canvas,
+.tile-shop canvas {
+    right: 7%;
+    bottom: 9%;
+    height: 84%;
+}
+
+.pc-name,
+.pf-input {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    border: 0;
+    border-radius: 10px;
+}
+
+.pc-name::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Elemente ohne eigene Glastafel brauchen auf hellem Himmel eine Tönung */
+.res-actions .btn:not(.start),
+.vs-map,
+.vs-sub,
+.vs-tip {
+    color: #fff;
+    background: rgba(14, 26, 84, 0.26);
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    border-radius: 99px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.res-actions .btn:not(.start) {
+    border-radius: 16px;
+}
+
+.vs-text {
+    -webkit-text-stroke: 0;
+    text-shadow: 0 4px 22px rgba(0, 0, 40, 0.55);
+}
+
+/* In allen Menüs tritt der Hintergrund zurück, damit das Glas und die Schrift tragen */
+#game {
+    transition: filter 0.3s;
+}
+
+/* Pause und Ergebnis legen eigene Schleier darüber, die Menü-Himmel bleiben hell */
+
+/* Knöpfe stehen auch ohne Tafel sicher auf jedem Hintergrund */
+.btn,
+.btn.mode,
+.back-btn,
+.step-pill,
+.opt-group button,
+.seg button {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.02)),
+        rgba(var(--map), 0.06);
+}
+
+.btn:hover,
+.btn:focus-visible,
+.btn.mode:hover,
+.btn.mode:focus-visible,
+.opt-group button:hover,
+.seg button:hover {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.12)),
+        rgba(60, 96, 200, 0.3);
+}
+
+.opt-group button.on,
+.seg button.on {
+    color: #10205e;
+    background: linear-gradient(180deg, #fff, #cfe0ff);
+    border-color: #fff;
+}
+
+.seg {
+    border: 0;
+    background: none;
+}
+
+.seg button,
+.opt-group button {
+    border-radius: 99px;
+}
+
+/* Bestenliste und Profil im selben Glas */
+.board {
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    border-radius: 24px;
+    box-shadow: var(--g-shine), var(--g-drop);
+    backdrop-filter: var(--g-blur);
+    -webkit-backdrop-filter: var(--g-blur);
+}
+
+.press-start,
+.shop-hint,
+.lore-intro {
+    color: #fff;
+    background: rgba(14, 26, 84, 0.26);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 99px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.press-start {
+    padding: 8px 30px 6px;
+    text-shadow: none;
+}
+
+.shop-hint,
+.lore-intro {
+    padding: 10px 20px;
+    border-radius: 18px;
+}
+
+.code-input {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    border-radius: 14px;
+}
+
+/* Dünneres Glas: Schrift bekommt einen weichen Schatten statt einer dunklen Fläche */
+.glass,
+.tile,
+.menu-panel,
+.modal-box,
+.sel-side,
+.vs-side,
+.btn,
+.board,
+.hud-keys,
+.mp-info {
+    text-shadow: 0 1px 2px rgba(0, 12, 45, 0.6), 0 0 1px rgba(0, 12, 45, 0.35);
+}
+
+.btn.start {
+    text-shadow: 0 1px 2px rgba(120, 0, 20, 0.6);
+}
+
+/* Freistehende Karten bekommen eigene Unschärfe, damit Figuren dahinter nicht in die Schrift laufen */
+.hub-card,
+.res-actions .btn:not(.start),
+.seg button {
+    backdrop-filter: blur(9px) saturate(1.2);
+    -webkit-backdrop-filter: blur(9px) saturate(1.2);
+}
+
+.btn small {
+    color: #fff;
+    opacity: 0.94;
+}
+
+/* .board.p1 aus dem Original ist spezifischer, deshalb hier ausdrücklich */
+.sel-side.board.p1,
+.vs-side.p1 {
+    background:
+        linear-gradient(125deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 40%),
+        radial-gradient(circle at 50% 42%, rgba(var(--champ, 110, 150, 255), 0.5), rgba(var(--champ, 110, 150, 255), 0) 66%),
+        linear-gradient(160deg, rgba(50, 96, 230, 0.1), rgba(20, 40, 130, 0.12));
+}
+
+/* Sehr klares Glas: Schrift trägt sich über einen kräftigeren Schatten selbst */
+.glass,
+.tile,
+.menu-panel,
+.modal-box,
+.sel-side,
+.vs-side,
+.board,
+.mp-info,
+.btn:not(.start),
+.champ-card {
+    text-shadow: 0 1px 2px rgba(0, 12, 45, 0.5);
+}
+
+/* Überschriften der Tafeln: die Original-Regel ist spezifischer */
+.glass.panel > h3:first-child,
+.panel-head,
+.glass h3 {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.rank-badge {
+    color: #2a1a0a;
+    text-shadow: none;
+}

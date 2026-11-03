@@ -1,0 +1,265 @@
+/* Kampf-HUD: flach wie Vorschlag A, Liquid Glass wie Vorschlag B.
+   Zwei schwebende Kapseln, dazwischen die Uhr. Keine Schrägen. */
+#hud {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 10px;
+    /* auf großen Bildschirmen rücken die Kapseln etwas zur Mitte */
+    padding: calc(10px + var(--safe-t)) max(calc(14px + var(--safe-r)), calc(50vw - 640px)) 0 max(calc(14px + var(--safe-l)), calc(50vw - 640px));
+}
+
+.hud-player,
+.hud-player.right {
+    --side-glass:
+        linear-gradient(115deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 42%),
+        linear-gradient(100deg, rgba(var(--champ, 106, 162, 255), 0.36), rgba(var(--map), 0.12));
+    --hp-fill: linear-gradient(#b4d6ff 0, #5b96ff 34%, #2a5fe8 100%);
+    align-items: center;
+    gap: 10px;
+    min-height: 60px;
+    padding: 6px 16px 7px 7px;
+    border: 1px solid rgba(255, 255, 255, 0.42);
+    border-radius: 30px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 10px 26px rgba(6, 12, 44, 0.32);
+    backdrop-filter: blur(12px) saturate(1.2);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+}
+
+.hud-player.right {
+    --side-glass:
+        linear-gradient(245deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 42%),
+        linear-gradient(260deg, rgba(var(--champ, 240, 84, 94), 0.36), rgba(var(--map), 0.12));
+    --hp-fill: linear-gradient(#ffc4ba 0, #ff6a64 34%, #dc2f3c 100%);
+    padding: 6px 7px 7px 16px;
+}
+
+/* schmal bleiben, aber nach außen in die Ecken rücken */
+.hud-player,
+.hud-player.right {
+    width: 100%;
+    max-width: 400px;
+}
+
+.hud-player.right {
+    justify-self: end;
+}
+
+.hud-portrait {
+    width: 46px;
+    height: 46px;
+    background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.12));
+    border: 2px solid rgb(var(--champ, 255, 255, 255));
+    border-radius: 50%;
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.8), 0 0 14px rgba(var(--champ, 255, 255, 255), 0.7);
+}
+
+.hud-info {
+    position: relative;
+    max-width: none;
+}
+
+.hud-name {
+    max-width: calc(100% - 172px);
+    font-size: clamp(15px, 1.45vw, 21px);
+    text-shadow: 0 1px 2px rgba(0, 12, 45, 0.6), 0 0 1px rgba(0, 12, 45, 0.35);
+}
+
+.hud-wins {
+    gap: 5px;
+}
+
+.hud-wins i {
+    width: 10px;
+    height: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    transform: none;
+}
+
+.hud-wins i.on {
+    background: radial-gradient(circle at 35% 30%, #fff6c8, var(--gold));
+    box-shadow: 0 0 8px rgba(255, 216, 74, 0.9);
+}
+
+.hp {
+    height: 12px;
+    margin-top: 4px;
+    overflow: hidden;
+    background: rgba(6, 12, 44, 0.46);
+    border: 0;
+    border-radius: 99px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 30, 0.6), 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.hp-fill,
+.hp-lag {
+    border-radius: 99px;
+}
+
+.hp-lag {
+    background: rgba(255, 244, 205, 0.92);
+}
+
+.hp-text {
+    display: none;
+}
+
+.guard {
+    height: 3px;
+    margin-top: 3px;
+    overflow: hidden;
+    background: rgba(6, 12, 44, 0.32);
+    border-radius: 99px;
+}
+
+.guard i {
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.88);
+}
+
+/* Energie sitzt in der Namenszeile, so bleibt das HUD flach */
+.energy {
+    position: absolute;
+    top: 3px;
+    right: 56px;
+    gap: 3px;
+    margin: 0;
+}
+
+.hud-player.right .energy {
+    right: auto;
+    left: 56px;
+}
+
+.energy i,
+.energy i.cost,
+.hud-player.right .energy i.cost {
+    width: 14px;
+    height: 6px;
+    margin: 0;
+    background: rgba(6, 12, 44, 0.3);
+    border: 0;
+    border-radius: 99px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+}
+
+.energy i.on {
+    background: var(--gold);
+    box-shadow: 0 0 7px rgba(255, 216, 74, 0.85);
+}
+
+.energy img {
+    width: 19px;
+    height: 19px;
+    margin: -7px 2px;
+}
+
+.combo {
+    left: 66px;
+    margin-top: 10px;
+    text-shadow: 0 1px 3px rgba(0, 12, 45, 0.5);
+}
+
+.hud-player.right .combo {
+    right: 66px;
+}
+
+.hud-center {
+    align-self: start;
+}
+
+.hud-timer,
+.hud-timer.urgent {
+    min-width: 76px;
+    height: 60px;
+    display: grid;
+    place-items: center;
+    padding: 0 14px;
+    font-size: clamp(27px, 2.5vw, 36px);
+    line-height: 1;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 12, 45, 0.6), 0 0 1px rgba(0, 12, 45, 0.35);
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 48%),
+        rgba(var(--map), 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.42);
+    border-radius: 30px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 10px 26px rgba(6, 12, 44, 0.32);
+    backdrop-filter: blur(12px) saturate(1.2);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+}
+
+.hud-timer.urgent {
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 48%),
+        rgba(190, 34, 48, 0.42);
+}
+
+#pauseBtn {
+    top: calc(78px + var(--safe-t));
+    width: 36px;
+    height: 36px;
+    background: rgba(14, 26, 84, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.hud-map {
+    position: absolute;
+    top: calc(118px + var(--safe-t));
+    left: 50%;
+    padding: 4px 16px 3px;
+    font-family: var(--font-display);
+    font-size: 16px;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 12, 45, 0.6), 0 0 1px rgba(0, 12, 45, 0.35);
+    background: rgba(var(--map), 0.24);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 99px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px) saturate(1.2);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+    opacity: 0;
+    transform: translateX(-50%);
+}
+
+.hud-map.show {
+    animation: mapTag 6s ease-out forwards;
+}
+
+@keyframes mapTag {
+    0%, 86% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* Rolle und Bot-Stufe stehen auf dem VS-Bildschirm, im HUD zählt der freie Platz */
+.hud-name small {
+    display: none;
+}
+
+@media (max-width: 720px) {
+    .hud-player,
+    .hud-player.right {
+        min-height: 48px;
+    }
+
+    .hud-portrait {
+        width: 34px;
+        height: 34px;
+    }
+
+    .energy {
+        display: none;
+    }
+
+    .hud-timer,
+    .hud-timer.urgent {
+        min-width: 58px;
+        height: 48px;
+    }
+}

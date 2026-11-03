@@ -136,7 +136,7 @@ const PadMode = {
         $id("padLeave").onclick = () => {
             this.close()
             // Wurde die App direkt als Controller geöffnet, fehlen die Grafiken – dann normal neu laden
-            if (!App.demo) location.href = location.pathname
+            if (!App.loaded) location.href = location.pathname
             else App.quitToMenu()
         }
         $id("padFs").onclick = () => this.fullscreen(false)

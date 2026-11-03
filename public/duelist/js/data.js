@@ -93,7 +93,7 @@ const CHAMPIONS = {
             icon: "Faehigkeiten/schield.png",
             cost: 3,
             duration: 3,
-            text: "Nach 3 Treffern verfügbar. 3 Sekunden lang blockt ein Lichtschild jeden Schaden und stößt Angreifer zurück."
+            text: "3 Sekunden lang blockt ein Lichtschild jeden Schaden und stößt Angreifer zurück."
         },
         lore: "Der unerschütterliche Anführer der einstigen Gruppe. Vanguard lebte für Ehre, Zusammenhalt und die Hoffnung auf Frieden. Als das Band zerbrach, erhob er sein Schild, um nicht nur sich, sondern auch seine zerbrochenen Kameraden zu schützen. In der Arena kämpft er mit unerschütterlicher Entschlossenheit – um seine Freunde zu retten … oder endgültig zu besiegen."
     },
@@ -133,7 +133,7 @@ const CHAMPIONS = {
             icon: "Faehigkeiten/bombe2.png",
             cost: 3,
             maxEnergy: 5,
-            text: "Ab 3 Treffern bereit, lädt bis 5 Treffer weiter: 12 / 24 / 36 Schaden. Die Bombe fliegt zum Gegner – man kann ausweichen!"
+            text: "Wirft eine Bombe zum Gegner, die sich weiter aufladen lässt: 12 / 24 / 36 Schaden. Man kann ausweichen!"
         },
         lore: "Der einst mächtigste Krieger – jetzt die Verkörperung ungezähmter Zerstörung. Von Gier und Macht korrumpiert, wandte sich Warbrute gegen alles, was er einst liebte. In der Arena entfesselt er Bomben voller Chaos, während sein wilder Zorn die Luft zerreißt. Für ihn zählt nur Stärke – und die Welt wird seinen Triumph bezeugen."
     },
@@ -173,7 +173,7 @@ const CHAMPIONS = {
             icon: "Faehigkeiten/unsichtbar.png",
             cost: 3,
             duration: 3,
-            text: "Nach 3 Treffern verfügbar. 3 Sekunden unsichtbar und unverwundbar – der erste Schlag aus dem Schatten macht doppelten Schaden."
+            text: "3 Sekunden unsichtbar und unverwundbar – der erste Schlag aus dem Schatten macht doppelten Schaden."
         },
         lore: "Der gefallene Held, der den Tod selbst überwand. Dunkle Kräfte brachten ihn zurück – verändert und geheimnisvoll. Boneguard wandelt durch die Schatten der Arena, unsichtbar und tödlich, doch sein Herz erinnert sich an die Kameradschaft, die ihn einst verband."
     },
@@ -213,7 +213,7 @@ const CHAMPIONS = {
             icon: "Faehigkeiten/leben2.png",
             cost: 3,
             amount: 25,
-            text: "Nach 3 Treffern verfügbar. Nach Aktivierung bekommt man +25 Leben – perfekt, um ein Duell zu drehen."
+            text: "Heilt sofort 25 Leben – perfekt, um ein Duell zu drehen."
         },
         lore: "Der schnellste, wildeste Kämpfer, gefangen zwischen Mensch und Bestie. Verrat hat seine Seele zerrissen und seine Instinkte entfesselt. Doch tief in ihm glimmt ein Funke der alten Freundschaft, den er mit heilender Kraft schützt."
     },
@@ -297,7 +297,7 @@ const CHAMPIONS = {
             name: "Blink",
             icon: "Faehigkeiten/unsichtbar.png",
             cost: 3,
-            text: "Nach 3 Treffern verfügbar. Teleportiert sich hinter den Gegner und ist kurz unverwundbar. Leicht = Feuerball, Schwer = Eis-Explosion (langsam, aber auf Distanz)."
+            text: "Teleportiert sich hinter den Gegner und ist kurz unverwundbar. Leicht = Feuerball, Schwer = Eis-Explosion (langsam, aber auf Distanz)."
         },
         lore: "Er war der Kopf der Gruppe, der die Sterne las und den Verrat kommen sah – und schwieg. Seitdem sucht Arcanis in der Arena nach Vergebung, mit Feuer in der einen und Eis in der anderen Hand."
     },
@@ -340,7 +340,7 @@ const CHAMPIONS = {
             icon: "Faehigkeiten/leben.png",
             cost: 3,
             amount: 30,
-            text: "Nach 3 Treffern verfügbar. Ein Gebet heilt 30 Leben – aber während des Gebets ist sie verwundbar."
+            text: "Ein Gebet heilt 30 Leben – aber während des Gebets ist sie verwundbar."
         },
         lore: "Seraphina hütete das Licht im Tempel über den Wolken, lange bevor die Arena gebaut wurde. Als der Knochenkönig erwachte, legte sie die Gebetsbücher beiseite und nahm den Stab in die Hand. Sie heilt, wen sie retten kann – und richtet, wen nicht."
     },
@@ -379,7 +379,7 @@ const CHAMPIONS = {
             icon: "Faehigkeiten/schield2.png",
             cost: 3,
             move: move(anim("Attack02", 9, 16), [[2, 6]], 15, 900, 44, { lunge: 0, rush: [1, 6, 950], guardBreak: true, recovery: 0.4 }),
-            text: "Nach 3 Treffern verfügbar. Galoppiert quer über die Arena und reißt alles mit – perfekt, um Gegner in den Abgrund zu stoßen."
+            text: "Galoppiert quer über die Arena und reißt alles mit – perfekt, um Gegner in den Abgrund zu stoßen."
         },
         lore: "Valor ritt einst als Bote zwischen den Wolkeninseln. Als die Brücken fielen, blieb nur die Arena. Er kämpft für niemanden – nur für den Wind unter den Hufen und den Ruhm, der Schnellste zu sein."
     },
@@ -417,7 +417,7 @@ const CHAMPIONS = {
             name: "Glibberpfütze",
             icon: "Faehigkeiten/unsichtbar.png",
             cost: 3,
-            text: "Nach 3 Treffern verfügbar. Spuckt eine Pfütze unter den Gegner – sie verlangsamt und ätzt 4 Sekunden lang."
+            text: "Spuckt eine Pfütze unter den Gegner – sie verlangsamt und ätzt 4 Sekunden lang."
         },
         lore: "Niemand weiß, woher Gloop kam. Manche sagen, er tropfte eines Nachts aus einer Regenwolke direkt in die Arena. Er ist klein, schnell und unterschätzt – und genau das liebt er."
     },
@@ -486,9 +486,9 @@ function resolveChampion(name) {
 // ---------------- Maps ----------------
 const MAPS = {
     sky: {
-        id: "sky", cliff: ["#8a5a32", "#6b4528", "#3a2416"], name: "Himmelsarena", img: "ui/Arena2.png",
-        text: "Die Original-Arena über den Wolken – Windstöße schieben euch über den Platz.",
-        ambient: "clouds", grip: 1, hazard: "wind", bg: ["#3f7bd9", "#9ccaf5"]
+        id: "sky", cliff: ["#9aa2b4", "#6e7688", "#3e4456"], name: "Himmelsgarten", img: "ui/Map-Himmel.png",
+        text: "Eine Wiese über den Wolken – Windstöße schieben euch über den Platz.",
+        ambient: "clouds", grip: 1, hazard: "wind", bg: ["#4a6aa6", "#a3bcd8"], tint: ["#22345c", 0.12]
     },
     classic: {
         id: "classic", cliff: ["#c8c2d4", "#8e889e", "#4e4862"], name: "Wolkenhof", img: "ui/Map-Wolkenhof.png",
@@ -498,7 +498,7 @@ const MAPS = {
     volcano: {
         id: "volcano", cliff: ["#5a4246", "#33262a", "#160e10"], name: "Vulkanschmiede", img: "ui/Map-Vulkan.png",
         text: "Glut steigt auf – und manchmal bricht der Boden auf. Achte auf Feuerfontänen!",
-        ambient: "embers", grip: 1, hazard: "geyser", bg: ["#1c0a0e", "#7a1a0a"], tint: ["#3a0806", 0.72]
+        ambient: "embers", grip: 1, hazard: "geyser", bg: ["#26101e", "#8e2c14"], tint: ["#3a0806", 0.55]
     },
     frost: {
         id: "frost", cliff: ["#cfe8fb", "#7aa8d8", "#3a5c90"], name: "Frostgipfel", img: "ui/Map-Frost.png",
@@ -606,7 +606,7 @@ const DEFAULT_SETTINGS = {
     gameSpeed: 1,
     showFps: false,
     fullscreen: true,
-    replay: true,
+    replay: false,
     autoFight: false,   // Cheat: KI kämpft, man läuft nur (F8)
     name: ""            // eigener Spielername (Menü, HUD, Highscore)
 }

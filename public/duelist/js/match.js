@@ -1242,9 +1242,12 @@ class Match {
         const f = this.leads[w]
         const perfect = f.hp >= f.maxHp
         this.emit("roundWin", { side: w, perfect, hp: f.hp, maxHp: f.maxHp, timeLeft: this.timer })
+        // "Du gewinnst", aber "Arcanis gewinnt"
+        const name = this.winnerName(w)
+        const verb = name === "DU" ? "gewinnst" : "gewinnt"
         this.emit("banner", {
-            text: perfect ? "PERFECT!" : this.winnerName(w) + " GEWINNT",
-            sub: perfect ? this.winnerName(w) + " gewinnt die Runde" : `Runde ${this.round}`,
+            text: perfect ? "PERFECT!" : `${name} ${verb.toUpperCase()}`,
+            sub: perfect ? `${name === "DU" ? "Du" : name} ${verb} die Runde` : `Runde ${this.round}`,
             kind: "win", side: w, time: 1.9
         })
         if (!f.isHuman && this.humanCount === 1) this.sound("defeat")
@@ -1428,9 +1431,16 @@ class Match {
             ctx.globalAlpha = 0.06 + Math.sin(this.time * 1.7) * 0.03
             ctx.fillStyle = "#ff5a1f"
             // nur auf der Insel glühen, nicht über den Wolken
-            ctx.fillRect(ARENA.x0 - 40, ARENA.y0 - 30, ARENA.x1 - ARENA.x0 + 80, ARENA.y1 - ARENA.y0 + 60)
+            const { rows, first, step } = ARENA.shape
+            ctx.beginPath()
+            rows.forEach((r, i) => ctx.lineTo(r[0], first + i * step))
+            for (let i = rows.length - 1; i >= 0; i--) ctx.lineTo(rows[i][1], first + i * step)
+            ctx.closePath()
+            ctx.fill()
             ctx.restore()
         }
+        // Wolken vor der Unterseite der Insel (polish.js)
+        if (this.drawMapFront) this.drawMapFront(ctx)
 
         ctx.restore()
 
@@ -1441,6 +1451,13 @@ class Match {
         this.drawArenaGround(ground)
         if (this.phase !== "replay") for (const f of this.fighters) f.drawShadow(ground)
         this.pixel.end(ctx)
+        // Fähigkeiten am Boden als glattes Glas (polish.js): Pfützen, Warnkreise, Ringe
+        if (this.drawGlassGround) {
+            ctx.save()
+            toWorld()
+            this.drawGlassGround(ctx)
+            ctx.restore()
+        }
 
         // Figuren & Geschosse (Sprites)
         ctx.save()
@@ -1466,6 +1483,13 @@ class Match {
         this.fx.draw(top)
         this.fx.drawTexts(top)
         this.pixel.end(ctx)
+        // Fähigkeiten an den Figuren als glattes Glas (polish.js): Schild, Ringe
+        if (this.drawGlassTop) {
+            ctx.save()
+            toWorld()
+            this.drawGlassTop(ctx)
+            ctx.restore()
+        }
         if (this.phase === "fight") {
             ctx.save()
             toWorld()
@@ -1481,10 +1505,6 @@ class Match {
         }
         this.drawImpact(ctx, w, h)
         this.drawDanger(ctx, w, h)
-        if (this.phase === "ko" && this.phaseT < 1.6) {
-            ctx.fillStyle = `rgba(10,5,20,${Math.min(0.35, this.phaseT * 0.5)})`
-            ctx.fillRect(0, 0, w, h)
-        }
         // Wiederholung: Kino-Balken, Sepia-Schleier und REPLAY-Anzeige
         if (this.phase === "replay") {
             ctx.fillStyle = "rgba(60,40,20,0.12)"
@@ -1503,18 +1523,9 @@ class Match {
                 ctx.fill()
             }
             ctx.textAlign = "right"
-            ctx.font = `${Math.round(h * 0.03)}px "Quantico", sans-serif`
+            ctx.font = `${Math.round(h * 0.03)}px "Inter", sans-serif`
             ctx.fillText("Taste drücken zum Überspringen", w * 0.96, h * 0.95)
             ctx.textAlign = "left"
-        }
-        // Kino-Balken beim Finisher
-        if (this.phase === "ko") {
-            const t = this.phaseT
-            const k = Math.min(1, t * 5) * (t > 3.1 ? Math.max(0, 1 - (t - 3.1) * 3) : 1)
-            const bar = h * (this.finisher && this.finisher.big ? 0.1 : 0.07) * k
-            ctx.fillStyle = "#05070f"
-            ctx.fillRect(0, 0, w, bar)
-            ctx.fillRect(0, h - bar, w, bar)
         }
         // Rote Ränder bei wenig Leben (nur wenn ein Mensch allein spielt)
         const human = this.humanCount === 1 && this.fighters.find(f => f.isHuman)
@@ -1760,20 +1771,41 @@ class Match {
             const fade = Math.min(1, (b.life - b.t) * 2)
             ctx.save()
             ctx.globalAlpha = fade
-            ctx.fillStyle = `rgba(255,170,210,${0.25 * pulse})`
+            // Glasscheibe am Boden mit zartem Rosa-Schimmer
+            const disc = ctx.createRadialGradient(b.x, b.y - 6, 4, b.x, b.y, 56)
+            disc.addColorStop(0, `rgba(255,255,255,${0.45 * pulse})`)
+            disc.addColorStop(1, `rgba(255,190,220,${0.18 * pulse})`)
+            ctx.fillStyle = disc
             ctx.beginPath()
             ctx.ellipse(b.x, b.y, 54, 22, 0, 0, Math.PI * 2)
             ctx.fill()
-            ctx.strokeStyle = "rgba(255,200,230,0.9)"
-            ctx.lineWidth = 4
+            ctx.strokeStyle = "rgba(255,255,255,0.9)"
+            ctx.lineWidth = 2
             ctx.stroke()
-            // Blüte: vier Blätter und eine goldene Mitte
-            const s = 9
-            const y = b.y - 16 - Math.sin(b.t * 3) * 3
-            ctx.fillStyle = "#ff8fc2"
-            for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) ctx.fillRect(b.x + dx * s - s / 2, y + dy * s - s / 2, s, s)
+            ctx.strokeStyle = "rgba(255,170,210,0.55)"
+            ctx.lineWidth = 5
+            ctx.beginPath()
+            ctx.ellipse(b.x, b.y, 50, 19, 0, 0, Math.PI * 2)
+            ctx.stroke()
+            // Blüte aus vier Glasblättern mit goldener Mitte
+            const y = b.y - 18 - Math.sin(b.t * 3) * 3
+            for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+                const px = b.x + dx * 9, py = y + dy * 8
+                const leaf = ctx.createRadialGradient(px - 2, py - 3, 1, px, py, 8)
+                leaf.addColorStop(0, "rgba(255,255,255,0.95)")
+                leaf.addColorStop(1, "rgba(255,140,195,0.75)")
+                ctx.fillStyle = leaf
+                ctx.beginPath()
+                ctx.arc(px, py, 7.5, 0, Math.PI * 2)
+                ctx.fill()
+                ctx.strokeStyle = "rgba(255,255,255,0.9)"
+                ctx.lineWidth = 1.2
+                ctx.stroke()
+            }
             ctx.fillStyle = "#ffe27a"
-            ctx.fillRect(b.x - s / 2, y - s / 2, s, s)
+            ctx.beginPath()
+            ctx.arc(b.x, y, 4.5, 0, Math.PI * 2)
+            ctx.fill()
             ctx.restore()
         }
         for (const g of this.geysers) {

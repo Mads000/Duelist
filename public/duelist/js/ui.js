@@ -50,18 +50,6 @@ const UI = {
         for (const btn of $$("[data-go]")) btn.addEventListener("click", () => App.go(btn.dataset.go))
         for (const btn of $$("[data-back]")) btn.addEventListener("click", () => App.back())
 
-        // Hauptmenü: kurze Erklärung zum Modus unter dem Mauszeiger / Fokus
-        const info = $("#menuInfo")
-        const explain = btn => {
-            const [name, ...rest] = btn.dataset.info.split(": ")
-            info.innerHTML = `<b>${name}</b> ${rest.join(": ")}`
-        }
-        for (const btn of $$("#screen-menu [data-info]")) {
-            btn.addEventListener("mouseenter", () => explain(btn))
-            btn.addEventListener("focus", () => explain(btn))
-        }
-        explain($(".menu-arcade"))
-
         this.buildLore()
         this.buildSettings()
         this.buildSelect()
@@ -127,8 +115,6 @@ const UI = {
     renderRecord() {
         $("#menuProfile").innerHTML = Progress.profileHtml()
         $("#tileMissions").innerHTML = Progress.missionsHtml()
-        this.renderRankTile()
-        this.renderShopTile()
         const field = $("#playerName")
         field.value = playerName()
         // Name des Profils ändern (leer lassen = alter Name bleibt)
@@ -140,40 +126,6 @@ const UI = {
         $("#menuProfile .gold-pill").addEventListener("click", () => App.go("shop"))
         $("#profileSwitch").addEventListener("click", () => App.go("profiles"))
         this.renderQuickChamp()
-    },
-
-    renderRankTile() {
-        const r = Shop.rank()
-        const best = (PlayerRecord.data.highscores.arcade || [])[0]
-        $("#tileRank").innerHTML = `<span class="tile-head"><small>Dein Rang</small></span>
-            <span class="rank-badge big" style="--rank:${r.color}">${r.name}</span>
-            <span class="xp-bar rank-bar"><i style="transform:scaleX(${r.progress})"></i></span>
-            <span class="tile-foot">${r.next ? `${Shop.data.rp} / ${r.next.rp} RP bis ${r.next.name}` : `${Shop.data.rp} RP · Höchster Rang!`}<br>Arcade-Rekord: ${best ? best.score : "–"}</span>`
-    },
-
-    // Kachel: ein Skin, den man noch nicht hat (zuerst für den eigenen Champion)
-    renderShopTile() {
-        const tile = $("#tileShop")
-        const mine = isUnlocked(App.config.champs[0]) ? App.config.champs[0] : "vanguard"
-        const champs = [mine, ...playableChampions().filter(id => id !== mine)]
-        let offer = null
-        for (const id of champs) {
-            const skin = SKINS.find(s => !Shop.owns(id, s.id))
-            if (skin) {
-                offer = { id, skin }
-                break
-            }
-        }
-        if (!this.shopPreview) this.shopPreview = new SpritePreview($("canvas", tile), mine, "idle", { zoom: 1.3 })
-        if (!offer) {
-            this.shopPreview.set(mine, "idle", Shop.equipped(mine))
-            $(".tile-text", tile).innerHTML = `<small>Shop</small><b>Alle Skins gesammelt!</b>`
-            return
-        }
-        this.shopPreview.set(offer.id, "idle", offer.skin.id)
-        const afford = Shop.data.gold >= offer.skin.price
-        $(".tile-text", tile).innerHTML = `<small>Neu im Shop</small><b>${offer.skin.name}-${CHAMPIONS[offer.id].name}</b>
-            <em><span class="gold-coin"></span>${offer.skin.price}${afford ? " · Jetzt kaufen!" : ""}</em>`
     },
 
     // Training → Champions kennenlernen
@@ -201,7 +153,7 @@ const UI = {
     renderQuickChamp() {
         const id = isUnlocked(App.config.champs[0]) ? App.config.champs[0] : "vanguard"
         $("#quickName").textContent = CHAMPIONS[id].name
-        if (!this.quickPreview) this.quickPreview = new SpritePreview($("#quickPortrait"), id, "idle", { zoom: 1.25 })
+        if (!this.quickPreview) this.quickPreview = new SpritePreview($("#quickPortrait"), id, "idle", { zoom: 1.3 })
         if (this.quickPreview.champId !== id || this.quickPreview.skin !== Shop.equipped(id)) this.quickPreview.set(id, "idle", Shop.equipped(id))
     },
 
@@ -248,7 +200,7 @@ const UI = {
     abilityBox(c, who = "") {
         const a = c.ability
         return `<div class="ability-box">
-            <img src="${ASSET_ROOT}${a.icon}" alt="">
+            <span class="ab-badge">${abilityIcon(c)}</span>
             <div><b>${who}${who ? c.name + " · " : ""}Ability: ${a.name}</b><p>${a.text}</p>${c.special ? `<p class="sp-line"><b>Spezial (zum Gegner + Schwer): ${c.special.name}</b> – ${c.special.text}</p>` : ""}</div>
         </div>`
     },
@@ -576,15 +528,16 @@ const UI = {
             $(".hud-name", el).innerHTML = name
             $(".hp-text", el).textContent = match.localSide !== undefined ? (f.side === match.localSide ? playerName() || "Du" : "Gegner (online)")
                 : match.humanCount === 2 ? `Player ${f.side + 1}` : f.side === 0 ? playerName() || "Player 1" : (match.training ? "Dummy" : "CPU")
-            $(".energy", el).innerHTML = Array.from({ length: f.maxEnergy }, (_, i) =>
-                `<i class="${i === f.champ.ability.cost - 1 ? "cost" : ""}"></i>`).join("") +
-                `<img src="${ASSET_ROOT}${f.champ.ability.icon}" alt=""><span class="sp" title="Spezialangriff bereit">SP</span>`
+            const extra = Math.max(0, f.maxEnergy - f.champ.ability.cost)
+            $(".energy", el).innerHTML = `<span class="ab-ring" title="${f.champ.ability.name}">${abilityIcon(f.champ)}</span>` +
+                (extra ? `<span class="ab-extra">${"<i></i>".repeat(extra)}</span>` : "") +
+                `<span class="sp" title="Spezialangriff bereit">SP</span>`
             $(".hud-wins", el).innerHTML = match.training ? "" : Array.from({ length: match.roundsToWin }, () => "<i></i>").join("")
             if (!this.hudPreviews[f.side]) this.hudPreviews[f.side] = new SpritePreview($(".hud-portrait", el), f.champId, "idle", { zoom: 1.9, flip: f.side === 1 })
             this.hudPreviews[f.side].set(f.champId, "idle", f.skin)
         }
         this.renderHudKeys(match)
-        $("#touch .t-ability img").src = ASSET_ROOT + match.fighters[0].champ.ability.icon
+        $("#touch .t-ability .t-icon").innerHTML = abilityIcon(match.fighters[0].champ)
         $("#hudScore").hidden = !Modes.showsScore()
         document.body.classList.toggle("has-score", Modes.showsScore())
         this.setScore(Modes.score(), false)
@@ -640,7 +593,9 @@ const UI = {
             }
             if (c.energy[f.side] !== f.energy) {
                 c.energy[f.side] = f.energy
-                $$(".energy i", el).forEach((pip, i) => pip.classList.toggle("on", i < f.energy))
+                const cost = f.champ.ability.cost
+                $(".ab-ring", el).style.setProperty("--k", Math.min(1, f.energy / cost).toFixed(3))
+                $$(".ab-extra i", el).forEach((pip, i) => pip.classList.toggle("on", i < f.energy - cost))
                 el.classList.toggle("ready", f.abilityReady)
                 $(`.hud-keys[data-side="${f.side}"]`).classList.toggle("ready", f.abilityReady)
                 if (f.side === 0) this.updateTouchAbility(f)
@@ -722,32 +677,33 @@ const UI = {
     hideBanner() {
         clearTimeout(this.bannerTimer)
         $("#banner").className = ""
-        $("#vs").className = ""
+        $("#intro").className = ""
     },
 
-    // ---------------- VS-Bildschirm ----------------
+    // ---------------- Kampfstart ----------------
+    // Beide Champions fahren von den Seiten ein, in der Mitte das VS – dann öffnet sich die Arena
     showVs(match) {
-        const vs = $("#vs")
+        const box = $("#intro")
         this.vsPreviews = this.vsPreviews || []
         match.leads.forEach((f, i) => {
-            const side = $(`.vs-side.p${i + 1}`, vs)
-            $(".vs-name", side).textContent = f.champ.name
-            $(".vs-sub", side).textContent = match.humanCount === 2 ? `Player ${i + 1}` : i === 0 ? (playerName() || "Du") : (match.training ? "Trainingspuppe" : "CPU · " + (f.controller.diff ? f.controller.diff.name : ""))
+            const side = $(`.in-side[data-side="${i}"]`, box)
+            $(".in-name", side).textContent = f.champ.name
+            $(".in-sub", side).textContent = match.humanCount === 2 ? `Spieler ${i + 1}` : i === 0 ? (playerName() || "Du") : (match.training ? "Trainingspuppe" : "CPU · " + (f.controller.diff ? f.controller.diff.name : ""))
+            $(".in-ability", side).innerHTML = abilityIcon(f.champ) + f.champ.ability.name
             if (!this.vsPreviews[i]) this.vsPreviews[i] = new SpritePreview($("canvas", side), f.champId, "idle", { zoom: 1.2, flip: i === 1 })
             this.vsPreviews[i].set(f.champId, "idle", f.skin)
         })
-        $(".vs-tip", vs).textContent = match.training ? "" : "Tipp: " + randomTip()
-        $(".vs-map", vs).textContent = (match.rules.stage ? match.rules.stage + " · " : "") + match.map.name + (match.rules.chaos ? " · CHAOS" : "")
-        vs.className = ""
-        void vs.offsetWidth
-        vs.className = "show"
+        $(".in-map", box).textContent = (match.rules.stage ? match.rules.stage + " · " : "") + match.map.name + (match.rules.chaos ? " · Chaos" : "")
+        box.className = ""
+        void box.offsetWidth
+        box.className = "show"
         document.body.classList.add("vs-on")
         Sound.play("select")
         clearTimeout(this.vsTimer)
         clearTimeout(this.vsHudTimer)
-        // HUD blendet ein, während die VS-Tafel ausblendet
-        this.vsHudTimer = setTimeout(() => document.body.classList.remove("vs-on"), 1850)
-        this.vsTimer = setTimeout(() => { vs.className = "" }, 2300)
+        // HUD blendet ein, während die Seiten wieder hinausfahren
+        this.vsHudTimer = setTimeout(() => document.body.classList.remove("vs-on"), 1900)
+        this.vsTimer = setTimeout(() => { box.className = "" }, 2300)
     },
 
     // ---------------- Arcade-Leiter ----------------
@@ -900,21 +856,21 @@ const UI = {
         $("#screen-results").classList.toggle("lost", solo && !won)
         this.hideBanner()
         const t = $("#resTitle")
-        t.textContent = title || (solo ? (won ? "SIEG!" : "NIEDERLAGE") : `PLAYER ${winner + 1} GEWINNT`)
-        t.className = "res-title " + (solo ? (won ? "win" : "lose") : "p" + (winner + 1))
+        t.textContent = title || (solo ? (won ? "SIEG!" : "NIEDERLAGE") : `SPIELER ${winner + 1} GEWINNT`)
+        t.className = "rs-title " + (solo ? (won ? "win" : "lose") : "p" + (winner + 1))
         const opp = match.leads[1 - me]
         $("#resSub").textContent = sub || (solo
             ? `gegen ${opp.champ.name} · ${match.map.name}`
             : `${match.team2 ? (winner === 0 ? "Team Blau" : "Team Rot") : match.leads[winner].champ.name} beherrscht die Arena`)
         $("#resScore").innerHTML = `<span class="p1">${match.wins[0]}</span><i>:</i><span class="p2">${match.wins[1]}</span>`
 
-        // Sieger groß und im Licht, Verlierer grau daneben
+        // Sieger in Farbe, Verlierer blass daneben
         this.resPreviews = this.resPreviews || []
         for (const f of match.leads) {
-            const el = $(`.res-fighter[data-side="${f.side}"]`)
+            const el = $(`.rs-fighter[data-side="${f.side}"]`)
             el.classList.toggle("winner", f.side === winner)
             el.classList.toggle("loser", f.side !== winner)
-            $(".res-name", el).textContent = solo ? (f.side === me ? (playerName() || "Du") + " · " : (online ? "Gegner · " : "CPU · ")) + f.champ.name : `P${f.side + 1} · ${f.champ.name}`
+            $(".rs-name", el).innerHTML = `<small>${solo ? (f.side === me ? (playerName() || "Du") : (online ? "Gegner" : "CPU")) : "Spieler " + (f.side + 1)}</small>${f.champ.name}`
             if (!this.resPreviews[f.side]) this.resPreviews[f.side] = new SpritePreview($("canvas", el), f.champId, "idle", { zoom: 1.2, flip: f.side === 1 })
             this.resPreviews[f.side].set(f.champId, f.side === winner ? "heavy" : "death", f.skin)
         }
@@ -930,30 +886,25 @@ const UI = {
         const gradeSide = solo ? me : winner
         const grade = this.grade(match, gradeSide, winner === gradeSide)
         const g = $("#resGrade")
-        g.className = "res-grade g-" + grade
+        g.className = "rs-grade g-" + grade
         $("b", g).textContent = grade
         setTimeout(() => { if (this.current === "results") Sound.play(grade === "S" || grade === "A" ? "perfect" : "guard") }, 1100)
 
-        const rows = [
-            ["Schaden", "damage"], ["Treffer", "hits"], ["Beste Kombo", "maxCombo"], ["Konter", "counters"],
-            ["Geblockt", "blocked"], ["Perfekt geblockt", "perfect"], ["Ausgewichen", "dodges"], ["Fähigkeiten", "abilities"]
-        ]
+        // Nur die drei Werte, die etwas über den Kampf erzählen
+        const rows = [["Schaden", "damage"], ["Treffer", "hits"], ["Beste Kombo", "maxCombo"]]
         const [a, b] = match.leads
-        $("#resStats").innerHTML = rows.map(([label, key], i) => {
+        $("#resStats").innerHTML = rows.map(([label, key]) => {
             const va = Math.round(a.stats[key])
             const vb = Math.round(b.stats[key])
-            const max = Math.max(1, va, vb)
-            return `<div class="rs-row" style="--d:${(0.5 + i * 0.07).toFixed(2)}s">
-                <span class="rs-val p1 ${va > vb ? "best" : ""}">${va}</span>
-                <div class="rs-bar left"><i style="width:${va / max * 100}%"></i></div>
-                <span class="rs-label">${label}</span>
-                <div class="rs-bar"><i style="width:${vb / max * 100}%"></i></div>
-                <span class="rs-val p2 ${vb > va ? "best" : ""}">${vb}</span>
+            const share = va + vb ? va / (va + vb) : 0.5
+            return `<div class="rs-row">
+                <b class="${va > vb ? "best" : ""}">${va}</b>
+                <span class="rs-label">${label}<i style="--k:${share.toFixed(3)}"></i></span>
+                <b class="${vb > va ? "best" : ""}">${vb}</b>
             </div>`
         }).join("")
         $("#resNote").textContent = note
         this.showRewards()
-        this.confetti(!solo || won)
         $("#rematchBtn").textContent = rematch
         $("#changeBtn").hidden = !change
         this.wipe()
@@ -976,63 +927,36 @@ const UI = {
         this.progressInfo = null
         const box = $("#resProgress")
         box.hidden = !p
-        $(".res-cols").classList.toggle("single", !p)
         if (!p) return
         const d = Progress.data
         const r = p.rank
         const rb = r && Shop.rank(r.before)
         const ra = r && Shop.rank(r.after)
         const diff = r ? r.after - r.before : 0
-        box.innerHTML = `
-            <div class="rw-row"><span class="rw-icon">XP</span><b class="rw-num" data-to="${p.xp}">+0</b>
-                <b class="rw-level">LEVEL ${p.start.level}</b><div class="xp-bar"><i style="transform:scaleX(${p.start.xp / Progress.need(p.start.level)})"></i></div></div>
-            <div class="rw-row"><span class="gold-coin big"></span><b class="rw-num gold" data-to="${p.gold}">+0</b>
-                <span class="rw-total">Gold gesamt: ${Shop.data.gold}</span></div>
-            ${r ? `<div class="rw-row"><span class="rank-badge" style="--rank:${rb.color}">${rb.name}</span><b class="rw-rp${diff < 0 ? " minus" : ""}">${diff >= 0 ? "+" : ""}${diff} RP</b>
-                <div class="xp-bar rank-bar"><i style="transform:scaleX(${rb.progress})"></i></div></div>` : ""}
-            <div class="rw-up" hidden></div>
-            <div class="rp-lines">${p.lines.map((l, i) => `<span style="--d:${(1.4 + i * 0.15).toFixed(2)}s">${l}</span>`).join("")}</div>`
-
         const ups = []
-        if (p.levelUp) ups.push(`LEVEL UP! ${p.levelUp}`)
-        if (r && ra.index > rb.index) ups.push(`NEUER RANG: ${ra.name.toUpperCase()}!`)
-        const setBar = (bar, k, instant = false) => {
-            if (instant) {
-                bar.style.transition = "none"
-                bar.style.transform = `scaleX(${k})`
-                void bar.offsetWidth
-                bar.style.transition = ""
-            } else bar.style.transform = `scaleX(${k})`
-        }
+        if (p.levelUp) ups.push(`Level ${p.levelUp}!`)
+        if (r && ra.index > rb.index) ups.push(`Neuer Rang: ${ra.name}`)
+        box.innerHTML = `
+            <span class="rw"><b class="rw-num" data-to="${p.xp}">+0</b> XP
+                <span class="rw-bar"><i style="transform:scaleX(${p.start.xp / Progress.need(p.start.level)})"></i></span></span>
+            <span class="rw"><span class="gold-coin"></span><b class="rw-num gold" data-to="${p.gold}">+0</b></span>
+            ${r ? `<span class="rw"><span class="rank-badge" style="--rank:${ra.color}">${ra.name}</span><b class="${diff < 0 ? "minus" : ""}">${diff >= 0 ? "+" : ""}${diff} RP</b></span>` : ""}
+            ${ups.map(u => `<span class="rw-up">${u}</span>`).join("")}`
+        box.title = p.lines.join("\n")
+
         // kurz warten, bis der Bildschirm eingeblendet ist
         setTimeout(() => {
             for (const el of $$(".rw-num", box)) this.countUp(el, +el.dataset.to)
-            const xpBar = $(".rw-row .xp-bar i", box)
-            setBar(xpBar, p.levelUp ? 1 : d.xp / Progress.need(d.level))
+            const bar = $(".rw-bar i", box)
+            bar.style.transform = `scaleX(${p.levelUp ? 1 : d.xp / Progress.need(d.level)})`
             if (p.levelUp) setTimeout(() => {
-                $(".rw-level", box).textContent = `LEVEL ${d.level}`
-                setBar(xpBar, 0, true)
-                setBar(xpBar, d.xp / Progress.need(d.level))
+                bar.style.transition = "none"
+                bar.style.transform = "scaleX(0)"
+                void bar.offsetWidth
+                bar.style.transition = ""
+                bar.style.transform = `scaleX(${d.xp / Progress.need(d.level)})`
             }, 700)
-            if (r) {
-                const bar = $(".rank-bar i", box)
-                const changed = ra.index !== rb.index
-                setBar(bar, changed ? (ra.index > rb.index ? 1 : 0) : ra.progress)
-                if (changed) setTimeout(() => {
-                    const badge = $(".rank-badge", box)
-                    badge.textContent = ra.name
-                    badge.style.setProperty("--rank", ra.color)
-                    badge.classList.add("pop")
-                    setBar(bar, ra.index > rb.index ? 0 : 1, true)
-                    setBar(bar, ra.progress)
-                }, 700)
-            }
-            if (ups.length) setTimeout(() => {
-                const up = $(".rw-up", box)
-                up.innerHTML = ups.map(u => `<span>${u}</span>`).join("")
-                up.hidden = false
-                Sound.play("victory")
-            }, 1000)
+            if (ups.length) setTimeout(() => Sound.play("victory"), 1000)
         }, 500)
     },
 
@@ -1050,23 +974,6 @@ const UI = {
             else if (el.classList.contains("gold")) Sound.play("coin")
         }
         requestAnimationFrame(step)
-    },
-
-    confetti(on) {
-        const box = $("#resConfetti")
-        box.innerHTML = ""
-        if (!on) return
-        const colors = ["#ffd84a", "#ff6a5a", "#6aa2ff", "#7dffa1", "#ffffff", "#c9a5ff"]
-        for (let i = 0; i < 60; i++) {
-            const c = document.createElement("i")
-            c.style.left = (Math.random() * 100).toFixed(1) + "%"
-            c.style.background = colors[i % colors.length]
-            c.style.animationDelay = (Math.random() * 1.6).toFixed(2) + "s"
-            c.style.animationDuration = (2.4 + Math.random() * 2).toFixed(2) + "s"
-            c.style.setProperty("--x", (Math.random() * 160 - 80).toFixed(0) + "px")
-            c.style.setProperty("--r", (Math.random() * 720 - 360).toFixed(0) + "deg")
-            box.appendChild(c)
-        }
     },
 
     // Übergang: diagonaler Streifen wischt über den Bildschirm

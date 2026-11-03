@@ -152,22 +152,22 @@ const Progress = {
     profileHtml() {
         const d = this.data
         const need = this.need(d.level)
-        return `<input class="pc-name" id="playerName" maxlength="14" placeholder="Dein Name ✎" spellcheck="false" autocomplete="off" aria-label="Dein Name">
+        const r = Shop.rank()
+        return `<input class="pc-name" id="playerName" maxlength="14" placeholder="Dein Name" spellcheck="false" autocomplete="off" aria-label="Dein Name">
+            <span class="mp-level" title="${d.xp} / ${need} XP">Lvl ${d.level}<i style="--k:${(d.xp / need).toFixed(3)}"></i></span>
+            <span class="rank-badge" style="--rank:${r.color}" title="${Shop.data.rp} RP">${r.name}</span>
             <button class="gold-pill" title="Shop">${Shop.goldHtml()}</button>
-            <button class="btn small mp-switch" id="profileSwitch" title="Profil wechseln">⇄ Profil</button>
-            <div class="pc-level"><b>LEVEL ${d.level}</b><div class="xp-bar"><i style="transform:scaleX(${d.xp / need})"></i></div><span>${d.xp} / ${need} XP</span></div>`
+            <button class="mp-switch" id="profileSwitch" title="Profil wechseln" aria-label="Profil wechseln"><svg viewBox="0 0 24 24"><path d="M7 7h12l-3-3M17 17H5l3 3"/></svg></button>`
     },
 
-    // Kachel: heutige Aufgaben
+    // Hauptmenü: heutige Aufgaben, kurz und knapp
     missionsHtml() {
         const daily = this.daily()
-        const missions = daily.missions.map(m => {
-            const def = this.mission(m.id)
-            return `<div class="mis${m.done ? " done" : ""}"><span>${m.done ? "✔" : "◆"} ${def.text}</span><b>${m.progress}/${def.goal}</b></div>`
-        }).join("")
         const done = daily.missions.filter(m => m.done).length
-        return `<div class="tile-head"><small>Heute</small><b>Aufgaben</b><span>${done}/${daily.missions.length}</span></div>
-            <div class="tile-missions-list">${missions}</div>
-            <div class="tile-foot">${daily.firstWin ? "✔ Erster Sieg des Tages geschafft" : `Erster Sieg des Tages: +${XP_FIRST_WIN} XP · +${GOLD.firstWin} Gold`}<br>Jede Aufgabe: +${XP_MISSION} XP · +${GOLD.mission} Gold</div>`
+        const rows = daily.missions.map(m => {
+            const def = this.mission(m.id)
+            return `<li class="${m.done ? "done" : ""}"><span>${def.text}</span><b>${m.done ? "✓" : `${m.progress}/${def.goal}`}</b></li>`
+        }).join("")
+        return `<div class="mmm-head"><b>Aufgaben heute</b><span>${done}/${daily.missions.length}</span></div><ul>${rows}</ul>`
     }
 }

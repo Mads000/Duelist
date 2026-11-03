@@ -1,0 +1,9 @@
+/* Dein Glas-HUD bleibt. Nur die Steuerungs-Box blendet sich nach ein paar Sekunden aus,
+   damit sie nicht auf Dauer über dem Spielfeld liegt. */
+.hud-keys {
+    animation: keysOut 0.5s 8s forwards;
+}
+
+@keyframes keysOut {
+    to { opacity: 0; visibility: hidden; }
+}

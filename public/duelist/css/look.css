@@ -1,0 +1,2176 @@
+/* ============================================================
+   DUELIST – ruhiges Glas über den Wolken
+   Letzte Ebene über app.css und glas-ui.css: kleinere Schrift,
+   weniger Kästen, ein Glas-Stil für alle Menüs, Intro und Ergebnis.
+   ============================================================ */
+
+:root {
+    --ink: #fff;
+    --ink-soft: rgba(255, 255, 255, 0.78);
+    /* Klares, farbneutrales Glas (Liquid Glass) mit Vista-Glanz:
+       obere Hälfte heller, scharfe Kante in der Mitte, helle Lichtkanten rundherum */
+    --gloss: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.03) 45%, rgba(255, 255, 255, 0) 70%, rgba(255, 255, 255, 0.1));
+    --gloss-big: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.02) 110px, rgba(255, 255, 255, 0) 75%, rgba(255, 255, 255, 0.08));
+    --glass-base: rgba(255, 255, 255, 0.07);
+    --pane: var(--gloss), var(--glass-base);
+    --pane-strong: var(--gloss), rgba(255, 255, 255, 0.1);
+    --pane-hover: linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.16) 55%, rgba(255, 255, 255, 0.1) 75%, rgba(255, 255, 255, 0.24)), rgba(255, 255, 255, 0.12);
+    --edge: rgba(255, 255, 255, 0.6);
+    --edge-strong: rgba(255, 255, 255, 0.9);
+    --frost: blur(20px) saturate(1.2) brightness(1.04);
+    --soft-shadow:
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.45),
+        inset 1px 0 0 rgba(255, 255, 255, 0.35),
+        inset -1px 0 0 rgba(255, 255, 255, 0.25),
+        inset 0 0 22px rgba(255, 255, 255, 0.2),
+        0 10px 30px rgba(0, 10, 40, 0.16);
+    --text-lift: 0 1px 2px rgba(0, 12, 45, 0.45);
+    --blue: #6f9bff;
+    --red: #ff6f6f;
+}
+
+/* ---------------- Hintergrund: Wolken in allen Menüs ---------------- */
+html body:not(.show-arena):not(.in-game)[data-screen] #sky {
+    opacity: 1;
+}
+
+body.show-arena #sky {
+    opacity: 0;
+}
+
+#sky::after {
+    background: linear-gradient(180deg, rgba(20, 50, 140, 0.18), rgba(20, 50, 140, 0) 40%, rgba(10, 30, 100, 0.22));
+}
+
+/* Die alten dunklen Schleier über den Menüs fallen weg */
+#screen-menu,
+#screen-select,
+#screen-ladder,
+#screen-scores,
+#screen-versus,
+#screen-online,
+#screen-controller,
+#screen-lore,
+#screen-controls,
+#screen-settings,
+#screen-title,
+#screen-profiles,
+#screen-trainhub,
+#screen-lessons,
+#screen-shop {
+    background: none;
+}
+
+/* ---------------- Schrift ---------------- */
+.glass,
+.tile,
+.menu-panel,
+.modal-box,
+.sel-side,
+.board,
+.mp-info,
+.btn,
+.btn:not(.start),
+.champ-card,
+.hud-keys {
+    text-shadow: var(--text-lift);
+}
+
+.screen-head h2,
+.chrome {
+    color: #fff;
+    background: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    filter: none;
+    text-shadow: 0 2px 0 rgba(20, 50, 140, 0.55), 0 6px 18px rgba(10, 30, 90, 0.3);
+}
+
+.screen-head h2 {
+    font-size: clamp(28px, 3.2vw, 40px);
+    letter-spacing: 0.06em;
+}
+
+/* ---------------- Glas: eine Sorte für alles ---------------- */
+.glass,
+.tile,
+.menu-panel,
+.modal-box,
+.sel-middle,
+.board,
+.results-box .glass {
+    background: var(--pane);
+    border: 1px solid var(--edge);
+    border-radius: 18px;
+    box-shadow: var(--soft-shadow);
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+}
+
+.btn,
+.btn.mode,
+.back-btn,
+.step-pill,
+.opt-group button,
+.seg button {
+    background: var(--pane);
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    box-shadow: none;
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+}
+
+.btn:hover,
+.btn:focus-visible,
+.btn.mode:hover,
+.btn.mode:focus-visible,
+.opt-group button:hover,
+.seg button:hover,
+.back-btn:hover,
+.back-btn:focus-visible {
+    background: var(--pane-hover);
+    border-color: var(--edge-strong);
+    box-shadow: none;
+    transform: none;
+    outline: none;
+}
+
+.btn.start,
+.btn.start:hover,
+.btn.start:focus-visible {
+    background: linear-gradient(180deg, #ff6b6b, #d8303f);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 6px 18px rgba(200, 30, 50, 0.35);
+}
+
+.btn.start:hover,
+.btn.start:focus-visible {
+    background: linear-gradient(180deg, #ff7d7d, #e43b4a);
+    box-shadow: 0 0 0 2px #fff, 0 8px 22px rgba(220, 40, 60, 0.45);
+}
+
+.back-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 26px;
+}
+
+.opt-group button.on,
+.seg button.on {
+    color: #13306f;
+    background: #fff;
+    border-color: #fff;
+    text-shadow: none;
+}
+
+/* ---------------- Fähigkeits-Icons ---------------- */
+.ab-icon {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.ab-icon .f {
+    fill: currentColor;
+    fill-opacity: 0.22;
+}
+
+.ab-badge {
+    display: grid;
+    place-items: center;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    padding: 10px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--edge);
+    border-radius: 50%;
+}
+
+.ability-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* ---------------- Titel ---------------- */
+.title-icon {
+    width: clamp(84px, 13vh, 128px);
+    height: auto;
+    border-radius: 24%;
+    box-shadow: 0 12px 30px rgba(10, 30, 90, 0.35);
+    animation: fadeUp 0.6s both;
+}
+
+.logo-big.chrome {
+    font-size: clamp(72px, 12vw, 150px);
+}
+
+.tagline {
+    font-size: clamp(16px, 2vw, 24px);
+    text-shadow: var(--text-lift);
+}
+
+.press-start {
+    margin-top: 2vh;
+    font-size: clamp(18px, 2.2vw, 26px);
+    background: var(--pane);
+    border: 1px solid var(--edge);
+    border-radius: 99px;
+    box-shadow: none;
+}
+
+/* ---------------- Hauptmenü ---------------- */
+#screen-menu {
+    justify-content: flex-start;
+    gap: 2vh;
+    padding: calc(18px + var(--safe-t)) calc(28px + var(--safe-r)) calc(18px + var(--safe-b)) calc(28px + var(--safe-l));
+}
+
+.mm-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.mm-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 44px;
+    padding: 0 6px 0 14px;
+    background: var(--pane);
+    border: 1px solid var(--edge);
+    border-radius: 99px;
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+    text-shadow: var(--text-lift);
+}
+
+.mm-profile .pc-name {
+    width: 8.5em;
+    padding: 0;
+    font-family: var(--font-display);
+    font-size: 21px;
+    letter-spacing: 0.04em;
+    color: #fff;
+    background: none;
+    border: 0;
+    outline: none;
+    text-shadow: var(--text-lift);
+}
+
+.mm-profile .pc-name:focus {
+    border-bottom: 1px solid #fff;
+}
+
+.mp-level {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    line-height: 1;
+}
+
+.mp-level i {
+    width: 46px;
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--gold) calc(var(--k) * 100%), rgba(255, 255, 255, 0.25) 0);
+}
+
+.mm-profile .rank-badge {
+    padding: 2px 9px;
+    font-size: 14px;
+    color: #1a1a1a;
+    background: var(--rank);
+    border: 0;
+    border-radius: 99px;
+    text-shadow: none;
+}
+
+.mm-profile .gold-pill {
+    height: 30px;
+    padding: 0 11px;
+    font-size: 17px;
+    color: #4a2d00;
+    background: linear-gradient(#fff3b8, #ffcf3c);
+    border: 0;
+    border-radius: 99px;
+    text-shadow: none;
+}
+
+.mp-switch,
+.mm-icon {
+    display: grid;
+    place-items: center;
+    padding: 0;
+    color: #fff;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.mp-switch {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.mp-switch svg,
+.mm-icon svg {
+    width: 55%;
+    height: 55%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.mm-icons {
+    display: flex;
+    gap: 6px;
+    padding: 4px;
+    background: var(--pane);
+    border: 1px solid var(--edge);
+    border-radius: 99px;
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+}
+
+.mm-icon {
+    width: 36px;
+    height: 36px;
+}
+
+.mp-switch:hover,
+.mp-switch:focus-visible,
+.mm-icon:hover,
+.mm-icon:focus-visible {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.6);
+    outline: none;
+}
+
+.mm-main {
+    flex: 1;
+    min-height: 0;
+    width: min(1080px, 100%);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(260px, 360px) 1fr;
+    align-items: center;
+    gap: clamp(20px, 5vw, 70px);
+}
+
+.mm-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2.4vh;
+    animation: fadeUp 0.45s both;
+}
+
+.mm-logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(46px, 6vw, 72px);
+    line-height: 1;
+    letter-spacing: 0.06em;
+    color: #fff;
+    text-shadow: 0 2px 0 rgba(20, 50, 140, 0.55), 0 6px 18px rgba(10, 30, 90, 0.3);
+}
+
+.mm-logo img {
+    width: 0.9em;
+    height: 0.9em;
+    border-radius: 24%;
+    box-shadow: 0 6px 16px rgba(10, 30, 90, 0.35);
+}
+
+.mm-modes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mm-mode {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    padding: 9px 16px 10px;
+    text-align: left;
+    color: #fff;
+    background: var(--pane);
+    border: 1px solid var(--edge);
+    border-radius: 14px;
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+    text-shadow: var(--text-lift);
+    transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.mm-mode b {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 24px;
+    letter-spacing: 0.05em;
+    line-height: 1.05;
+}
+
+.mm-mode small {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+}
+
+.mm-mode:hover,
+.mm-mode:focus-visible {
+    background: var(--pane-hover);
+    border-color: var(--edge-strong);
+    transform: translateX(4px);
+    outline: none;
+}
+
+.mm-play {
+    padding: 12px 18px 13px;
+    background: linear-gradient(180deg, #ff6b6b, #d8303f);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 22px rgba(200, 30, 50, 0.3);
+}
+
+.mm-play b {
+    font-size: 30px;
+}
+
+.mm-play small {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.mm-play:hover,
+.mm-play:focus-visible {
+    background: linear-gradient(180deg, #ff7d7d, #e43b4a);
+    box-shadow: 0 0 0 2px #fff, 0 10px 26px rgba(220, 40, 60, 0.4);
+}
+
+.mm-right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2.4vh;
+    min-height: 0;
+    animation: fadeUp 0.45s 0.08s both;
+}
+
+/* Champion steht frei auf den Wolken, nur ein weicher Lichtfleck dahinter */
+.mm-champ {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    color: #fff;
+    background: none;
+    border: 0;
+    text-shadow: var(--text-lift);
+}
+
+.mm-champ::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    width: 120%;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(var(--champ, 120, 170, 255), 0.45), rgba(var(--champ, 120, 170, 255), 0) 62%);
+    pointer-events: none;
+}
+
+.mm-champ canvas {
+    position: relative;
+    width: clamp(180px, 42vh, 320px);
+    height: clamp(180px, 42vh, 320px);
+    margin: -4vh 0 -2vh;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 10px 12px rgba(10, 30, 90, 0.35));
+}
+
+.mm-champ-name {
+    position: relative;
+    font-family: var(--font-display);
+    font-size: clamp(30px, 3.4vw, 42px);
+    letter-spacing: 0.06em;
+    line-height: 1;
+}
+
+.mm-champ-change {
+    position: relative;
+    margin-top: 6px;
+    padding: 4px 12px;
+    font-size: 12.5px;
+    background: var(--pane);
+    border: 1px solid var(--edge);
+    border-radius: 99px;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.mm-champ:hover .mm-champ-change,
+.mm-champ:focus-visible .mm-champ-change {
+    background: var(--pane-hover);
+    border-color: var(--edge-strong);
+}
+
+.mm-champ:focus-visible {
+    outline: none;
+}
+
+.mm-missions {
+    width: min(340px, 100%);
+    padding: 12px 16px;
+    background: var(--pane);
+    border: 1px solid var(--edge);
+    border-radius: 14px;
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+    text-shadow: var(--text-lift);
+}
+
+.mmm-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+    font-family: var(--font-display);
+    letter-spacing: 0.05em;
+}
+
+.mmm-head b {
+    font-weight: 400;
+    font-size: 18px;
+}
+
+.mmm-head span {
+    font-size: 16px;
+    color: var(--ink-soft);
+}
+
+.mm-missions ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mm-missions li {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 3px 0;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+}
+
+.mm-missions li b {
+    font-weight: 700;
+    color: #fff;
+}
+
+.mm-missions li.done {
+    opacity: 0.6;
+}
+
+.mm-missions li.done b {
+    color: #8dffb0;
+}
+
+@media (max-width: 760px), (max-height: 520px) {
+    #screen-menu {
+        gap: 8px;
+        padding-top: calc(10px + var(--safe-t));
+        padding-bottom: calc(10px + var(--safe-b));
+    }
+
+    .mm-profile .rank-badge,
+    .mp-level {
+        display: none;
+    }
+
+    .mm-main {
+        grid-template-columns: minmax(220px, 300px) 1fr;
+    }
+
+    .mm-left {
+        gap: 8px;
+    }
+
+    .mm-logo {
+        font-size: 40px;
+    }
+
+    .mm-mode {
+        padding: 6px 12px 7px;
+    }
+
+    .mm-mode b {
+        font-size: 20px;
+    }
+
+    .mm-play b {
+        font-size: 24px;
+    }
+
+    .mm-mode small {
+        display: none;
+    }
+
+    .mm-missions {
+        display: none;
+    }
+}
+
+/* ---------------- Kampfstart ---------------- */
+/* Ruhig: zwei Glaskarten gleiten ein, dazwischen ein schlichtes VS */
+body.vs-on #hud,
+body.vs-on .hud-keys,
+body.vs-on #pauseBtn {
+    opacity: 0;
+}
+
+#intro {
+    position: fixed;
+    inset: 0;
+    z-index: 9;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(16px, 4vw, 56px);
+    padding: 0 4vw;
+    pointer-events: none;
+}
+
+#intro.show {
+    display: flex;
+    animation: inFade 0.3s both, inFade 0.35s 1.9s reverse forwards;
+}
+
+#intro::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 22, 70, 0.18);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+@keyframes inFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.in-side {
+    --champ: 110, 150, 255;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(320px, 36vw);
+    padding: 10px 16px 18px;
+    color: #fff;
+    text-align: center;
+    text-shadow: var(--text-lift);
+    background:
+        radial-gradient(circle at 50% 40%, rgba(var(--champ), 0.35), rgba(var(--champ), 0) 62%),
+        var(--pane);
+    border: 1px solid var(--edge);
+    border-radius: 20px;
+    box-shadow: var(--soft-shadow);
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+}
+
+.in-side[data-side="0"] {
+    order: 0;
+    animation: inLeft 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.in-side[data-side="1"] {
+    --champ: 255, 110, 120;
+    order: 2;
+    animation: inRight 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+@keyframes inLeft {
+    from { opacity: 0; transform: translateX(-40px); }
+}
+
+@keyframes inRight {
+    from { opacity: 0; transform: translateX(40px); }
+}
+
+.in-side canvas {
+    width: min(34vh, 26vw, 240px);
+    height: min(34vh, 26vw, 240px);
+    margin-bottom: -2vh;
+    image-rendering: pixelated;
+}
+
+.in-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.in-sub {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+}
+
+.in-name {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(30px, 4vw, 48px);
+    letter-spacing: 0.05em;
+    line-height: 1;
+}
+
+.in-ability {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    padding: 3px 11px 3px 6px;
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--edge);
+    border-radius: 99px;
+}
+
+.in-ability .ab-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.in-vs {
+    position: relative;
+    order: 1;
+    font-family: var(--font-display);
+    font-size: clamp(34px, 4.4vw, 54px);
+    letter-spacing: 0.06em;
+    color: #fff;
+    text-shadow: var(--text-lift);
+    animation: fadeUp 0.4s 0.2s both;
+}
+
+.in-map {
+    position: absolute;
+    left: 50%;
+    bottom: 8vh;
+    padding: 5px 16px;
+    font-family: var(--font-display);
+    font-size: clamp(15px, 1.6vw, 19px);
+    letter-spacing: 0.12em;
+    color: #fff;
+    white-space: nowrap;
+    background: var(--pane);
+    border: 1px solid var(--edge);
+    border-radius: 99px;
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+    transform: translateX(-50%);
+}
+
+@media (max-width: 760px), (max-height: 520px) {
+    .in-side {
+        padding: 6px 12px 12px;
+    }
+
+    .in-ability {
+        display: none;
+    }
+}
+
+/* ---------------- Rundenansagen ---------------- */
+/* Ein schmales Glasband quer über das Bild statt Kasten */
+#banner {
+    padding-top: 0;
+    justify-content: center;
+}
+
+#banner.show,
+#banner.show[data-kind="ko"] {
+    animation: bnShow 0.2s ease-out forwards;
+}
+
+@keyframes bnShow {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+#banner .banner-text,
+#banner[data-kind] .banner-text {
+    position: relative;
+    width: 100%;
+    padding: 0.18em 0 0.1em;
+    font-size: clamp(40px, 6vw, 76px);
+    letter-spacing: 0.14em;
+    color: #fff;
+    -webkit-text-stroke: 0;
+    text-shadow: 0 2px 10px rgba(6, 14, 48, 0.5);
+    background: linear-gradient(90deg, rgba(16, 34, 100, 0), rgba(16, 34, 100, 0.55) 22%, rgba(16, 34, 100, 0.55) 78%, rgba(16, 34, 100, 0));
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+#banner.show .banner-text {
+    animation: bnBand 0.45s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+}
+
+@keyframes bnBand {
+    from { clip-path: inset(0 50%); letter-spacing: 0.5em; }
+    to { clip-path: inset(0 0); }
+}
+
+/* feine helle Kanten oben und unten */
+#banner .banner-text::before,
+#banner .banner-text::after {
+    content: "";
+    position: absolute;
+    left: 15%;
+    right: 15%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+}
+
+#banner .banner-text::before {
+    top: 0;
+}
+
+#banner .banner-text::after {
+    bottom: 0;
+}
+
+#banner .banner-sub {
+    margin-top: 10px;
+    padding: 3px 14px;
+    font-size: clamp(13px, 1.4vw, 17px);
+    letter-spacing: 0.18em;
+    background: var(--pane-strong);
+    border: 1px solid var(--edge);
+    border-radius: 99px;
+}
+
+/* Countdown: große Zahl, ein Ring zieht sich zusammen */
+#banner[data-kind="count"] .banner-text {
+    width: auto;
+    padding: 0;
+    font-size: clamp(90px, 14vw, 170px);
+    letter-spacing: 0;
+    background: none;
+}
+
+#banner[data-kind="count"] .banner-text::before {
+    left: 50%;
+    top: 50%;
+    right: auto;
+    width: 1.25em;
+    height: 1.25em;
+    background: none;
+    border: 3px solid rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    transform: translate(-50%, -54%);
+    animation: cdRing 0.5s ease-out both;
+}
+
+#banner[data-kind="count"] .banner-text::after {
+    display: none;
+}
+
+#banner.show[data-kind="count"] .banner-text {
+    animation: cdNum 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+@keyframes cdRing {
+    from { transform: translate(-50%, -54%) scale(1.8); opacity: 0; }
+    40% { opacity: 1; }
+    to { transform: translate(-50%, -54%) scale(1); opacity: 0; }
+}
+
+@keyframes cdNum {
+    from { transform: scale(1.6); opacity: 0; }
+}
+
+/* FIGHT! und K.O. in Rot */
+#banner[data-kind="fight"] .banner-text,
+#banner[data-kind="ko"] .banner-text {
+    font-size: clamp(56px, 9vw, 120px);
+    background: linear-gradient(90deg, rgba(190, 30, 50, 0), rgba(190, 30, 50, 0.6) 22%, rgba(190, 30, 50, 0.6) 78%, rgba(190, 30, 50, 0));
+}
+
+#banner[data-kind="ko"][data-long] .banner-text {
+    font-size: clamp(40px, 6vw, 80px);
+}
+
+#banner.show[data-kind="fight"] .banner-text {
+    animation: bnFight 0.5s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+@keyframes bnFight {
+    from { clip-path: inset(0 50%); transform: scale(1.3); }
+    to { clip-path: inset(0 0); transform: none; }
+}
+
+#banner[data-kind="win"] .banner-text,
+#banner[data-kind="info"] .banner-text {
+    font-size: clamp(30px, 4.4vw, 56px);
+}
+
+/* ---------------- HUD: Fähigkeit als Ladering ---------------- */
+.hud-info {
+    padding-right: 48px;
+}
+
+.hud-player.right .hud-info {
+    padding-right: 0;
+    padding-left: 48px;
+}
+
+.energy,
+.hud-player.right .energy {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    left: auto;
+    display: block;
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    transform: translateY(-50%);
+}
+
+.hud-player.right .energy {
+    right: auto;
+    left: 0;
+}
+
+.ab-ring {
+    --k: 0;
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 10px;
+    color: rgba(255, 255, 255, 0.55);
+    background: rgba(6, 14, 48, 0.35);
+    border-radius: 50%;
+    transition: color 0.2s;
+}
+
+.ab-ring::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(var(--gold) calc(var(--k) * 360deg), rgba(255, 255, 255, 0.22) 0);
+    -webkit-mask: radial-gradient(circle, transparent 15.5px, #000 16.5px);
+    mask: radial-gradient(circle, transparent 15.5px, #000 16.5px);
+    transition: background 0.2s;
+}
+
+.hud-player.ready .ab-ring {
+    color: var(--gold);
+    background: rgba(70, 50, 0, 0.35);
+    animation: abReady 1.1s ease-in-out infinite;
+}
+
+@keyframes abReady {
+    50% { box-shadow: 0 0 0 4px rgba(255, 216, 74, 0.25), 0 0 18px rgba(255, 216, 74, 0.7); }
+}
+
+.ab-extra {
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    display: flex;
+    gap: 3px;
+    margin-top: 3px;
+    transform: translateX(-50%);
+}
+
+.ab-extra i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.ab-extra i.on {
+    background: var(--gold);
+    box-shadow: 0 0 5px rgba(255, 216, 74, 0.9);
+}
+
+.energy .sp {
+    position: absolute;
+    right: -6px;
+    bottom: -4px;
+    margin: 0;
+    padding: 0 3px;
+    font-size: 10px;
+    line-height: 13px;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(6, 14, 48, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 5px;
+    box-shadow: none;
+}
+
+.hud-player.right .energy .sp {
+    right: auto;
+    left: -6px;
+}
+
+.energy .sp.on {
+    color: #3a2000;
+    background: var(--gold);
+    border-color: #fff;
+}
+
+.hud-name {
+    max-width: none;
+}
+
+/* Touch-Knopf mit demselben Icon */
+.t-ability .t-icon {
+    display: grid;
+    width: 46%;
+    height: 46%;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.t-ability.ready .t-icon {
+    color: #4a2d00;
+}
+
+/* ---------------- Ergebnis ---------------- */
+/* oben ausrichten, die Karte zentriert sich per margin:auto – so wird bei wenig Höhe nichts abgeschnitten */
+#screen-results {
+    align-items: center;
+    justify-content: flex-start;
+    overflow-y: auto;
+    background: transparent;
+}
+
+.rs-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: min(560px, 100%);
+    margin: auto;
+    padding: 18px 24px 20px;
+    text-align: center;
+    background: var(--pane);
+    border: 1px solid var(--edge);
+    border-radius: 22px;
+    box-shadow: var(--soft-shadow);
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+    text-shadow: var(--text-lift);
+}
+
+#screen-results.active .rs-card {
+    animation: rsIn 0.45s cubic-bezier(0.2, 1.2, 0.4, 1) both;
+}
+
+@keyframes rsIn {
+    from { opacity: 0; transform: translateY(18px) scale(0.97); }
+}
+
+.rs-title {
+    font-family: var(--font-display);
+    font-size: clamp(46px, 7vw, 68px);
+    line-height: 0.95;
+    letter-spacing: 0.08em;
+    color: #fff;
+}
+
+.rs-title.win {
+    color: var(--gold);
+    text-shadow: 0 2px 0 rgba(120, 70, 0, 0.6), 0 6px 20px rgba(255, 200, 60, 0.35);
+}
+
+.rs-title.lose {
+    color: #c9d6ff;
+}
+
+.rs-title.p1 {
+    color: #9dbcff;
+}
+
+.rs-title.p2 {
+    color: #ffa0a0;
+}
+
+.rs-sub {
+    margin-top: -4px;
+    font-size: 13px;
+    color: var(--ink-soft);
+}
+
+.rs-duel {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+}
+
+.rs-fighter {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+}
+
+.rs-fighter canvas {
+    width: clamp(90px, 18vh, 130px);
+    height: clamp(90px, 18vh, 130px);
+    image-rendering: pixelated;
+}
+
+.rs-fighter.loser canvas {
+    opacity: 0.55;
+    filter: grayscale(0.7);
+}
+
+.rs-name {
+    display: flex;
+    flex-direction: column;
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: 0.05em;
+    line-height: 1;
+}
+
+.rs-name small {
+    font-family: var(--font-body);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+}
+
+.rs-mid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.rs-score {
+    font-family: var(--font-display);
+    font-size: clamp(44px, 6vw, 60px);
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.rs-score .p1 {
+    color: #9dbcff;
+}
+
+.rs-score .p2 {
+    color: #ffa0a0;
+}
+
+.rs-score i {
+    margin: 0 6px;
+    font-style: normal;
+    opacity: 0.5;
+}
+
+.rs-grade {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    font-family: var(--font-display);
+    font-size: 22px;
+    color: #13306f;
+    background: #fff;
+    border-radius: 50%;
+    text-shadow: none;
+}
+
+.rs-grade.g-S {
+    background: var(--gold);
+    color: #4a2d00;
+}
+
+.rs-grade.g-C,
+.rs-grade.g-D {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.rs-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
+}
+
+.rs-row {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    gap: 10px;
+}
+
+.rs-row b {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 20px;
+    color: var(--ink-soft);
+}
+
+.rs-row b.best {
+    color: #fff;
+}
+
+.rs-label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--ink-soft);
+}
+
+.rs-label i {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--blue) calc(var(--k) * 100%), var(--red) 0);
+}
+
+.rs-rewards {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 18px;
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: 0.04em;
+}
+
+.rw {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rw b {
+    font-weight: 400;
+}
+
+.rw-num.gold {
+    color: var(--gold);
+}
+
+.rw b.minus {
+    color: #ff9a9a;
+}
+
+.rw-bar {
+    width: 64px;
+    height: 4px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.rw-bar i {
+    display: block;
+    height: 100%;
+    background: var(--gold);
+    transform-origin: left;
+    transition: transform 0.7s ease-out;
+}
+
+.rs-rewards .rank-badge {
+    padding: 1px 8px;
+    font-size: 14px;
+    background: var(--rank);
+    border: 0;
+    border-radius: 99px;
+    text-shadow: none;
+}
+
+.rw-up {
+    padding: 2px 10px;
+    font-size: 16px;
+    color: #4a2d00;
+    background: var(--gold);
+    border-radius: 99px;
+    text-shadow: none;
+    animation: rankPop 0.6s 1s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.rs-note {
+    font-size: 13px;
+    color: var(--ink-soft);
+}
+
+.rs-note:empty {
+    display: none;
+}
+
+.rs-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.rs-actions .btn {
+    min-width: 0;
+    padding: 9px 16px;
+    font-family: var(--font-display);
+    font-size: 19px;
+    letter-spacing: 0.05em;
+}
+
+@media (max-height: 520px) {
+    .rs-card {
+        width: min(640px, 100%);
+        gap: 4px;
+        padding: 8px 18px 10px;
+    }
+
+    .rs-title {
+        font-size: 36px;
+    }
+
+    .rs-sub {
+        margin-top: -2px;
+        font-size: 12px;
+    }
+
+    .rs-fighter canvas {
+        width: 64px;
+        height: 64px;
+    }
+
+    .rs-name {
+        font-size: 18px;
+    }
+
+    .rs-score {
+        font-size: 38px;
+    }
+
+    .rs-grade {
+        width: 26px;
+        height: 26px;
+        font-size: 17px;
+    }
+
+    .rs-stats {
+        padding: 5px 12px;
+        gap: 2px;
+    }
+
+    .rs-row b {
+        font-size: 17px;
+    }
+
+    .rs-rewards {
+        font-size: 17px;
+    }
+
+    .rs-actions .btn {
+        padding: 6px 14px;
+        font-size: 17px;
+    }
+}
+
+/* ---------------- Pause & Hinweise ---------------- */
+.modal-box h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+}
+
+.screen.modal {
+    background: rgba(6, 14, 48, 0.25);
+}
+
+/* ---------------- Champion-Auswahl ---------------- */
+#screen-select .sel-side {
+    color: #fff;
+    background: var(--pane);
+    border: 1px solid var(--edge);
+    border-radius: 20px;
+    box-shadow: var(--soft-shadow);
+}
+
+#screen-select .sel-side.active {
+    border-color: var(--edge-strong);
+    box-shadow: var(--soft-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+#screen-select .champ-card {
+    background:
+        radial-gradient(circle at 50% 42%, rgba(var(--champ, 255, 255, 255), 0.3), rgba(var(--champ, 255, 255, 255), 0) 70%),
+        rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    box-shadow: none;
+}
+
+#screen-select .champ-card:hover,
+#screen-select .champ-card:focus-visible {
+    background:
+        radial-gradient(circle at 50% 42%, rgba(var(--champ, 255, 255, 255), 0.55), rgba(var(--champ, 255, 255, 255), 0.08) 78%),
+        rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 1px rgb(var(--champ, 255, 255, 255));
+}
+
+.step-pill {
+    font-size: 16px;
+    padding: 6px 14px;
+    background: var(--pane-strong);
+    border: 1px solid var(--edge) !important;
+    box-shadow: var(--soft-shadow) !important;
+}
+
+.opt-group,
+.toggle.glass {
+    border-radius: 99px;
+}
+
+/* Hinweis-Leiste unten im selben Glas */
+#toast {
+    color: #fff;
+    background: var(--pane-strong);
+    border: 1px solid var(--edge);
+    border-radius: 99px;
+    box-shadow: var(--soft-shadow);
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+    text-shadow: var(--text-lift);
+}
+
+/* keine Lichtstrahlen */
+.sky-rays {
+    display: none;
+}
+
+/* ---------------- Liquid Glass + Vista-Glanz überall ---------------- */
+.mm-mode:not(.mm-play),
+.mm-profile,
+.mm-icons,
+.mm-missions,
+.mm-champ-change,
+.glass,
+.modal-box,
+.sel-middle,
+.board,
+.rs-card,
+.in-side,
+.in-map,
+.btn:not(.start),
+.back-btn,
+.step-pill,
+.opt-group button:not(.on),
+.seg button:not(.on),
+#toast,
+#screen-select .sel-side,
+#screen-select .champ-card {
+    box-shadow: var(--soft-shadow);
+}
+
+/* große Flächen: der Glanz bleibt ein schmaler Streifen oben */
+.glass,
+.modal-box,
+.sel-middle,
+.board,
+.rs-card,
+.mm-missions,
+.in-side,
+#screen-select .sel-side {
+    background-color: var(--glass-base);
+    background-image: var(--gloss-big);
+}
+
+#screen-select .sel-side,
+.in-side {
+    background-image:
+        radial-gradient(circle at 50% 40%, rgba(var(--champ, 150, 190, 255), 0.3), rgba(var(--champ, 150, 190, 255), 0) 62%),
+        var(--gloss-big);
+}
+
+/* roter Hauptknopf mit glänzender oberer Hälfte */
+.mm-play,
+.btn.start,
+.btn.start:hover,
+.btn.start:focus-visible {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.12) 48%, rgba(255, 255, 255, 0) 50%),
+        linear-gradient(180deg, #ff5a63, #c81f33);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(255, 180, 180, 0.5), 0 8px 22px rgba(200, 30, 50, 0.35);
+}
+
+.mm-play:hover,
+.mm-play:focus-visible,
+.btn.start:hover,
+.btn.start:focus-visible {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.18) 48%, rgba(255, 255, 255, 0.04) 50%),
+        linear-gradient(180deg, #ff6d75, #d82a3e);
+    box-shadow: inset 0 1px 0 #fff, 0 0 0 2px rgba(255, 255, 255, 0.8), 0 10px 26px rgba(220, 40, 60, 0.45);
+}
+
+/* ============================================================
+   Einheitlich überall: Abzeichen, Schalter, Regler, Tasten,
+   Tafeln, Überschriften – alles im selben Glas
+   ============================================================ */
+
+/* Überschriften ohne Sonderfarben */
+.panel-head,
+.panel-head.red,
+.p1t,
+.p2t,
+.continue-title,
+.ladder-title,
+.board h3 {
+    color: #fff;
+    -webkit-text-stroke: 0;
+    text-shadow: var(--text-lift);
+}
+
+.p1t,
+.p2t {
+    font-family: var(--font-display);
+    letter-spacing: 0.06em;
+    opacity: 0.85;
+}
+
+.continue-title,
+.ladder-title {
+    font-family: var(--font-display);
+    letter-spacing: 0.08em;
+}
+
+.continue-count,
+.entry-score {
+    color: #fff;
+    -webkit-text-stroke: 0;
+    text-shadow: var(--text-lift);
+}
+
+/* Tafeln (Highscores, Profil) ohne Blau/Rot */
+.board,
+.board.p1,
+.board.p2,
+.sel-side.board.p1,
+.sel-side.board.p2 {
+    border: 1px solid var(--edge);
+    border-radius: 20px;
+    background-color: var(--glass-base);
+    background-image: var(--gloss-big);
+    box-shadow: var(--soft-shadow);
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+}
+
+#screen-select .sel-side.board {
+    background-image:
+        radial-gradient(circle at 50% 40%, rgba(var(--champ, 150, 190, 255), 0.3), rgba(var(--champ, 150, 190, 255), 0) 62%),
+        var(--gloss-big);
+}
+
+/* Abzeichen: Gold, Rang, Aktiv, Belohnung – runde Pillen mit Glanz */
+.gold-pill,
+.gold-pill.big,
+.pf-active,
+.lesson-state,
+.rank-badge,
+.rank-badge.big {
+    border: 0;
+    border-radius: 99px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 8px rgba(0, 10, 40, 0.18);
+    text-shadow: none;
+}
+
+.gold-pill,
+.gold-pill.big,
+.pf-active,
+.lesson-state {
+    color: #4a2d00;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.1) 48%, rgba(255, 255, 255, 0) 50%),
+        linear-gradient(#ffe27a, #f2b632);
+}
+
+.gold-pill.big {
+    padding: 2px 14px;
+    font-size: 22px;
+}
+
+.pf-active {
+    top: 8px;
+    right: 8px;
+    padding: 1px 9px;
+    font-size: 13px;
+}
+
+.lesson-state {
+    padding: 2px 10px;
+}
+
+.rank-badge,
+.rank-badge.big {
+    color: #1a1a1a;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.1) 48%, rgba(255, 255, 255, 0) 50%),
+        var(--rank);
+}
+
+.profile-card.done .lesson-state,
+.lesson-card.owned .lesson-state {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+/* Profil-Bild: runde Glaskugel statt rotem Kasten */
+.pf-avatar,
+.profile-card.on .pf-avatar {
+    border: 1px solid var(--edge);
+    border-radius: 50%;
+    color: #fff;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.08) 48%, rgba(255, 255, 255, 0) 50%),
+        rgba(var(--map), 0.35);
+    box-shadow: var(--soft-shadow);
+    text-shadow: var(--text-lift);
+}
+
+.profile-card.on {
+    border-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Schalter: Glas-Pille mit weißem Knopf */
+.toggle span {
+    width: 46px;
+    height: 26px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid var(--edge);
+    border-radius: 99px;
+    box-shadow: inset 0 1px 3px rgba(0, 10, 40, 0.3);
+}
+
+.toggle span::after {
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 10, 40, 0.35);
+}
+
+.toggle input:checked + span {
+    background: linear-gradient(180deg, #7fd0ff, #3d8ff0);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+.toggle.glass {
+    border-radius: 99px;
+    box-shadow: var(--soft-shadow);
+}
+
+/* Regler: dünne Glasspur, runder weißer Knopf */
+input[type="range"] {
+    height: 6px;
+    border: 0;
+    border-radius: 99px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.95) var(--val), rgba(255, 255, 255, 0.22) var(--val));
+    box-shadow: inset 0 1px 2px rgba(0, 10, 40, 0.3);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    border: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #fff, #dfe9ff);
+    box-shadow: 0 1px 5px rgba(0, 10, 40, 0.4), inset 0 -1px 0 rgba(0, 20, 80, 0.15);
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border: 0;
+    border-radius: 50%;
+    background: #fff;
+}
+
+/* Tasten-Kästchen wie im HUD */
+kbd,
+.keys kbd {
+    padding: 1px 7px;
+    color: #10205e;
+    background: rgba(255, 255, 255, 0.88);
+    border: 0;
+    border-radius: 6px;
+    box-shadow: inset 0 -1px 0 rgba(0, 20, 80, 0.2);
+    text-shadow: none;
+}
+
+/* Arcade-Leiter: Glaskarten, die aktuelle leuchtet weiß */
+.ladder-step,
+.ladder-step.done,
+.ladder-step.boss {
+    border: 1px solid var(--edge);
+    border-radius: 14px;
+    background-color: var(--glass-base);
+    background-image: var(--gloss);
+    box-shadow: var(--soft-shadow);
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+    color: #fff;
+}
+
+.ladder-step.current {
+    border: 1px solid #fff;
+    border-radius: 14px;
+    background-color: rgba(255, 255, 255, 0.18);
+    background-image: var(--gloss);
+    box-shadow: var(--soft-shadow), 0 0 0 2px rgba(255, 255, 255, 0.7), 0 0 24px rgba(255, 255, 255, 0.45);
+}
+
+.ladder-step.boss {
+    background-color: rgba(255, 90, 100, 0.16);
+}
+
+.ladder-step.done {
+    opacity: 0.5;
+}
+
+/* Initialen eingeben: Glas statt Navy-Kästen */
+.letter button {
+    color: #fff;
+    background: var(--pane);
+    border: 1px solid var(--edge);
+    border-radius: 10px;
+    box-shadow: var(--soft-shadow);
+}
+
+.letter span {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    box-shadow: var(--soft-shadow);
+    text-shadow: var(--text-lift);
+}
+
+.letter.active span {
+    border-color: #fff;
+    box-shadow: var(--soft-shadow), 0 0 0 2px rgba(255, 255, 255, 0.7);
+}
+
+/* Codes und Eingabefelder */
+.pair-code b {
+    color: #fff;
+    text-shadow: var(--text-lift);
+}
+
+.code-input,
+.pf-input,
+.pc-name {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--edge);
+    border-radius: 14px;
+    box-shadow: inset 0 1px 3px rgba(0, 10, 40, 0.25);
+}
+
+.code-input::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.mm-profile .pc-name {
+    background: none;
+    border: 0;
+    box-shadow: none;
+}
+
+/* Gesperrte Knöpfe (z. B. Skin zu teuer, START ohne Auswahl): Glas statt blassem Rot */
+.btn:disabled,
+.btn.start:disabled {
+    color: rgba(255, 255, 255, 0.7);
+    background: var(--pane);
+    border-color: var(--edge);
+    box-shadow: var(--soft-shadow);
+    opacity: 0.75;
+}
+
+/* Hinweis-Texte unter Tafeln: kein dunkler Balken */
+.shop-hint,
+.lore-intro,
+.center-note {
+    color: #fff;
+    background-color: var(--glass-base);
+    background-image: var(--gloss-big);
+    border: 1px solid var(--edge);
+    box-shadow: var(--soft-shadow);
+    text-shadow: var(--text-lift);
+}
+
+.center-note {
+    align-self: center;
+    margin-top: 10px;
+    padding: 6px 16px;
+    border-radius: 99px;
+}
+
+/* Steuerungshinweis im Kampf im selben Glas */
+.hud-keys {
+    background-color: var(--glass-base);
+    background-image: var(--gloss-big);
+    border: 1px solid var(--edge);
+    box-shadow: var(--soft-shadow);
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+}
+
+/* ============================================================
+   Handy-Steuerung: Glasknöpfe, frei verschiebbar und skalierbar
+   ============================================================ */
+.t-btn {
+    --tint: 255, 255, 255;
+    color: #fff;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1) 48%, rgba(255, 255, 255, 0) 50%),
+        rgba(var(--tint), 0.38);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    box-shadow: var(--soft-shadow);
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+    text-shadow: var(--text-lift);
+}
+
+.t-light { --tint: 230, 60, 80; }
+.t-heavy { --tint: 235, 130, 40; }
+.t-dash { --tint: 70, 130, 240; }
+.t-block { --tint: 60, 170, 100; }
+
+.t-ability {
+    --tint: 40, 50, 90;
+    filter: none;
+}
+
+.t-ability.ready {
+    --tint: 255, 200, 50;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.15) 48%, rgba(255, 255, 255, 0) 50%),
+        rgba(var(--tint), 0.75);
+}
+
+.t-btn.pressed {
+    filter: brightness(1.3);
+}
+
+/* eigene Lage: Knöpfe werden relativ zum ganzen Bildschirm platziert */
+#touch.custom .touch-btns {
+    inset: 0;
+    width: auto;
+    height: auto;
+}
+
+/* Joystick-Größe */
+.stick-base {
+    width: calc(128px * var(--stick, 1));
+    height: calc(128px * var(--stick, 1));
+    margin: calc(-64px * var(--stick, 1)) 0 0 calc(-64px * var(--stick, 1));
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.06) 48%, rgba(255, 255, 255, 0) 50%),
+        rgba(26, 46, 116, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: var(--soft-shadow);
+}
+
+.stick-demo {
+    display: none;
+}
+
+/* Editor */
+#touch.editing {
+    z-index: 320;
+    pointer-events: auto;
+    background: rgba(6, 14, 48, 0.45);
+}
+
+#touch.editing .stick-zone {
+    pointer-events: none;
+}
+
+#touch.editing .stick-hint {
+    display: none;
+}
+
+#touch.editing .t-btn {
+    cursor: grab;
+}
+
+#touch.editing .t-btn.selected,
+#touch.editing .stick-demo.selected {
+    box-shadow: var(--soft-shadow), 0 0 0 3px #fff, 0 0 24px rgba(255, 255, 255, 0.7);
+}
+
+#touch.editing .stick-demo {
+    position: absolute;
+    left: 18%;
+    top: 62%;
+    display: grid;
+    place-items: center;
+    width: calc(128px * var(--stick, 1));
+    height: calc(128px * var(--stick, 1));
+    margin: calc(-64px * var(--stick, 1)) 0 0 calc(-64px * var(--stick, 1));
+    padding: 0;
+    font-family: var(--font-display);
+    font-size: 16px;
+    letter-spacing: 0.06em;
+    color: #fff;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.06) 48%, rgba(255, 255, 255, 0) 50%),
+        rgba(26, 46, 116, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    box-shadow: var(--soft-shadow);
+    text-shadow: var(--text-lift);
+}
+
+#touchEdit {
+    position: fixed;
+    left: 50%;
+    top: calc(10px + var(--safe-t));
+    z-index: 330;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: min(440px, calc(100% - 24px));
+    padding: 10px 16px 12px;
+    color: #fff;
+    background: var(--pane);
+    border: 1px solid var(--edge);
+    border-radius: 20px;
+    box-shadow: var(--soft-shadow);
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+    text-shadow: var(--text-lift);
+    transform: translateX(-50%);
+}
+
+#touchEdit[hidden] {
+    display: none;
+}
+
+.te-hint {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    text-align: center;
+}
+
+.te-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.te-row b {
+    min-width: 6.5em;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 20px;
+    letter-spacing: 0.05em;
+}
+
+.te-row input[type="range"] {
+    flex: 1;
+    --val: 50%;
+}
+
+#touchLayoutBtn {
+    margin-top: 8px;
+}
+
+/* Segment-Leisten (Runden, Tempo …) als eine Glasschiene, Knöpfe darin klar */
+.seg,
+.opt-group {
+    background: var(--pane) !important;
+    border: 1px solid var(--edge) !important;
+    border-radius: 14px;
+    box-shadow: var(--soft-shadow) !important;
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+}
+
+.seg button:not(.on),
+.opt-group button:not(.on) {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.35) !important;
+    box-shadow: none !important;
+}
+
+.seg button:not(.on):hover,
+.opt-group button:not(.on):hover {
+    background: rgba(255, 255, 255, 0.22) !important;
+}
+
+/* Tastenfelder in den Optionen: Glas statt dunkler Knopf */
+.key-btn {
+    background: var(--pane) !important;
+    border: 1px solid var(--edge) !important;
+    border-radius: 12px !important;
+    box-shadow: var(--soft-shadow) !important;
+    color: #fff;
+    backdrop-filter: var(--frost);
+    -webkit-backdrop-filter: var(--frost);
+}
+
+.key-btn:hover {
+    background: var(--pane-hover) !important;
+    border-color: var(--edge-strong) !important;
+}
+
+.key-btn.waiting {
+    background: #fff !important;
+    color: #13306f !important;
+    text-shadow: none;
+}
+
+/* Schrift: ein feiner Schatten, damit sie auf hellem Glas lesbar bleibt – nicht fett, nicht verschmiert */
+.screen,
+#hud,
+#toast {
+    text-shadow: 0 1px 2px rgba(0, 12, 45, 0.6), 0 0 1px rgba(0, 12, 45, 0.35);
+}
+
+kbd,
+.gold-pill,
+.gold-pill *,
+.gold,
+.rw-num,
+.rank-badge,
+.pf-active,
+.seg button.on,
+.opt-group button.on,
+.key-btn.waiting,
+[class*="badge"] {
+    text-shadow: none !important;
+}
+
+.seg button:not(.on),
+.opt-group button:not(.on),
+.key-btn:not(.waiting) {
+    color: #fff !important;
+}
+
+/* Gewählter Champion: weißes Glas-Schild statt dunkler Farbbalken */
+#screen-select .champ-card.pick0,
+#screen-select .champ-card.pick1 {
+    border-color: #fff !important;
+    box-shadow: var(--soft-shadow), 0 0 0 2px rgba(255, 255, 255, 0.9), 0 0 18px rgba(255, 255, 255, 0.45) !important;
+}
+
+#screen-select .champ-card.pick0 .cc-name,
+#screen-select .champ-card.pick1 .cc-name {
+    background: rgba(255, 255, 255, 0.92) !important;
+    color: #1d3c8f !important;
+    text-shadow: none !important;
+    border-radius: 8px;
+}
+
+#screen-select .champ-card.pick1 .cc-name {
+    color: #a3202a !important;
+}
+
+/* Schrift: keine künstlich verdickte Bebas Neue, Fließtext in Inter mittel statt fett */
+html {
+    font-synthesis: none;
+}
+
+body {
+    font-family: var(--font-body);
+    font-weight: 500;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.screen :is(p, dd, li, small, label, span, td),
+#hud :is(small, span) {
+    font-weight: 500;
+}
+
+.screen :is(b, strong, dt, kbd, th),
+.gold-pill {
+    font-weight: 600;
+}
+
+/* Gesperrte Knöpfe (Preis zu hoch usw.) und Beschreibungen gut lesbar halten */
+.btn:disabled,
+.btn.start:disabled {
+    color: #fff !important;
+    opacity: 0.85 !important;
+    text-shadow: 0 1px 2px rgba(0, 12, 45, 0.55) !important;
+}
+
+.keys dd,
+.keys dt,
+.screen p,
+.screen small,
+.shop-hint,
+.center-note,
+.mp-info {
+    color: #fff;
+}

@@ -60,6 +60,7 @@ class Fighter {
         this.swingSound = false
         this.bufLight = 0
         this.bufHeavy = 0
+        this.bufAbility = 0
         this.dashCd = 0
         this.powerT = 0
         this.slowT = 0
@@ -145,6 +146,7 @@ class Fighter {
         this.flashT -= dt
         this.bufLight -= dt
         this.bufHeavy -= dt
+        this.bufAbility -= dt
         this.readyPulse += dt
         this.hpLag += (this.hp - this.hpLag) * (1 - Math.exp(-3 * dt))
         if (Math.abs(this.hpLag - this.hp) < 0.05) this.hpLag = this.hp
@@ -160,6 +162,16 @@ class Fighter {
 
         if (inp.light || (inp.lightHeld && this.state === "attack" && this.moveKind === "light")) this.bufLight = COMBAT.comboWindow
         if (inp.heavy) this.bufHeavy = COMBAT.comboWindow
+        // Fähigkeit: Druck wird gemerkt und ausgelöst, sobald es geht – auch mitten im Schlag oder nach dem Dash
+        if (inp.ability) {
+            if (this.abilityReady) this.bufAbility = 0.6
+            else this.match.emit("abilityDenied", this)
+        }
+        if (this.bufAbility > 0 && this.abilityReady && ["idle", "run", "attack", "recover"].includes(this.state)) {
+            this.bufAbility = 0
+            if (this.state !== "idle" && this.state !== "run") this.toIdle()
+            this.tryAbility(opp)
+        }
 
         this.guarding = false
         switch (this.state) {
@@ -224,7 +236,6 @@ class Fighter {
         if (heavy && this.wantsSpecial(opp, inp)) return this.startSpecial(opp)
         if (heavy) return this.startAttack("heavy", 0, opp)
         if (light) return this.startAttack("light", 0, opp)
-        if (inp.ability && this.tryAbility(opp)) return
 
         const dist = Math.abs(opp.x - this.x)
         const toOpp = Math.sign(opp.x - this.x) || this.facing

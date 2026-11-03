@@ -379,7 +379,7 @@ class Effects {
             ctx.textAlign = "center"
             ctx.textBaseline = "middle"
             ctx.lineJoin = "round"
-            ctx.lineWidth = 8
+            ctx.lineWidth = 3
             ctx.strokeStyle = p.stroke
             ctx.strokeText(p.str, 0, 0)
             ctx.fillStyle = p.color

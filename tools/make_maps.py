@@ -137,11 +137,12 @@ def frost(kind, c, x, y, n, fine):
         return base
     if kind == "floor":
         # festgetretener Schnee und blankes Eis
-        ice = n > 0.56
-        if ice:
-            return lerp((150, 196, 228), (205, 232, 250), v)
+        # weicher Übergang statt harter Kante, sonst sieht das Eis fleckig aus
         g = 0.75 + v * 0.3
-        return (min(255, int(205 * g)), min(255, int(218 * g)), min(255, int(236 * g)))
+        snow = (min(255, int(205 * g)), min(255, int(218 * g)), min(255, int(236 * g)))
+        ice = lerp((178, 212, 236), (214, 236, 251), v)
+        k = max(0, min(1, (n - 0.42) / 0.3))
+        return lerp(snow, ice, k * k * (3 - 2 * k) * 0.8)
     if kind == "stone":
         g = v
         base = (int(90 * g + 30), int(108 * g + 34), int(140 * g + 40))
