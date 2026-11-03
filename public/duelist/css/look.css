@@ -2174,3 +2174,93 @@ body {
 .mp-info {
     color: #fff;
 }
+
+/* ============================================================
+   Kampf: HUD und Touch-Knöpfe im selben klaren Glas wie die Menüs
+   ============================================================ */
+.hud-player,
+.hud-player.right,
+.hud-timer,
+.hud-timer.urgent,
+#pauseBtn,
+.hud-map,
+.hud-keys {
+    background: var(--pane) !important;
+    border: 1px solid var(--edge) !important;
+    box-shadow: var(--soft-shadow) !important;
+    backdrop-filter: var(--frost) !important;
+    -webkit-backdrop-filter: var(--frost) !important;
+}
+
+.hud-timer.urgent {
+    border-color: rgba(255, 120, 130, 0.95) !important;
+    box-shadow: var(--soft-shadow), 0 0 0 2px rgba(255, 90, 100, 0.55) !important;
+}
+
+.hud-portrait {
+    background: rgba(255, 255, 255, 0.14) !important;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.hp,
+.guard {
+    background: rgba(10, 18, 40, 0.28) !important;
+}
+
+/* Touch-Knöpfe: klares Glas, Farbe nur als feiner Ring */
+.t-btn {
+    background: var(--pane) !important;
+    border: 2px solid rgba(var(--tint), 0.85) !important;
+    box-shadow: var(--soft-shadow), 0 0 12px rgba(var(--tint), 0.25) !important;
+    text-shadow: 0 1px 2px rgba(0, 12, 45, 0.6) !important;
+}
+
+.t-ability {
+    --tint: 255, 255, 255;
+}
+
+.t-ability.ready {
+    --tint: 255, 205, 60;
+    background: var(--pane), rgba(255, 205, 60, 0.18) !important;
+    box-shadow: var(--soft-shadow), 0 0 18px rgba(255, 205, 60, 0.55) !important;
+}
+
+.t-btn.pressed {
+    background: var(--pane-hover) !important;
+    filter: none;
+}
+
+/* Touch-Knöpfe: farbiges Glas – kräftige Tönung, weicher Glanz oben, keine harte Kante */
+.t-btn {
+    background:
+        radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 60%),
+        linear-gradient(180deg, rgba(var(--tint), 0.55), rgba(var(--tint), 0.78)) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
+    box-shadow:
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -6px 14px rgba(var(--tint), 0.5),
+        0 6px 18px rgba(var(--tint), 0.35) !important;
+}
+
+.t-ability {
+    --tint: 70, 82, 120;
+}
+
+.t-ability.ready {
+    --tint: 255, 196, 40;
+    box-shadow:
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -6px 14px rgba(var(--tint), 0.5),
+        0 0 20px rgba(255, 205, 60, 0.7) !important;
+}
+
+.t-btn.pressed {
+    filter: brightness(1.25) !important;
+}
+
+.t-ability.ready,
+.t-ability {
+    background:
+        radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 60%),
+        linear-gradient(180deg, rgba(var(--tint), 0.55), rgba(var(--tint), 0.78)) !important;
+}
