@@ -19,11 +19,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="css/app.css?v=3.0.80">
-    <link rel="stylesheet" href="css/polish.css?v=3.0.80">
-    <link rel="stylesheet" href="css/glas-ui.css?v=3.0.80">
-    <link rel="stylesheet" href="css/hud-glas.css?v=3.0.80">
-    <link rel="stylesheet" href="css/look.css?v=3.0.80">
+    <link rel="stylesheet" href="css/app.css?v=3.0.82">
+    <link rel="stylesheet" href="css/polish.css?v=3.0.82">
+    <link rel="stylesheet" href="css/glas-ui.css?v=3.0.82">
+    <link rel="stylesheet" href="css/hud-glas.css?v=3.0.82">
+    <link rel="stylesheet" href="css/look.css?v=3.0.82">
+    <link rel="stylesheet" href="css/glasrun.css?v=3.0.82">
 </head>
 
 <body>
@@ -73,6 +74,7 @@
                 <nav class="mm-modes">
                     <button class="mm-mode mm-play" data-go="quick"><b>Schnelles Match</b><small>Sofort los, kurze Runden</small></button>
                     <button class="mm-mode" data-go="arcade"><b>Arcade</b><small>5 Gegner und ein Endboss</small></button>
+                    <button class="mm-mode mm-glasrun" data-go="glasrun"><b>Glas-Run</b><small id="grMenuSub">Endlos, im Hochformat, mit einer Hand</small></button>
                     <button class="mm-mode" data-go="versus"><b>Versus</b><small>Bot, zu zweit, online, 2 gegen 2</small></button>
                     <button class="mm-mode" data-go="trainhub"><b>Training</b><small>Üben und Tutorial</small></button>
                     <button class="mm-mode" data-go="shop"><b>Shop</b><small>Skins für deine Champions</small></button>
@@ -536,6 +538,65 @@
         </div>
     </div>
 
+    <!-- ================= GLAS-RUN ================= -->
+    <div id="gr-touch">
+        <div class="gr-anchor"></div>
+        <div class="gr-knob"></div>
+        <div class="gr-hint" id="gr-hint">
+            <span><b>Ziehen</b>laufen</span>
+            <span><b>Weg ziehen</b>blocken</span>
+            <span><b>Tippen</b>leicht</span>
+            <span><b>Halten</b>schwer</span>
+            <span><b>Wischen</b>Dash</span>
+        </div>
+    </div>
+
+    <div id="gr-hud">
+        <div class="gr-top">
+            <div class="gr-cap me"><i class="gr-lag"></i><i class="gr-fill"></i><span class="gr-name"></span><b class="gr-hp"></b></div>
+            <div class="gr-time">30</div>
+            <div class="gr-cap foe"><i class="gr-lag"></i><i class="gr-fill"></i><span class="gr-name"></span><b class="gr-hp"></b></div>
+        </div>
+        <div class="gr-row">
+            <span class="gr-score"></span>
+            <span class="gr-stage"><span class="gr-stage-text">Gegner 1</span><span class="gr-plates"></span></span>
+            <button class="gr-pause" id="gr-pause" aria-label="Pause"><span></span><span></span></button>
+        </div>
+    </div>
+
+    <button id="gr-ability" aria-label="Fähigkeit">
+        <svg class="t-ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" /></svg>
+        <span class="t-icon"></span>
+    </button>
+
+    <section id="screen-glascards" class="screen scroll">
+        <div class="gr-col">
+            <div class="gr-head"><small id="grcSub">Gegner 1 besiegt</small><b>Wähle eine Karte</b></div>
+            <div class="gr-info glass" id="grcInfo"></div>
+            <div class="gr-cards" id="grCards"></div>
+            <div class="gr-owned" id="grcOwned" hidden></div>
+        </div>
+    </section>
+
+    <section id="screen-glasend" class="screen scroll">
+        <div class="gr-col">
+            <div class="gr-head"><small>Glas-Run</small><b id="greTitle">RUN VORBEI</b></div>
+            <div class="gr-big glass">
+                <b id="greCount">0</b>
+                <span>Gegner besiegt</span>
+                <small id="greRecord"></small>
+            </div>
+            <p class="gr-sub" id="greSub"></p>
+            <div class="gr-stats glass" id="greStats"></div>
+            <div class="rs-rewards gr-rewards" id="greRewards"></div>
+            <div class="gr-owned" id="greCards" hidden></div>
+            <div class="gr-actions">
+                <button class="btn start" id="greAgain">Neu starten</button>
+                <button class="btn" id="greMenu">Hauptmenü</button>
+            </div>
+        </div>
+    </section>
+
     <!-- ================= PAUSE ================= -->
     <section id="screen-pause" class="screen modal">
         <div class="glass modal-box">
@@ -574,35 +635,37 @@
     <div id="rotate">
         <div class="rotate-icon">📱</div>
         <p>Dreh dein Handy ins Querformat</p>
+        <button class="btn start" id="rotateGlasrun">Oder: Glas-Run im Hochformat</button>
     </div>
     <div id="fps" hidden></div>
     <div id="toast"></div>
     <div id="wipe"></div>
 
-    <script src="js/arena_shape.js?v=3.0.80"></script>
-    <script src="js/data.js?v=3.0.80"></script>
-    <script src="js/audio.js?v=3.0.80"></script>
-    <script src="js/settings.js?v=3.0.80"></script>
-    <script src="js/assets.js?v=3.0.80"></script>
-    <script src="js/input.js?v=3.0.80"></script>
-    <script src="js/touch-layout.js?v=3.0.80"></script>
-    <script src="js/link.js?v=3.0.80"></script>
-    <script src="js/pad.js?v=3.0.80"></script>
-    <script src="js/fx.js?v=3.0.80"></script>
-    <script src="js/arena.js?v=3.0.80"></script>
-    <script src="js/fighter.js?v=3.0.80"></script>
-    <script src="js/ai.js?v=3.0.80"></script>
-    <script src="js/match.js?v=3.0.80"></script>
-    <script src="js/icons.js?v=3.0.80"></script>
-    <script src="js/ui.js?v=3.0.80"></script>
-    <script src="js/modes.js?v=3.0.80"></script>
-    <script src="js/progress.js?v=3.0.80"></script>
-    <script src="js/shop.js?v=3.0.80"></script>
-    <script src="js/polish.js?v=3.0.80"></script>
-    <script src="js/profiles.js?v=3.0.80"></script>
-    <script src="js/net.js?v=3.0.80"></script>
-    <script src="js/tutorial.js?v=3.0.80"></script>
-    <script src="js/main.js?v=3.0.80"></script>
+    <script src="js/arena_shape.js?v=3.0.82"></script>
+    <script src="js/data.js?v=3.0.82"></script>
+    <script src="js/audio.js?v=3.0.82"></script>
+    <script src="js/settings.js?v=3.0.82"></script>
+    <script src="js/assets.js?v=3.0.82"></script>
+    <script src="js/input.js?v=3.0.82"></script>
+    <script src="js/touch-layout.js?v=3.0.82"></script>
+    <script src="js/link.js?v=3.0.82"></script>
+    <script src="js/pad.js?v=3.0.82"></script>
+    <script src="js/fx.js?v=3.0.82"></script>
+    <script src="js/arena.js?v=3.0.82"></script>
+    <script src="js/fighter.js?v=3.0.82"></script>
+    <script src="js/ai.js?v=3.0.82"></script>
+    <script src="js/match.js?v=3.0.82"></script>
+    <script src="js/icons.js?v=3.0.82"></script>
+    <script src="js/ui.js?v=3.0.82"></script>
+    <script src="js/modes.js?v=3.0.82"></script>
+    <script src="js/progress.js?v=3.0.82"></script>
+    <script src="js/shop.js?v=3.0.82"></script>
+    <script src="js/polish.js?v=3.0.82"></script>
+    <script src="js/profiles.js?v=3.0.82"></script>
+    <script src="js/net.js?v=3.0.82"></script>
+    <script src="js/tutorial.js?v=3.0.82"></script>
+    <script src="js/glasrun.js?v=3.0.82"></script>
+    <script src="js/main.js?v=3.0.82"></script>
 </body>
 
 </html>

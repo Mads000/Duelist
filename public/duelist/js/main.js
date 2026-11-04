@@ -43,6 +43,7 @@ const App = {
         UI.init()
         this.touch = new TouchSource(document.getElementById("touch"))
         TouchLayout.init()
+        GlasRun.init()
         Link.onChange = () => { if (UI.current === "controller") UI.renderController() }
         Net.onChange = () => { if (UI.current === "online") UI.renderOnline() }
         this.bindGlobalKeys()
@@ -152,9 +153,11 @@ const App = {
         document.body.classList.toggle("in-game", inGame)
         document.getElementById("hud").hidden = !inGame
         document.getElementById("pauseBtn").hidden = s !== "game"
-        const showTouch = s === "game" && isTouchDevice()
+        // Glas-Run hat eine eigene Einhand-Steuerung
+        const showTouch = s === "game" && isTouchDevice() && !(this.match && this.match.glasrun)
         document.getElementById("touch").hidden = !showTouch
         if (!showTouch && this.touch) this.touch.reset()
+        GlasRun.onState(s)
         if (!inGame) {
             document.body.classList.remove("replaying")
             Link.menuState()
@@ -171,6 +174,7 @@ const App = {
             Modes.run = null
         }
         if (target === "tutorial") return Tutorial.begin()
+        if (target === "glasrun") return GlasRun.start()
         if (target === "quick") return Modes.quick()
         if (target === "quickpick") {
             this.setState("select")
@@ -214,7 +218,7 @@ const App = {
             UI.show("pause")
             return
         }
-        if (["ladder", "continue", "entry", "pad"].includes(cur)) return
+        if (["ladder", "continue", "entry", "pad", "glascards", "glasend"].includes(cur)) return
         if (cur === "lessons") return UI.show("trainhub")
         if (cur === "profiles") ProfileSync.close()
         this.setState("menu")
@@ -280,6 +284,7 @@ const App = {
 
     startMatch({ rules, champs, opponent, net }) {
         Sound.unlock()
+        GlasRun.leave()
         this.lastStart = { rules, champs, opponent }
         writeStorage("duelist.lastConfig", this.config)
         this.menuSky = null
@@ -307,6 +312,7 @@ const App = {
     },
 
     restart() {
+        if (this.match && this.match.glasrun) return GlasRun.restart()
         if (this.match && this.match.netRole) {
             this.match = null
             return Net.rematch()
@@ -337,6 +343,7 @@ const App = {
     quitToMenu() {
         if (Net.connected) Net.close(true)
         Tutorial.stop()
+        GlasRun.leave()
         this.match = null
         Modes.run = null
         UI.hideBanner()
@@ -348,6 +355,7 @@ const App = {
 
     onMatchEvent(type, data, match) {
         if (match !== this.match) return
+        if (match.glasrun) return GlasRun.onEvent(type, data, match)
         Modes.onEvent(type, data, match)
         Tutorial.onEvent(type, data)
         Progress.onEvent(type, data, match)
@@ -416,8 +424,8 @@ const App = {
         this.canvas.width = Math.round(this.w * this.dpr)
         this.canvas.height = Math.round(this.h * this.dpr)
         if (this.match) this.match.setView(this.w, this.h)
-        // Im Hochformat auf dem Handy automatisch pausieren
-        if (this.state === "game" && isTouchDevice() && this.h > this.w) this.pause()
+        // Im Hochformat auf dem Handy automatisch pausieren (außer im Glas-Run, der ist fürs Hochformat gemacht)
+        if (this.state === "game" && isTouchDevice() && this.h > this.w && !(this.match && this.match.glasrun)) this.pause()
     },
 
     // Menü-Hintergrund: der Himmel einer Karte (Farben, ziehende Wolken), ohne Insel und ohne Kampf.
