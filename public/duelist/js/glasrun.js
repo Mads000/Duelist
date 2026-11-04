@@ -70,21 +70,23 @@ const GLAS_CARDS = {
 const glasIcon = id => `<svg viewBox="0 0 24 24" aria-hidden="true">${GLAS_ICON[id]}</svg>`
 
 // ============================================================
-//  Einhand-Steuerung: ein Daumen läuft, blockt, schlägt und dasht
+//  Zwei-Finger-Steuerung: links laufen und blocken,
+//  rechts tippen (leicht), halten (schwer) und wischen (Dash)
 // ============================================================
-const THUMB = { dead: 14, radius: 58, slop: 14, holdMs: 280, swipeMs: 240, swipeMin: 42 }
+const THUMB = { dead: 14, radius: 58, slop: 16, holdMs: 260, swipeMs: 260, swipeMin: 40 }
 
-class OneThumbSource {
+class TwoFingerSource {
     constructor(layer, getFighter) {
         this.layer = layer
         this.anchorEl = layer.querySelector(".gr-anchor")
         this.knobEl = layer.querySelector(".gr-knob")
+        this.actEl = layer.querySelector(".gr-act")
         this.getFighter = getFighter
-        this.id = null
+        this.moveId = null
+        this.act = null
         this.vec = { x: 0, y: 0 }
         this.latch = {}
         this.specialUntil = 0
-        this.timer = null
         layer.addEventListener("pointerdown", e => this.down(e))
         layer.addEventListener("pointermove", e => this.move(e))
         layer.addEventListener("pointerup", e => this.up(e, false))
@@ -92,33 +94,50 @@ class OneThumbSource {
     }
 
     down(e) {
-        if (this.id !== null) return
         e.preventDefault()
-        this.id = e.pointerId
+        // Linke Hälfte = Laufen, rechte Hälfte = Angriffe. Ist eine Seite schon belegt, nimmt der Finger die freie Rolle.
+        const left = e.clientX < window.innerWidth / 2
+        const role = left ? (this.moveId === null ? "move" : this.act ? null : "act") : (!this.act ? "act" : this.moveId === null ? "move" : null)
+        if (!role) return
         try { this.layer.setPointerCapture(e.pointerId) } catch (err) { }
-        const now = performance.now()
-        this.start = { x: e.clientX, y: e.clientY, t: now }
+        if (role === "move") return this.startMove(e)
+        this.startAct(e)
+    }
+
+    // ---------- Lauf-Finger: schwebender Joystick ----------
+    startMove(e) {
+        this.moveId = e.pointerId
         this.anchor = { x: e.clientX, y: e.clientY }
-        this.cur = { x: e.clientX, y: e.clientY }
-        this.maxDist = 0
-        this.held = false
-        clearTimeout(this.timer)
-        this.timer = setTimeout(() => this.hold(), THUMB.holdMs)
         this.place(this.anchorEl, this.anchor)
-        this.place(this.knobEl, this.cur)
-        this.layer.classList.add("touched")
-        this.layer.classList.remove("heavy")
+        this.place(this.knobEl, this.anchor)
+        this.layer.classList.add("moving")
+    }
+
+    // ---------- Angriffs-Finger: tippen, halten, wischen ----------
+    startAct(e) {
+        const p = { x: e.clientX, y: e.clientY }
+        this.act = { id: e.pointerId, start: p, cur: p, t: performance.now(), maxDist: 0, held: false }
+        this.act.timer = setTimeout(() => this.hold(), THUMB.holdMs)
+        this.place(this.actEl, p)
+        this.actEl.classList.remove("heavy", "tap")
+        this.layer.classList.add("acting")
     }
 
     move(e) {
-        if (e.pointerId !== this.id) return
-        this.cur = { x: e.clientX, y: e.clientY }
-        this.maxDist = Math.max(this.maxDist, Math.hypot(this.cur.x - this.start.x, this.cur.y - this.start.y))
-        if (this.maxDist > THUMB.slop) clearTimeout(this.timer)
-        let dx = this.cur.x - this.anchor.x
-        let dy = this.cur.y - this.anchor.y
+        if (e.pointerId === this.moveId) return this.moveStick(e)
+        const a = this.act
+        if (!a || e.pointerId !== a.id) return
+        a.cur = { x: e.clientX, y: e.clientY }
+        a.maxDist = Math.max(a.maxDist, Math.hypot(a.cur.x - a.start.x, a.cur.y - a.start.y))
+        if (a.maxDist > THUMB.slop) clearTimeout(a.timer)
+        this.place(this.actEl, a.cur)
+    }
+
+    moveStick(e) {
+        let dx = e.clientX - this.anchor.x
+        let dy = e.clientY - this.anchor.y
         const len = Math.hypot(dx, dy)
-        // Der Ankerpunkt wandert mit, wenn der Daumen weit wegzieht
+        // Der Ankerpunkt wandert mit, wenn der Finger weit wegzieht
         const far = THUMB.radius * 1.5
         if (len > far) {
             const k = (len - far) / len
@@ -135,50 +154,59 @@ class OneThumbSource {
         this.place(this.knobEl, { x: this.anchor.x + (l ? dx / l * c : 0), y: this.anchor.y + (l ? dy / l * c : 0) })
     }
 
-    // Gedrückt halten ohne zu ziehen = schwerer Angriff, mit Spezial-Bereitschaft automatisch der Spezialangriff
+    // Halten = schwerer Angriff, mit Spezial-Bereitschaft automatisch der Spezialangriff
     hold() {
-        this.timer = null
-        if (this.id === null || this.maxDist > THUMB.slop) return
-        this.held = true
+        const a = this.act
+        if (!a || a.maxDist > THUMB.slop) return
+        a.held = true
         this.latch.heavy = true
         const f = this.getFighter()
         if (f && f.specialReady && f.target) {
             this.specialDir = Math.sign(f.target.x - f.x) || f.facing
             this.specialUntil = performance.now() + 320
         }
-        this.layer.classList.add("heavy")
+        this.actEl.classList.add("heavy")
         if (GameSettings.get().vibration && navigator.vibrate) navigator.vibrate(14)
     }
 
     up(e, cancel) {
-        if (e.pointerId !== this.id) return
-        clearTimeout(this.timer)
-        const dt = performance.now() - this.start.t
-        const dx = this.cur.x - this.start.x
-        const dy = this.cur.y - this.start.y
+        if (e.pointerId === this.moveId) return this.endMove()
+        const a = this.act
+        if (!a || e.pointerId !== a.id) return
+        clearTimeout(a.timer)
+        const dt = performance.now() - a.t
+        const dx = a.cur.x - a.start.x
+        const dy = a.cur.y - a.start.y
         const dist = Math.hypot(dx, dy)
-        if (!cancel && !this.held) {
+        if (!cancel && !a.held) {
             if (dist >= THUMB.swipeMin && dt <= THUMB.swipeMs) {
-                // Schnell wischen = Dash in Wischrichtung
+                // Wischen = Dash in Wischrichtung
                 this.latch.dash = true
                 this.dashDir = { x: dx / dist, y: dy / dist }
-            } else if (this.maxDist <= THUMB.slop && dt < THUMB.holdMs) {
-                // Kurz tippen = leichter Angriff (mehrmals = Kombo)
+            } else if (a.maxDist <= THUMB.slop && dt < THUMB.holdMs) {
+                // Tippen = leichter Angriff (mehrmals = Kombo)
                 this.latch.light = true
+                this.actEl.classList.add("tap")
                 if (GameSettings.get().vibration && navigator.vibrate) navigator.vibrate(6)
             }
         }
-        this.release()
+        this.endAct()
+    }
+
+    endMove() {
+        this.moveId = null
+        this.vec = { x: 0, y: 0 }
+        this.layer.classList.remove("moving")
+    }
+
+    endAct() {
+        if (this.act) clearTimeout(this.act.timer)
+        this.act = null
+        this.layer.classList.remove("acting")
     }
 
     place(el, p) {
         if (el) el.style.transform = `translate(${p.x}px, ${p.y}px)`
-    }
-
-    release() {
-        this.id = null
-        this.vec = { x: 0, y: 0 }
-        this.layer.classList.remove("touched", "heavy")
     }
 
     read(out) {
@@ -203,11 +231,12 @@ class OneThumbSource {
     }
 
     reset() {
-        clearTimeout(this.timer)
-        if (this.id !== null) {
-            try { this.layer.releasePointerCapture(this.id) } catch (err) { }
+        for (const id of [this.moveId, this.act && this.act.id]) {
+            if (id === null || id === undefined) continue
+            try { this.layer.releasePointerCapture(id) } catch (err) { }
         }
-        this.release()
+        this.endMove()
+        this.endAct()
         this.latch = {}
         this.specialUntil = 0
     }
@@ -635,7 +664,7 @@ const GlasRun = {
 
     init() {
         const layer = document.getElementById("gr-touch")
-        this.touch = new OneThumbSource(layer, () => App.match && App.match.glasrun ? App.match.fighters[0] : null)
+        this.touch = new TwoFingerSource(layer, () => App.match && App.match.glasrun ? App.match.fighters[0] : null)
         const ability = document.getElementById("gr-ability")
         ability.addEventListener("pointerdown", e => {
             e.preventDefault()
@@ -647,10 +676,12 @@ const GlasRun = {
         document.getElementById("gr-pause").addEventListener("click", () => App.pause())
         document.getElementById("greAgain").addEventListener("click", () => this.restart())
         document.getElementById("greMenu").addEventListener("click", () => App.quitToMenu())
-        document.getElementById("rotateGlasrun").addEventListener("click", () => {
-            App.quitToMenu()
-            this.start()
-        })
+        for (const id of ["rotateGlasrun", "pauseGlasrun"]) {
+            document.getElementById(id).addEventListener("click", () => {
+                App.quitToMenu()
+                this.start()
+            })
+        }
         // Am PC: Karten mit 1 – 3 wählen
         Keyboard.listeners.add(code => {
             if (UI.current !== "glascards") return
@@ -691,7 +722,7 @@ const GlasRun = {
         const el = document.getElementById("grMenuSub")
         if (!el) return
         const r = this.record()
-        el.textContent = r.best ? `Rekord: ${r.best} Gegner · Hochformat, eine Hand` : "Endlos, im Hochformat, mit einer Hand"
+        el.textContent = r.best ? `Rekord: ${r.best} Gegner · im Hochformat` : "Endlos, im Hochformat"
     },
 
     // Bot-Stufe, Leben und Zeit je Gegnernummer

@@ -60,16 +60,49 @@ body.glasrun.gr-play.is-touch #gr-touch {
     box-shadow: var(--soft-shadow);
 }
 
-#gr-touch.touched .gr-anchor,
-#gr-touch.touched .gr-knob {
+#gr-touch.moving .gr-anchor,
+#gr-touch.moving .gr-knob {
     opacity: 1;
 }
 
-/* Halten = schwerer Angriff: der Knopf leuchtet orange auf */
-#gr-touch.heavy .gr-knob {
+/* Angriffs-Finger: kleiner Glasring unter dem rechten Finger */
+.gr-act {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 62px;
+    height: 62px;
+    margin: -31px 0 0 -31px;
+    pointer-events: none;
+    border-radius: 50%;
+    opacity: 0;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.08) 48%, rgba(255, 255, 255, 0) 50%),
+        rgba(230, 60, 80, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow: var(--soft-shadow);
+    transition: opacity 0.15s;
+}
+
+#gr-touch.acting .gr-act {
+    opacity: 1;
+}
+
+/* Tippen: kurzer Ring, der nachleuchtet */
+.gr-act.tap {
+    animation: grTap 0.28s ease-out;
+}
+
+@keyframes grTap {
+    0% { opacity: 1; scale: 0.8; }
+    100% { opacity: 0; scale: 1.5; }
+}
+
+/* Halten = schwerer Angriff: der Ring leuchtet orange auf */
+.gr-act.heavy {
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.15) 48%, rgba(255, 255, 255, 0.05) 50%),
-        rgba(235, 130, 40, 0.75);
+        rgba(235, 130, 40, 0.8);
     animation: grPop 0.25s ease-out;
 }
 
@@ -81,15 +114,12 @@ body.glasrun.gr-play.is-touch #gr-touch {
 /* Gesten-Hinweis in den ersten Runs */
 .gr-hint {
     position: absolute;
-    left: 50%;
+    left: calc(12px + var(--safe-l));
+    right: calc(12px + var(--safe-r));
     bottom: calc(118px + var(--safe-b));
-    translate: -50% 0;
-    width: max-content;
-    max-width: calc(100vw - 24px);
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.4s;
@@ -97,6 +127,27 @@ body.glasrun.gr-play.is-touch #gr-touch {
 
 .gr-hint.show {
     opacity: 1;
+}
+
+.gr-hint-side {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: flex-start;
+    gap: 5px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.45);
+}
+
+.gr-hint-side small {
+    flex-basis: 100%;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: var(--text-lift);
 }
 
 .gr-hint span {

@@ -309,6 +309,22 @@ const App = {
         UI.show("none")
         Music.play("battle")
         this.requestFullscreen()
+        this.checkPortrait()
+    },
+
+    // Normale Kämpfe brauchen das Querformat: im Hochformat pausieren (Pausemenü bleibt bedienbar)
+    // und beim Drehen ins Querformat von selbst weiterspielen
+    portraitBlocked() {
+        return isTouchDevice() && this.h > this.w && !(this.match && this.match.glasrun)
+    },
+
+    checkPortrait() {
+        if (this.state === "game" && this.portraitBlocked()) {
+            this.pause()
+            this.portraitPaused = true
+        } else if (this.state === "paused" && this.portraitPaused && !this.portraitBlocked() && UI.current === "pause") {
+            this.resume()
+        }
     },
 
     restart() {
@@ -324,6 +340,7 @@ const App = {
 
     pause() {
         if (this.state !== "game" || !this.match) return
+        this.portraitPaused = false
         // Online läuft das Spiel weiter – nur das Menü öffnet sich
         if (!this.match.netRole) this.match.paused = true
         this.setState("paused")
@@ -333,6 +350,11 @@ const App = {
 
     resume() {
         if (this.state !== "paused" || !this.match) return
+        if (this.portraitBlocked()) {
+            UI.toast("📱 Dreh dein Handy ins Querformat, dann geht es weiter.")
+            return
+        }
+        this.portraitPaused = false
         Cheats.apply(this.match) // falls in den Optionen umgeschaltet
         this.match.paused = false
         this.last = performance.now()
@@ -425,7 +447,7 @@ const App = {
         this.canvas.height = Math.round(this.h * this.dpr)
         if (this.match) this.match.setView(this.w, this.h)
         // Im Hochformat auf dem Handy automatisch pausieren (außer im Glas-Run, der ist fürs Hochformat gemacht)
-        if (this.state === "game" && isTouchDevice() && this.h > this.w && !(this.match && this.match.glasrun)) this.pause()
+        this.checkPortrait()
     },
 
     // Menü-Hintergrund: der Himmel einer Karte (Farben, ziehende Wolken), ohne Insel und ohne Kampf.
