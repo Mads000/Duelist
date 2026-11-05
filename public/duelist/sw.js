@@ -1,6 +1,6 @@
 // Service Worker – macht DUELIST nach dem ersten Laden komplett offline spielbar
 // (automatisch erzeugt von tools/make_sw.js)
-const CACHE = "duelist-v3.0.83"
+const CACHE = "duelist-v3.0.84"
 const PRECACHE = [
     "./",
     "index.html",

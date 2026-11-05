@@ -3,6 +3,33 @@
    Nur für schmale Hochformat-Bildschirme, das Querformat bleibt unverändert.
    ============================================================ */
 
+/* iPhone-App vom Home-Bildschirm: iOS meldet die Höhe um die Statusleiste zu klein.
+   main.js misst die fehlende Höhe (--vh-fix), alle Vollbild-Ebenen reichen dann bis ganz unten. */
+html {
+    --vh-fix: 0px;
+}
+
+body.ios-gap :is(#crt, .screen, #banner, #touch, #gr-touch, #rotate, #vs, #intro) {
+    bottom: calc(-1 * var(--vh-fix));
+}
+
+body.ios-gap #game {
+    height: calc(100% + var(--vh-fix));
+}
+
+body.ios-gap #sky {
+    bottom: calc(-4% - var(--vh-fix));
+}
+
+/* Knöpfe am unteren Rand an den echten Bildschirmrand setzen */
+body.ios-gap #gr-ability {
+    bottom: calc(22px + var(--safe-b) - var(--vh-fix));
+}
+
+body.ios-gap #toast {
+    bottom: calc(24px + var(--safe-b) - var(--vh-fix));
+}
+
 /* Pausemenü: Hinweis und Glas-Run-Knopf nur im Hochformat am Handy */
 .pause-rotate {
     display: none;

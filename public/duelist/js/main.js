@@ -439,10 +439,25 @@ const App = {
             .catch(() => {})
     },
 
+    // iPhone-App vom Home-Bildschirm (Statusleiste durchsichtig): iOS meldet die Höhe um die
+    // Statusleiste zu klein, unten bliebe ein leerer Streifen. Die fehlende Höhe wird nachgereicht.
+    iosGap() {
+        const test = +params.get("iosgap")
+        if (test) return test
+        if (navigator.standalone !== true) return 0
+        const portrait = window.innerHeight > window.innerWidth
+        const full = portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height)
+        const gap = full - window.innerHeight
+        return gap > 0 && gap <= 80 ? gap : 0
+    },
+
     resize() {
         this.dpr = Math.min(window.devicePixelRatio || 1, 2)
+        const gap = this.iosGap()
+        document.documentElement.style.setProperty("--vh-fix", gap + "px")
+        document.body.classList.toggle("ios-gap", gap > 0)
         this.w = window.innerWidth
-        this.h = window.innerHeight
+        this.h = window.innerHeight + gap
         this.canvas.width = Math.round(this.w * this.dpr)
         this.canvas.height = Math.round(this.h * this.dpr)
         if (this.match) this.match.setView(this.w, this.h)
